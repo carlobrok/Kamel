@@ -78,7 +78,6 @@ int main() {
 #ifdef ON_PI
 
 	CameraCapture cam(0);
-	CameraCapture cam(0);
 	VideoServer srv;
 
 	cam.set(cv::CAP_PROP_FPS, 30);
