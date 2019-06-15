@@ -1,6 +1,8 @@
 #ifndef _KAMELI2C_H
 #define _KAMELI2C_H
 
+#include <cstdint>
+
 #define MOTOR_LEFT 0
 #define MOTOR_RIGHT 1
 #define MOTOR_BOTH 2

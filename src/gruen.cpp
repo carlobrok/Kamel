@@ -162,7 +162,7 @@ void separate_gruen(Mat & hsv, Mat & bin_gr) {
 	inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
 	morphologyEx(bin_gr, bin_gr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
-#ifdef VISUAL_DEBUG
+#if defined(VISUAL_DEBUG) && !defined(ON_PI)
 	imshow("Mask Green", bin_gr);
 #endif
 }
