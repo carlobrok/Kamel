@@ -181,6 +181,7 @@ int main() {
 		srv.imshow("Input", img_rgb);
 		srv.imshow("HSV", hsv);
 		srv.imshow("Mask SW", bin_sw);
+		srv.update();
 #else
 		imshow("Input", img_rgb);
 		imshow("HSV", hsv);
