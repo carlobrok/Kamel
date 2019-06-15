@@ -109,11 +109,13 @@ int main() {
 
 
 	while(1) {				// Dauerschleife
-
 		/*
 		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
 		 * wenn es auf dem PC läuft aus Video Array lesen
 		 */
+
+		int64 tloop = getTickCount();
+		int64 tlast = getTickCount();
 
 #ifdef ON_PI
 
@@ -131,10 +133,13 @@ int main() {
 #endif
 
 		// Bild filter anwenden
-		GaussianBlur(img_rgb, img_rgb, Size(15,15),2,2);
+		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);
 
 		Mat hsv;
 		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);
+
+		std::cout << "Reading, color covert, gauss: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
 
 		Mat bin_sw;
 		Mat bin_gr;
@@ -142,6 +147,9 @@ int main() {
 
 		separate_gruen(hsv, bin_gr);
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
+
+		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
 
 		/*float line_radiant_average = 0;
 			for (unsigned int i = 0; i < line_points.size(); ++i) {
@@ -177,6 +185,9 @@ int main() {
 
 		cout << endl;
 
+		std::cout << "Green calc: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
+
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
 		srv.imshow("HSV", hsv);
@@ -196,6 +207,8 @@ int main() {
 		}
 #endif
 
+		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl;
 	}
 
 	return -1;

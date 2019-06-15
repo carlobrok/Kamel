@@ -84,7 +84,7 @@ void VideoServer::run(){
 			std::vector<uchar> img_buf;
 			cv::imencode(".jpg", l_tmpWindow.image, img_buf, m_jpegParams);
 			t2 = cv::getTickCount();
-			std::cout << "Size: " << img_buf.size() / 1024.0 << std::endl << "Encode took " << (t2-t1) / cv::getTickFrequency() * 1000.0 << std::endl;
+			//std::cout << "Size: " << img_buf.size() / 1024.0 << std::endl << "Encode took " << (t2-t1) / cv::getTickFrequency() * 1000.0 << std::endl;
 			m_windowMap[l_tmpWindow.windowName].readyForData = true;
 
 			t1 = cv::getTickCount();
