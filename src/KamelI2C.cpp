@@ -22,5 +22,6 @@ int kamelI2Copen(int devId) {
 }
 
 int writeMotor(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
-	return i2c_smbus_write_block_data(fd, 0, 3, {side, direction, pwm});
+	uint8_t data[3] = {side, direction, pwm};
+	return i2c_smbus_write_block_data(fd, 0, 3, data);
 }
