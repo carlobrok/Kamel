@@ -1,8 +1,17 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
+#include "math.h"
+
+#include "config.h"
 #include "gruen.h"
 #include "line.h"
-#include "math.h"
+
+
+#ifdef ON_PI
+#include "CameraCapture.h"
+#include "VideoServer.h"
+#include "KamelI2C.h"
+#endif
 
 #define VIDEO_NAME video_name[vid_name_idx]
 
@@ -100,27 +109,32 @@ int main() {
 
 
 
- 			grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
+			grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
 
- 			cout << "Gruenstate: " << grstate << " / ";
+			cout << "Gruenstate: " << grstate << " / ";
 
- 			switch (grstate) {
- 				case 0:
- 					cout << "KEINER";
- 					break;
-				case 1:
-					cout << "LINKS";
-					break;
-				case 2:
-					cout << "RECHTS";
-					break;
-				case 3:
-					cout << "BEIDE";
-					break;
- 			}
+			switch (grstate) {
+			case 0:
+				cout << "KEINER";
+				break;
+			case 1:
+				cout << "LINKS";
+				break;
+			case 2:
+				cout << "RECHTS";
+				break;
+			case 3:
+				cout << "BEIDE";
+				break;
+			}
 
- 			cout << endl;
+			cout << endl;
 
+#ifdef ON_PI
+			srv.imshow("Input", img_rgb);
+			srv.imshow("HSV", hsv);
+			srv.imshow("Mask SW", bin_sw);
+#else
 			imshow("Input", img_rgb);
 			imshow("HSV", hsv);
 			imshow("Mask SW", bin_sw);
@@ -132,6 +146,7 @@ int main() {
 			} else if(key == 'n') {
 				open_new_vid(cap);
 			}
+#endif
 		}
 	}
 
