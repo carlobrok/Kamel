@@ -107,6 +107,10 @@ int main() {
 #endif
 
 
+	int motor_fd = kamelI2Copen(0x08);
+
+	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0);
+
 
 	while(1) {				// Dauerschleife
 		/*
@@ -151,6 +155,12 @@ int main() {
 		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		tlast = getTickCount();
 
+		if(line_points.size() > 0) {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 255);
+		} else {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0);
+		}
+
 		/*float line_radiant_average = 0;
 			for (unsigned int i = 0; i < line_points.size(); ++i) {
 				float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
@@ -193,6 +203,9 @@ int main() {
 		srv.imshow("HSV", hsv);
 		srv.imshow("Mask SW", bin_sw);
 		srv.update();
+
+
+
 #else
 		imshow("Input", img_rgb);
 		imshow("HSV", hsv);

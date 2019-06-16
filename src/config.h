@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-//#define ON_PI				// Wenn definiert, geht der Videooutput über den VideoServer
+#define ON_PI				// Wenn definiert, geht der Videooutput über den VideoServer
 #define VISUAL_DEBUG		// Wenn definiert, werden Debuglinien und Konturen in img_rgb gezeichnet
 
 // Grünpunkt defines
