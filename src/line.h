@@ -6,8 +6,10 @@
 using namespace cv;
 using namespace std;
 
-void binarize_line();
-void ellipse_calc();
+//void binarize_line();
+//void ellipse_calc();
+
+float line_radiant(Point & p, int rows, int cols);
 
 void sepatare_line(Mat & hsv, Mat & bin_sw);
 

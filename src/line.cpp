@@ -1,6 +1,7 @@
 #include "opencv2/opencv.hpp"
 #include "line.h"
 #include "config.h"
+#include "math.h"
 
 Mat bin_ellipse;
 
@@ -16,6 +17,10 @@ bool inMat(Point p, int w, int h) {
 	} else {
 		return false;
 	}
+}
+
+float line_radiant(Point & p, int rows, int cols) {
+	return atan2(p.y - rows, p.x - cols/2)  * 180 / CV_PI + 90;
 }
 
 void sepatare_line(Mat & hsv, Mat & bin_sw) {
@@ -148,7 +153,7 @@ void sepatare_line(Mat & hsv, Mat & bin_sw) {
 void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Point> & line_points) {
 	inRange(hsv, Scalar(0, 0, 0), Scalar(180, 255, 60), bin_sw);
 	bin_sw -= bin_gr;
-	morphologyEx(bin_sw, bin_sw, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(2,2)));
+	morphologyEx(bin_sw, bin_sw, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
 	if(bin_ellipse.empty()) {
 		init_line_ellipse(img_rgb);

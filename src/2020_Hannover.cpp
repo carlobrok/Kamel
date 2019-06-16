@@ -155,8 +155,34 @@ int main() {
 		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		tlast = getTickCount();
 
-		if(line_points.size() > 0) {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 255);
+		if(line_points.size() == 1) {
+
+			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
+
+			cout << "Line radiant: " << rad << endl;
+
+			if(rad > 70) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 100);
+			} else if(rad < -70) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 100);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
+			} else if(rad > 40) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 50);
+			} else if(rad < -40) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 50);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
+			} else if(rad > 10) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
+			} else if(rad < -10) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
+			}
+
+		} else if(line_points.size() > 1) {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
 		} else {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0);
 		}
