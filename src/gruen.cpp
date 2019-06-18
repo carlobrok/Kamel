@@ -35,6 +35,10 @@ Point rotated_point_lenght(Point & origin_point, float rotation, float length) {
 }*/
 
 
+/*
+ * Checkt bei einem grünen Punkt vertikal nach oben den anteil der Schwarzen linie.
+ */
+
 int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> contour) {
 
 	Moments m = moments(contour);
@@ -158,13 +162,13 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 }
 
 
+/*
+ * Alle bereiche, wo grün vorhanden ist in bin_gr schreiben.
+ */
+
 void separate_gruen(Mat & hsv, Mat & bin_gr) {
 	inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
 	morphologyEx(bin_gr, bin_gr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-
-#if defined(VISUAL_DEBUG) && !defined(ON_PI)
-	imshow("Mask Green", bin_gr);
-#endif
 }
 
 
