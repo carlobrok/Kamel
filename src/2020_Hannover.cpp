@@ -161,24 +161,32 @@ int main() {
 
 			cout << "Line radiant: " << rad << endl;
 
-			if(rad > 70) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 100);
-			} else if(rad < -70) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 100);
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
-			} else if(rad > 40) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
+			if(rad > 55) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
+			} else if(rad < -55) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+			} else if(rad > 35) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 50);
-			} else if(rad < -40) {
+			} else if(rad < -35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 50);
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else if(rad > 10) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
 			} else if(rad < -10) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
+				this_thread::sleep_for(chrono::milliseconds(0.5));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
 			}
 
 		} else if(line_points.size() > 1) {
