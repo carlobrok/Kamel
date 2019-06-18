@@ -163,27 +163,27 @@ int main() {
 
 			if(rad > 55) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
 			} else if(rad < -55) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
 			} else if(rad > 35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
 			} else if(rad < -35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else if(rad > 10) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
 			} else if(rad < -10) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-				this_thread::sleep_for(chrono::milliseconds(0.5));
+				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else {
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
@@ -191,7 +191,7 @@ int main() {
 
 		} else if(line_points.size() > 1) {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-		}
+		}g
 
 		/*float line_radiant_average = 0;
 			for (unsigned int i = 0; i < line_points.size(); ++i) {
