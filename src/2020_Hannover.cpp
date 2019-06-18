@@ -2,6 +2,7 @@
 #include "opencv2/opencv.hpp"
 #include "math.h"
 #include <sstream>
+#include <cstdio>
 
 #include "config.h"
 #include "gruen.h"
@@ -57,12 +58,36 @@ int open_new_vid(VideoCapture & cap) {
 #endif
 
 
+inline void log_timing(int64 & tlast, const char* message) {
+	cout << message << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+	tlast = getTickCount();
+}
+
 // MAIN METHODE
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	Mat img_rgb;			// input Bild
+	if(argc > 1) {
+		cerr << "cerr will be logged in: " << argv[1] << endl;
+		freopen(argv[1], "w", stderr);
+	}
+
+
+	/*
+	 * Mats for image with
+	 * colorspace rgb and hsv
+	 * binary image for line and green points
+	 */
+
+	Mat img_rgb;			// input image
+	Mat hsv;
+
+	Mat bin_sw;
+	Mat bin_gr;
+
 	int grstate;
+	vector<Point> line_points;
+
 
 	/*
 	 * Umgebungen unterscheiden durch Precompiler:
@@ -107,20 +132,20 @@ int main() {
 	namedWindow("Input", WINDOW_AUTOSIZE);
 #endif
 
+	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 
-	int motor_fd = kamelI2Copen(0x08);
-
-	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0);
+	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
 
 
-	while(1) {				// Dauerschleife
+	while(1) {
 		/*
 		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
 		 * wenn es auf dem PC läuft aus Video Array lesen
 		 */
 
-		int64 tloop = getTickCount();
-		int64 tlast = getTickCount();
+
+ 		int64 tloop = getTickCount();			// Tickcount for whole loop
+		int64 tlast = getTickCount();			// Tickcount to next measurement
 
 #ifdef ON_PI
 
@@ -137,34 +162,22 @@ int main() {
 		}
 #endif
 
-		// Bild filter anwenden
-		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);
+		// Filter image and convert to hsv
+		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);		// Gaussian blur to normalize image
+		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);		// Convert to HSV and save in Mat hsv
 
-		Mat hsv;
-		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);
-
-		std::cout << "Reading, color covert, gauss: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		tlast = getTickCount();
-
-		Mat bin_sw;
-		Mat bin_gr;
-		vector<Point> line_points;
+		log_timing(tlast, "Reading, color covert, gauss: ");
 
 		separate_gruen(hsv, bin_gr);
+		log_timing(tlast, "Green separation: ");
 
-		std::cout << "Green separation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		tlast = getTickCount();
-
+		line_points.clear();
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
-
-		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		tlast = getTickCount();
-
+		log_timing(tlast, "Line calculation: ");
 
 		grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
 
 		cout << "Gruenstate: " << grstate << " / ";
-
 		switch (grstate) {
 		case 0:
 			cout << "KEINER";
@@ -182,9 +195,7 @@ int main() {
 
 		cout << endl;
 
-		std::cout << "Green calc: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		tlast = getTickCount();
-
+		log_timing(tlast, "Green calc: ");
 
 		if(line_points.size() == 1) {
 
@@ -240,9 +251,7 @@ int main() {
 			cout << "Average: " << line_radiant_average << endl;
 		}*/
 
-		std::cout << "Motor write: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		tlast = getTickCount();
-
+		log_timing(tlast, "Motor write: ");
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
