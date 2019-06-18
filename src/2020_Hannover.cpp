@@ -191,7 +191,7 @@ int main() {
 
 		} else if(line_points.size() > 1) {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-		}g
+		}
 
 		/*float line_radiant_average = 0;
 			for (unsigned int i = 0; i < line_points.size(); ++i) {
