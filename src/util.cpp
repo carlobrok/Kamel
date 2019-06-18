@@ -29,8 +29,8 @@ void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, int & g
 	}
 }
 
-bool inMat(cv::Point p, int w, int h) {
-	if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h)
+bool inMat(cv::Point p, int cols, int rows) {
+	if (p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows)
 	{
 		return true;
 	} else {
