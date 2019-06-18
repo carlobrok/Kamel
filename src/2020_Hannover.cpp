@@ -64,17 +64,17 @@ int main() {
 	Mat img_rgb;			// input Bild
 	int grstate;
 
-/*
- * Umgebungen unterscheiden durch Precompiler:
- *
- * Pi:
- *  - CameraCapture als Videoquelle mit neuem Thread
- *  - VideoServer als Bildausgabe über IP
- *
- * PC:
- *  - VideoCapture für Videoinput
- *  - kein Videoserver, lokale Bildausgabe
- */
+	/*
+	 * Umgebungen unterscheiden durch Precompiler:
+	 *
+	 * Pi:
+	 *  - CameraCapture als Videoquelle mit neuem Thread
+	 *  - VideoServer als Bildausgabe über IP
+	 *
+	 * PC:
+	 *  - VideoCapture für Videoinput
+	 *  - kein Videoserver, lokale Bildausgabe
+	 */
 
 #ifdef ON_PI
 
@@ -151,10 +151,40 @@ int main() {
 		vector<Point> line_points;
 
 		separate_gruen(hsv, bin_gr);
+
+		std::cout << "Green separation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
+
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
 
 		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		tlast = getTickCount();
+
+
+		grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
+
+		cout << "Gruenstate: " << grstate << " / ";
+
+		switch (grstate) {
+		case 0:
+			cout << "KEINER";
+			break;
+		case 1:
+			cout << "LINKS";
+			break;
+		case 2:
+			cout << "RECHTS";
+			break;
+		case 3:
+			cout << "BEIDE";
+			break;
+		}
+
+		cout << endl;
+
+		std::cout << "Green calc: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
+
 
 		if(line_points.size() == 1) {
 
@@ -200,54 +230,33 @@ int main() {
 		}
 
 		/*float line_radiant_average = 0;
-			for (unsigned int i = 0; i < line_points.size(); ++i) {
-				float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
-				cout << "radiant of point: " << current_radiant << endl;
-				line_radiant_average += current_radiant;
-			}
-			if(line_points.size() > 0) {
-				line_radiant_average /= line_points.size();
-				cout << "Average: " << line_radiant_average << endl;
-			}*/
-
-
-
-		grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
-
-		cout << "Gruenstate: " << grstate << " / ";
-
-		switch (grstate) {
-		case 0:
-			cout << "KEINER";
-			break;
-		case 1:
-			cout << "LINKS";
-			break;
-		case 2:
-			cout << "RECHTS";
-			break;
-		case 3:
-			cout << "BEIDE";
-			break;
+		for (unsigned int i = 0; i < line_points.size(); ++i) {
+			float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
+			cout << "radiant of point: " << current_radiant << endl;
+			line_radiant_average += current_radiant;
 		}
+		if(line_points.size() > 0) {
+			line_radiant_average /= line_points.size();
+			cout << "Average: " << line_radiant_average << endl;
+		}*/
 
-		cout << endl;
-
-		std::cout << "Green calc: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		std::cout << "Motor write: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		tlast = getTickCount();
+
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
 		srv.imshow("HSV", hsv);
 		srv.imshow("Mask SW", bin_sw);
+		srv.imshow("Mask Green", bin_gr);
 		srv.update();
-
 
 
 #else
 		imshow("Input", img_rgb);
 		imshow("HSV", hsv);
 		imshow("Mask SW", bin_sw);
+		imshow("Mask Green", bin_gr);
 
 		int key = waitKey(0);
 		if(key == 'q') {
@@ -259,7 +268,7 @@ int main() {
 #endif
 
 		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl;
+		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
 	}
 
 	return -1;
