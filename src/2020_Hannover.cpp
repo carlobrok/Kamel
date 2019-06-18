@@ -172,9 +172,9 @@ int main() {
 			} else if(rad > 35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
 				this_thread::sleep_for(chrono::milliseconds(0.5));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 50);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
 			} else if(rad < -35) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 50);
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
 				this_thread::sleep_for(chrono::milliseconds(0.5));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else if(rad > 10) {
@@ -191,8 +191,6 @@ int main() {
 
 		} else if(line_points.size() > 1) {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-		} else {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0);
 		}
 
 		/*float line_radiant_average = 0;
