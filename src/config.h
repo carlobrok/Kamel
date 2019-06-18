@@ -8,6 +8,8 @@
 
 //#define DEBUG_GRUEN
 
+#define THRESH_BLACK 50
+
 #define LOWER_GREEN Scalar(50, 60, 25)
 #define UPPER_GREEN Scalar(90, 255, 115)
 

@@ -151,7 +151,7 @@ void sepatare_line(Mat & hsv, Mat & bin_sw) {
 }
 
 void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Point> & line_points) {
-	inRange(hsv, Scalar(0, 0, 0), Scalar(180, 255, 60), bin_sw);
+	inRange(hsv, Scalar(0, 0, 0), Scalar(180, 255, THRESH_BLACK), bin_sw);
 	bin_sw -= bin_gr;
 	morphologyEx(bin_sw, bin_sw, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
