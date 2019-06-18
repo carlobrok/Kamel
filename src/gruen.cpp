@@ -1,5 +1,5 @@
-#include "opencv2/opencv.hpp"
 #include "gruen.h"
+#include "util.h"
 #include "config.h"
 
 //Point gruen_center(vector <Point>, vector <Point>)
@@ -193,28 +193,33 @@ float ratio_black_points(Point & origin, Point & destination, Mat & bin_sw, Mat 
 		cur_pixel.x = origin.x + (float)i/30 * (destination.x - origin.x);
 		cur_pixel.y = origin.y + (float)i/30 * (destination.y - origin.y);
 
-		color_sw = (int)bin_sw.at<uchar>(cur_pixel);
-		color_gr = (int)bin_gr.at<uchar>(cur_pixel);
+		if(inMat(cur_pixel, bin_sw.cols, bin_sw.rows)) {
 
-		//cout << "gr_punkt: " << id << "; Pixel: " << cur_pixel << " bin_colors:  sw:" << color_sw << " gr:" << color_gr << endl;
+			color_sw = (int)bin_sw.at<uchar>(cur_pixel);
+			color_gr = (int)bin_gr.at<uchar>(cur_pixel);
 
-		if(color_sw == 255 && color_gr == 0) {
-			black_pixels++;
+			//cout << "gr_punkt: " << id << "; Pixel: " << cur_pixel << " bin_colors:  sw:" << color_sw << " gr:" << color_gr << endl;
 
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(50, 50, 50), 2);
-#endif
-		} else if(color_gr == 255) {
-			green_pixels++;
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(20, 150, 20), 2);
-#endif
+			if(color_sw == 255 && color_gr == 0) {
+				black_pixels++;
+
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(50, 50, 50), 2);
+	#endif
+			} else if(color_gr == 255) {
+				green_pixels++;
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(20, 150, 20), 2);
+	#endif
+			} else {
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(200,200,200), 2);
+	#endif
+			}
 		} else {
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(200,200,200), 2);
-#endif
+			i = NUM_ITERATIONS_BLACK_POINTS;
 		}
 	}
 
-	return (float) black_pixels / (NUM_ITERATIONS_BLACK_POINTS-1 - green_pixels);
+	return (float) black_pixels / (NUM_ITERATIONS_BLACK_POINTS - 1 - green_pixels);
 }
