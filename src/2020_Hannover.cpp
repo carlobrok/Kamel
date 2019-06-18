@@ -3,11 +3,12 @@
 #include "math.h"
 #include <sstream>
 #include <cstdio>
+#include <fstream>
 
 #include "config.h"
 #include "gruen.h"
 #include "line.h"
-
+#include "util.h"
 
 #ifdef ON_PI
 #include "CameraCapture.h"
@@ -58,20 +59,9 @@ int open_new_vid(VideoCapture & cap) {
 #endif
 
 
-inline void log_timing(int64 & tlast, const char* message) {
-	cout << message << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-	tlast = getTickCount();
-}
-
 // MAIN METHODE
 
 int main(int argc, char* argv[]) {
-
-	if(argc > 1) {
-		cerr << "cerr will be logged in: " << argv[1] << endl;
-		freopen(argv[1], "w", stderr);
-	}
-
 
 	/*
 	 * Mats for image with
@@ -216,19 +206,19 @@ int main(int argc, char* argv[]) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
-			} else if(rad > 25) {
+			} else if(rad > 20) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if(rad < -25) {
+			} else if(rad < -20) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-			} else if(rad > 10) {
+			} else if(rad > 3) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
-			} else if(rad < -10) {
+			} else if(rad < -3) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
