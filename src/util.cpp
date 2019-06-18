@@ -4,7 +4,7 @@
 bool log_to_file = false;
 std::ofstream sensorlog;
 
-void init_sensorlog(int argc, char* & argv[]) {
+void init_sensorlog(int & argc, char* & argv[]) {
 	if(argc > 1) {
 		sensorlog.open(argv[1]);
 		if(sensorlog.is_open()) {
