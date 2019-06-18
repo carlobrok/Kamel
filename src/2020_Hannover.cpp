@@ -163,7 +163,7 @@ int main() {
 			ostringstream s;
 			s << "Rad: " << rad;
 
-			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 2, Scalar(255,255,255),1);
+			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
 
 			cout << "Line radiant: " << rad << endl;
 
