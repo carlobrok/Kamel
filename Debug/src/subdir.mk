@@ -9,7 +9,8 @@ CPP_SRCS += \
 ../src/KamelI2C.cpp \
 ../src/VideoServer.cpp \
 ../src/gruen.cpp \
-../src/line.cpp 
+../src/line.cpp \
+../src/util.cpp 
 
 OBJS += \
 ./src/2020_Hannover.o \
@@ -17,7 +18,8 @@ OBJS += \
 ./src/KamelI2C.o \
 ./src/VideoServer.o \
 ./src/gruen.o \
-./src/line.o 
+./src/line.o \
+./src/util.o 
 
 CPP_DEPS += \
 ./src/2020_Hannover.d \
@@ -25,7 +27,8 @@ CPP_DEPS += \
 ./src/KamelI2C.d \
 ./src/VideoServer.d \
 ./src/gruen.d \
-./src/line.d 
+./src/line.d \
+./src/util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
