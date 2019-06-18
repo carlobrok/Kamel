@@ -167,11 +167,11 @@ int main() {
 
 			cout << "Line radiant: " << rad << endl;
 
-			if(rad > 55) {
+			if(rad > 50) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
-			} else if(rad < -55) {
+			} else if(rad < -50) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
