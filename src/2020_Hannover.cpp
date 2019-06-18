@@ -205,11 +205,11 @@ int main() {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
-			} else if(rad > 35) {
+			} else if(rad > 25) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if(rad < -35) {
+			} else if(rad < -25) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
