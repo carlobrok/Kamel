@@ -1,6 +1,7 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include "math.h"
+#include <sstream>
 
 #include "config.h"
 #include "gruen.h"
@@ -158,6 +159,11 @@ int main() {
 		if(line_points.size() == 1) {
 
 			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
+
+			ostringstream s;
+			s << "Rad: " << rad;
+
+			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 2, Scalar(255,255,255),1);
 
 			cout << "Line radiant: " << rad << endl;
 
