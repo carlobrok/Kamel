@@ -1,14 +1,14 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+// Debug defines
+
 #define ON_PI				// Wenn definiert, geht der Videooutput über den VideoServer
 #define VISUAL_DEBUG		// Wenn definiert, werden Debuglinien und Konturen in img_rgb gezeichnet
+#define LOG_FILE			// Wenn definiert, versucht das Programm alle Sensordaten in eine, Outputdatei zu loggen, wenn der Name übergeben wurde
+
 
 // Grünpunkt defines
-
-//#define DEBUG_GRUEN
-
-#define THRESH_BLACK 50
 
 #define LOWER_GREEN Scalar(50, 60, 25)
 #define UPPER_GREEN Scalar(90, 255, 115)
@@ -24,6 +24,6 @@
 // Line defines
 
 #define ELLIPSE_THICKNESS 30		// thickness of the ellipse in pixels
-
+#define THRESH_BLACK 50
 
 #endif
