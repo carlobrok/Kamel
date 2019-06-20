@@ -170,11 +170,13 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 		 * Nur 1 Grüner Punkt
 		 */
 		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
+		grcenter = gruen_center(contg[0]);
 		return;
 
 	}
 
 	grstate = GRUEN_NICHT;
+	grcenter = Point(0,0);
 	return;
 }
 
