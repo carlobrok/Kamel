@@ -10,7 +10,7 @@ inline void log_timing(int64 & tlast, const char* message) {
 
 void init_sensorlog();
 
-void log_sensordata(std::vector<cv::Point> line_points, int & grstate, int gr_center);
+void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, cv::Point & grcenter, cv::Mat & img_output);
 
 bool inMat(cv::Point p, int w, int h);
 
