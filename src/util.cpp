@@ -9,7 +9,7 @@ int log_iteration = 0;
 char* log_filename;
 std::string log_imgname;
 
-
+/*
 void init_sensorlog(int & argc, char* & argv[]) {
 	if(argc > 1) {
 		sensorlog.open(argv[1]);
@@ -28,7 +28,7 @@ void init_sensorlog(int & argc, char* & argv[]) {
 		std::cerr << "No filename given. Output sensordata to cout" << std::endl;
 		log_to_file = false;
 	}
-}
+}*/
 
 
 void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, cv::Point & grcenter, cv::Mat & img_output) {

@@ -8,7 +8,7 @@ inline void log_timing(int64 & tlast, const char* message) {
 	tlast = cv::getTickCount();
 }
 
-void init_sensorlog();
+//void init_sensorlog();
 
 void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, cv::Point & grcenter, cv::Mat & img_output);
 
