@@ -75,8 +75,9 @@ int main(int argc, char* argv[]) {
 	Mat bin_sw;
 	Mat bin_gr;
 
-	int grstate;
 	vector<Point> line_points;
+	Point grcenter;
+	int grstate;
 
 
 	/*
@@ -165,7 +166,7 @@ int main(int argc, char* argv[]) {
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
 		log_timing(tlast, "Line calculation: ");
 
-		grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
+		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, grstate, grcenter);
 
 		cout << "Gruenstate: " << grstate << " / ";
 		switch (grstate) {
@@ -181,6 +182,10 @@ int main(int argc, char* argv[]) {
 		case 3:
 			cout << "BEIDE";
 			break;
+		}
+
+		if(grstate > 0) {
+			cout << " " << grcenter;
 		}
 
 		cout << endl;
@@ -268,6 +273,8 @@ int main(int argc, char* argv[]) {
 
 		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
+
+		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
 
 	return -1;
