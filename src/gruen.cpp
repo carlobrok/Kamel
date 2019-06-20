@@ -2,7 +2,16 @@
 #include "util.h"
 #include "config.h"
 
-//Point gruen_center(vector <Point>, vector <Point>)
+Point gruen_center(vector <Point> cont1, vector <Point> cont2) {
+	Moments m1 = moments(cont1);
+	Moments m2 = moments(cont2);
+
+	return Point((m1.m10 / m1.m00 + m2.m10 / m2.m00) / 2, (m1.m01 / m1.m00 + m2.m01 / m2.m00) / 2);
+}
+
+Point gruen_center(Point p1, Point p2) {
+	return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+}
 
 Point gruen_center(vector<Point> contour) {
 	Moments m = moments(contour);
@@ -67,9 +76,10 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> 
 	return GRUEN_NICHT;
 }
 
-int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
+void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, Point & grcenter) {
 
 	vector< vector<Point> > contg;
+
 	//morphologyEx(img_bingr, img_bingr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 	findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
@@ -89,7 +99,6 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 		/*
 		 * Mehr als 1 Grüner Punkt
 		 */
-
 
 		for(unsigned int i = 0; i < contg.size()-1; i++) {
 			Moments m1 = moments(contg[i]), m2 = moments(contg[i+1]);
@@ -129,7 +138,9 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 #endif
 
 					if(ratio_left_point > 0.4 && ratio_right_point > 0.4) {
-						return GRUEN_BEIDE;
+						grstate = GRUEN_BEIDE;
+						grcenter = gruen_center(p1_new, p2_new);
+						return;
 					}
 				}
 			}
@@ -137,6 +148,7 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 
 		int index_nearest = 0;
 		double nearest_distance = -1;
+		Point nearest_point;
 
 		for(unsigned int i = 0; i < contg.size(); i++) {
 			Point center = gruen_center(contg[i]);
@@ -145,20 +157,25 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 			if(distance_to_point < nearest_distance || nearest_distance == -1) {
 				nearest_distance = distance_to_point;
 				index_nearest = i;
+				nearest_point = center;
 			}
 		}
 
-		return gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]);
+		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]);
+		grcenter = nearest_point;
+		return;
 
 	} else if(contg.size() == 1){
 		/*
 		 * Nur 1 Grüner Punkt
 		 */
-		return gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
+		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
+		return;
 
 	}
 
-	return GRUEN_NICHT;
+	grstate = GRUEN_NICHT;
+	return;
 }
 
 
