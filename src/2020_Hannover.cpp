@@ -20,6 +20,9 @@
 
 using namespace std;
 using namespace cv;
+using this_thread::sleep_for;
+using chrono::milliseconds;
+using chrono::seconds;
 
 #ifndef ON_PI
 #define VIDEO_NAME video_name[vid_name_idx]
@@ -59,6 +62,128 @@ int open_new_vid(VideoCapture & cap) {
 #endif
 
 
+Mat img_rgb;			// input image
+
+vector<Point> line_points;
+Point grcenter(0,0);
+int grstate = GRUEN_NICHT;
+bool camera_ready = false;
+
+void drive() {
+
+	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
+
+	do {
+		this_thread::sleep_for(chrono::milliseconds(50));
+	} while(!camera_ready);
+	this_thread::sleep_for(chrono::milliseconds(250));
+
+	while(1) {
+
+		if(grstate > 0 && line_points.size() > 0) {
+
+			// Ein Grünpunkt vorhanden
+
+
+			// An Grünpunkt ausrichten
+			if(grcenter.x < img_rgb.cols/2) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
+			} else if(grcenter.x > img_rgb.cols/2) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+			}
+
+			// Grünpunkt fahren wenn nah genug, ansonsten zurück fahren
+			if(grcenter.y > img_rgb.rows - 150 && (grcenter.x > img_rgb.cols/2 - 100 || grcenter.x < img_rgb.cols/2 + 100)) {
+
+				// Grünpunkt fahren
+
+				if(grstate == GRUEN_LINKS) {
+					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+					this_thread::sleep_for(chrono::microseconds(500));
+					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
+					this_thread::sleep_for(chrono::microseconds(2000));
+
+				} else if(grstate == GRUEN_RECHTS) {
+					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+					this_thread::sleep_for(chrono::microseconds(500));
+					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+					this_thread::sleep_for(chrono::microseconds(2000));
+				}
+
+			} else if(grcenter.y > img_rgb.rows - 150) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 200);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 200);
+				this_thread::sleep_for(chrono::milliseconds(1500));
+			}
+
+
+		} else if(line_points.size() == 1) {
+
+			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
+
+//			ostringstream s;
+//			s << "Rad: " << rad;
+
+//			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
+
+			cout << "Line radiant: " << rad << endl;
+
+			if(rad > 50) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
+			} else if(rad < -50) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+			} else if(rad > 20) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+			} else if(rad < -20) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+			} else if(rad > 3) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
+			} else if(rad < -3) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+			}
+
+		} else if(line_points.size() > 1) {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+		}
+
+		/*float line_radiant_average = 0;
+		for (unsigned int i = 0; i < line_points.size(); ++i) {
+			float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
+			cout << "radiant of point: " << current_radiant << endl;
+			line_radiant_average += current_radiant;
+		}
+		if(line_points.size() > 0) {
+			line_radiant_average /= line_points.size();
+			cout << "Average: " << line_radiant_average << endl;
+		}*/
+
+//		log_timing(tlast, "Motor write: ");
+
+		this_thread::sleep_for(chrono::milliseconds(2));
+
+	}
+}
+
 // MAIN METHODE
 
 int main(int argc, char* argv[]) {
@@ -69,16 +194,10 @@ int main(int argc, char* argv[]) {
 	 * binary image for line and green points
 	 */
 
-	Mat img_rgb;			// input image
 	Mat hsv;
 
 	Mat bin_sw;
 	Mat bin_gr;
-
-	vector<Point> line_points;
-	Point grcenter;
-	int grstate;
-
 
 	/*
 	 * Umgebungen unterscheiden durch Precompiler:
@@ -91,6 +210,8 @@ int main(int argc, char* argv[]) {
 	 *  - VideoCapture für Videoinput
 	 *  - kein Videoserver, lokale Bildausgabe
 	 */
+
+	thread fahren(drive);
 
 #ifdef ON_PI
 
@@ -123,11 +244,7 @@ int main(int argc, char* argv[]) {
 	namedWindow("Input", WINDOW_AUTOSIZE);
 #endif
 
-	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
-
-	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
-
-
+	camera_ready = true;
 	while(1) {
 		/*
 		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
@@ -135,7 +252,7 @@ int main(int argc, char* argv[]) {
 		 */
 
 
- 		int64 tloop = getTickCount();			// Tickcount for whole loop
+		int64 tloop = getTickCount();			// Tickcount for whole loop
 		int64 tlast = getTickCount();			// Tickcount to next measurement
 
 #ifdef ON_PI
@@ -192,61 +309,6 @@ int main(int argc, char* argv[]) {
 
 		log_timing(tlast, "Green calc: ");
 
-		if(line_points.size() == 1) {
-
-			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
-
-			ostringstream s;
-			s << "Rad: " << rad;
-
-			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
-
-			cout << "Line radiant: " << rad << endl;
-
-			if(rad > 50) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
-			} else if(rad < -50) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
-			} else if(rad > 20) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if(rad < -20) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-			} else if(rad > 3) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
-			} else if(rad < -3) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-			} else {
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-			}
-
-		} else if(line_points.size() > 1) {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-		}
-
-		/*float line_radiant_average = 0;
-		for (unsigned int i = 0; i < line_points.size(); ++i) {
-			float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
-			cout << "radiant of point: " << current_radiant << endl;
-			line_radiant_average += current_radiant;
-		}
-		if(line_points.size() > 0) {
-			line_radiant_average /= line_points.size();
-			cout << "Average: " << line_radiant_average << endl;
-		}*/
-
-		log_timing(tlast, "Motor write: ");
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
@@ -274,7 +336,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
 
-//		log_sensordata(line_points, grstate, grcenter, img_rgb);
+		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
 
 	return -1;
