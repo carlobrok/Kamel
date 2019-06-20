@@ -44,7 +44,7 @@ void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, cv::Poi
 
 		std::string img_name = log_imgname;
 		std::size_t found = img_name.find("%n");
-		img_name.replace(found, found+1, std::string(log_iteration));
+		img_name.replace(found, found+1, std::to_string(log_iteration));
 
 		sensorlog << " " << img_name << std::endl;
 		cv::imwrite(img_name, img_output);

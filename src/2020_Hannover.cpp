@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
 		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
 
-		log_sensordata(line_points, grstate, grcenter, img_rgb);
+//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
 
 	return -1;
