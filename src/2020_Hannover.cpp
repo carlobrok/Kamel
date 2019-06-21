@@ -61,18 +61,13 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
+/*
 
-Mat img_rgb;			// input image
-
-vector<Point> line_points;
-Point grcenter(0,0);
-int grstate = GRUEN_NICHT;
 bool camera_ready = false;
 
 void drive() {
 
-	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
-	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
+
 
 	do {
 		this_thread::sleep_for(chrono::milliseconds(50));
@@ -81,92 +76,66 @@ void drive() {
 
 	while(1) {
 
-		if(grstate > 0 && line_points.size() > 0) {
+		if(grstate != GRUEN_NICHT) {
 
 			// Ein Grünpunkt vorhanden
 
+			// Offset, damit der Roboter sich auf die mitte der Kreuzung ausrichtet, nicht gerade auf den grünen Punkt
+			int gr_offset = 0;
+			if(grstate == GRUEN_LINKS) {
+				gr_offset = 50;
+			} else if(grstate == GRUEN_RECHTS) {
+				gr_offset = -50;
+			}
 
 			// An Grünpunkt ausrichten
-			if(grcenter.x < img_rgb.cols/2) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+			if(grcenter.x + gr_offset < img_rgb.cols/2) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 110);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
-			} else if(grcenter.x > img_rgb.cols/2) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+			} else if(grcenter.x + gr_offset > img_rgb.cols/2) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 110);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+			} else {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 80);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 80);
 			}
 
 			// Grünpunkt fahren wenn nah genug, ansonsten zurück fahren
-			if(grcenter.y > img_rgb.rows - 150 && (grcenter.x > img_rgb.cols/2 - 100 || grcenter.x < img_rgb.cols/2 + 100)) {
+			if(grcenter.y > img_rgb.rows / 3 /* && grcenter.x > img_rgb.cols/2 - 200 && grcenter.x < img_rgb.cols/2 + 200*/) {
 
 				// Grünpunkt fahren
 
 				if(grstate == GRUEN_LINKS) {
-					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
 					this_thread::sleep_for(chrono::microseconds(500));
 					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
-					this_thread::sleep_for(chrono::microseconds(2000));
+					this_thread::sleep_for(chrono::microseconds(1500));
+
+					cout << "GR_LINKS FAHREN!" << endl;
 
 				} else if(grstate == GRUEN_RECHTS) {
-					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
 					this_thread::sleep_for(chrono::microseconds(500));
 					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
-					this_thread::sleep_for(chrono::microseconds(2000));
+					this_thread::sleep_for(chrono::microseconds(1500));
+
+					cout << "GR_RECHTS FAHREN!" << endl;
 				}
 
-			} else if(grcenter.y > img_rgb.rows - 150) {
+			}/* else if(grcenter.y > img_rgb.rows / 2) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 200);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 200);
 				this_thread::sleep_for(chrono::milliseconds(1500));
-			}
+			}*/
 
 
-		} else if(line_points.size() == 1) {
+		} else
 
-			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
-
-//			ostringstream s;
-//			s << "Rad: " << rad;
-
-//			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
-
-			cout << "Line radiant: " << rad << endl;
-
-			if(rad > 50) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
-			} else if(rad < -50) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
-			} else if(rad > 20) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if(rad < -20) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-			} else if(rad > 3) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
-			} else if(rad < -3) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-			} else {
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-			}
-
-		} else if(line_points.size() > 1) {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-		}
-
-		/*float line_radiant_average = 0;
+			/*float line_radiant_average = 0;
 		for (unsigned int i = 0; i < line_points.size(); ++i) {
 			float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
 			cout << "radiant of point: " << current_radiant << endl;
@@ -177,9 +146,9 @@ void drive() {
 			cout << "Average: " << line_radiant_average << endl;
 		}*/
 
-//		log_timing(tlast, "Motor write: ");
+			//		log_timing(tlast, "Motor write: ");
 
-		this_thread::sleep_for(chrono::milliseconds(2));
+			this_thread::sleep_for(chrono::milliseconds(2));
 
 	}
 }
@@ -194,10 +163,22 @@ int main(int argc, char* argv[]) {
 	 * binary image for line and green points
 	 */
 
+
+	Mat img_rgb;			// input image
+
 	Mat hsv;
 
 	Mat bin_sw;
 	Mat bin_gr;
+
+	vector<Point> line_points;
+	Point grcenter(0,0);
+	int grstate = GRUEN_NICHT;
+
+
+	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
+
 
 	/*
 	 * Umgebungen unterscheiden durch Precompiler:
@@ -308,6 +289,86 @@ int main(int argc, char* argv[]) {
 		cout << endl;
 
 		log_timing(tlast, "Green calc: ");
+
+
+		if(line_points.size() == 1) {
+
+			if (line_points[1].x > 575) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 180);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 180);
+			} else if (line_points[1].x < 65) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 180);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 180);
+			} else if (line_points[1].x > 500) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+			} else if (line_points[1].x < 140) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+			} else if (line_points[1].x > 400) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 10);
+			} else if (line_points[1].x < 240) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 10);
+			} else if (line_points[1].x > 340) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+			} else if (line_points[1].x < 300) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+			}
+
+			/*float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
+
+					//			ostringstream s;
+					//			s << "Rad: " << rad;
+
+					//			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
+
+					//			cout << "Line radiant: " << rad << endl;
+
+					if(rad > 50) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
+					} else if(rad < -50) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+					} else if(rad > 20) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+					} else if(rad < -20) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+					} else if(rad > 3) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
+					} else if(rad < -3) {
+						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
+						this_thread::sleep_for(chrono::microseconds(500));
+						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+					} else {
+						writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+					}*/
+
+		} else {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+		}
 
 
 #ifdef ON_PI
