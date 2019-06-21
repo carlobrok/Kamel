@@ -57,7 +57,7 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> 
 	Point top_checkpoint = mittegr;
 	top_checkpoint.y -= point_distance;
 
-	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.6) {
+	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.5) {
 		Point left_checkpoint = mittegr;
 		Point right_checkpoint = mittegr;
 		left_checkpoint.x -= point_distance;

@@ -24,6 +24,6 @@
 // Line defines
 
 #define ELLIPSE_THICKNESS 30		// thickness of the ellipse in pixels
-#define THRESH_BLACK 50
+#define THRESH_BLACK 70
 
 #endif
