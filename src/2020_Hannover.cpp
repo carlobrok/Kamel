@@ -61,97 +61,6 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
-/*
-
-bool camera_ready = false;
-
-void drive() {
-
-
-
-	do {
-		this_thread::sleep_for(chrono::milliseconds(50));
-	} while(!camera_ready);
-	this_thread::sleep_for(chrono::milliseconds(250));
-
-	while(1) {
-
-		if(grstate != GRUEN_NICHT) {
-
-			// Ein Grünpunkt vorhanden
-
-			// Offset, damit der Roboter sich auf die mitte der Kreuzung ausrichtet, nicht gerade auf den grünen Punkt
-			int gr_offset = 0;
-			if(grstate == GRUEN_LINKS) {
-				gr_offset = 50;
-			} else if(grstate == GRUEN_RECHTS) {
-				gr_offset = -50;
-			}
-
-			// An Grünpunkt ausrichten
-			if(grcenter.x + gr_offset < img_rgb.cols/2) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 110);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
-			} else if(grcenter.x + gr_offset > img_rgb.cols/2) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 110);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
-			} else {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 80);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 80);
-			}
-
-			// Grünpunkt fahren wenn nah genug, ansonsten zurück fahren
-			if(grcenter.y > img_rgb.rows / 3 /* && grcenter.x > img_rgb.cols/2 - 200 && grcenter.x < img_rgb.cols/2 + 200*/) {
-
-				// Grünpunkt fahren
-
-				if(grstate == GRUEN_LINKS) {
-					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 200);
-					this_thread::sleep_for(chrono::microseconds(500));
-					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
-					this_thread::sleep_for(chrono::microseconds(1500));
-
-					cout << "GR_LINKS FAHREN!" << endl;
-
-				} else if(grstate == GRUEN_RECHTS) {
-					writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 200);
-					this_thread::sleep_for(chrono::microseconds(500));
-					writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
-					this_thread::sleep_for(chrono::microseconds(1500));
-
-					cout << "GR_RECHTS FAHREN!" << endl;
-				}
-
-			}/* else if(grcenter.y > img_rgb.rows / 2) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 200);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 200);
-				this_thread::sleep_for(chrono::milliseconds(1500));
-			}*/
-
-
-		} else
-
-			/*float line_radiant_average = 0;
-		for (unsigned int i = 0; i < line_points.size(); ++i) {
-			float current_radiant = atan2(line_points[i].y - img_rgb.rows, line_points[i].x - img_rgb.cols/2)  * 180 / CV_PI + 90;
-			cout << "radiant of point: " << current_radiant << endl;
-			line_radiant_average += current_radiant;
-		}
-		if(line_points.size() > 0) {
-			line_radiant_average /= line_points.size();
-			cout << "Average: " << line_radiant_average << endl;
-		}*/
-
-			//		log_timing(tlast, "Motor write: ");
-
-			this_thread::sleep_for(chrono::milliseconds(2));
-
-	}
-}
 
 // MAIN METHODE
 
@@ -192,8 +101,6 @@ int main(int argc, char* argv[]) {
 	 *  - kein Videoserver, lokale Bildausgabe
 	 */
 
-	thread fahren(drive);
-
 #ifdef ON_PI
 
 	CameraCapture cam(0);
@@ -225,7 +132,6 @@ int main(int argc, char* argv[]) {
 	namedWindow("Input", WINDOW_AUTOSIZE);
 #endif
 
-	camera_ready = true;
 	while(1) {
 		/*
 		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
