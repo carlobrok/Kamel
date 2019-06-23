@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstdio>
 #include <fstream>
+#include <mutex>
 
 #include "config.h"
 #include "gruen.h"
@@ -26,8 +27,7 @@ vector<Point> line_points;
 Point grcenter(0,0);
 int grstate = GRUEN_NICHT;
 
-
-
+mutex mutex_linepoints;
 
 
 #ifndef ON_PI
@@ -72,11 +72,13 @@ void drive() {
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
 
-	Point last_line_point = Point(0,0);
+	vector<Point> last_line_points = line_points;
 
 	while(1) {
 
 		//		cout << "In thread" << endl;
+
+		mutex_linepoints.lock();
 
 		if(line_points.size() == 1) {
 //			cout << "Different value -> check motor output for line" << endl;
@@ -117,11 +119,53 @@ void drive() {
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 			}
 
-			last_line_point = line_points[0];
+		} else if(line_points.size() == 0 && last_line_points.size() == 1) {
+			cout << "Lost line last:" << last_line_points << "  current:" << line_points;
 
+			if (last_line_points[0].x > 575) {
+				cout << "  correction right" << endl;
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 120);
+
+				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x > img_rgb.cols / 2 + 100)) {
+					mutex_linepoints.unlock();
+					this_thread::sleep_for(chrono::milliseconds(10));
+					mutex_linepoints.lock();
+				}
+
+				mutex_linepoints.unlock();
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+				this_thread::sleep_for(chrono::milliseconds(500));
+				mutex_linepoints.lock();
+
+			} else if (last_line_points[0].x < 65) {
+				cout << "  correction left" << endl;
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 120);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x < img_rgb.cols / 2 - 100)) {
+					mutex_linepoints.unlock();
+					this_thread::sleep_for(chrono::milliseconds(10));
+					mutex_linepoints.lock();
+				}
+
+				mutex_linepoints.unlock();
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+				this_thread::sleep_for(chrono::milliseconds(500));
+				mutex_linepoints.lock();
+
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+				cout << endl;
+			}
 		} else {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 		}
+
+		last_line_points = line_points;
+		mutex_linepoints.unlock();
+
 		this_thread::sleep_for(chrono::milliseconds(5));
 	}
 }
@@ -221,18 +265,25 @@ int main(int argc, char* argv[]) {
 		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);		// Gaussian blur to normalize image
 		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);		// Convert to HSV and save in Mat hsv
 
-		log_timing(tlast, "Reading, color covert, gauss: ");
+//		log_timing(tlast, "Reading, color covert, gauss: ");
 
 		separate_gruen(hsv, bin_gr);
-		log_timing(tlast, "Green separation: ");
+//		log_timing(tlast, "Green separation: ");
 
-		line_points.clear();
-		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
-		log_timing(tlast, "Line calculation: ");
+		vector<Point> m_line_points;
+
+		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);
+
+		mutex_linepoints.lock();
+		line_points = m_line_points;
+		mutex_linepoints.unlock();
+
+
+//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, grstate, grcenter);
 
-		cout << "Gruenstate: " << grstate << " / ";
+		/*cout << "Gruenstate: " << grstate << " / ";
 		switch (grstate) {
 		case 0:
 			cout << "KEINER";
@@ -252,9 +303,9 @@ int main(int argc, char* argv[]) {
 			cout << " " << grcenter;
 		}
 
-		cout << endl;
+		cout << endl;*/
 
-		log_timing(tlast, "Green calc: ");
+//		log_timing(tlast, "Green calc: ");
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
@@ -279,8 +330,8 @@ int main(int argc, char* argv[]) {
 		}
 #endif
 
-		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
+//		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+//		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
 
 		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
