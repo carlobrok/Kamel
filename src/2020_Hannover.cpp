@@ -84,9 +84,9 @@ void drive() {
 //			cout << "Different value -> check motor output for line" << endl;
 
 			if (line_points[0].x > 575) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 190);
 				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 190);
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 160);
 			} else if (line_points[0].x < 65) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
