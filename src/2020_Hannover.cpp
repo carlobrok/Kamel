@@ -17,12 +17,18 @@
 #endif
 
 
-
 using namespace std;
 using namespace cv;
-using this_thread::sleep_for;
-using chrono::milliseconds;
-using chrono::seconds;
+
+Mat img_rgb;			// input image
+
+vector<Point> line_points;
+Point grcenter(0,0);
+int grstate = GRUEN_NICHT;
+
+
+
+
 
 #ifndef ON_PI
 #define VIDEO_NAME video_name[vid_name_idx]
@@ -61,6 +67,66 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
+void drive() {
+
+	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
+
+	Point last_line_point = Point(0,0);
+
+	while(1) {
+
+		//		cout << "In thread" << endl;
+
+		if(line_points.size() == 1) {
+//			cout << "Different value -> check motor output for line" << endl;
+
+			if (line_points[0].x > 575) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 190);
+			} else if (line_points[0].x < 65) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 190);
+			} else if (line_points[0].x > 500) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+			} else if (line_points[0].x < 140) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+			} else if (line_points[0].x > 400) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 10);
+			} else if (line_points[0].x < 240) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 10);
+			} else if (line_points[0].x > 340) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+			} else if (line_points[0].x < 300) {
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+				this_thread::sleep_for(chrono::microseconds(500));
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+			}
+
+			last_line_point = line_points[0];
+
+		} else {
+			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+		}
+		this_thread::sleep_for(chrono::milliseconds(5));
+	}
+}
+
+
 
 // MAIN METHODE
 
@@ -72,22 +138,10 @@ int main(int argc, char* argv[]) {
 	 * binary image for line and green points
 	 */
 
-
-	Mat img_rgb;			// input image
-
 	Mat hsv;
 
 	Mat bin_sw;
 	Mat bin_gr;
-
-	vector<Point> line_points;
-	Point grcenter(0,0);
-	int grstate = GRUEN_NICHT;
-
-
-	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
-	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
-
 
 	/*
 	 * Umgebungen unterscheiden durch Precompiler:
@@ -131,6 +185,12 @@ int main(int argc, char* argv[]) {
 	namedWindow("HSV", WINDOW_AUTOSIZE);
 	namedWindow("Input", WINDOW_AUTOSIZE);
 #endif
+
+
+	thread drive_thread(drive);
+	//	drive_thread.join();
+
+	cout << "After thread start" << endl;
 
 	while(1) {
 		/*
@@ -195,87 +255,6 @@ int main(int argc, char* argv[]) {
 		cout << endl;
 
 		log_timing(tlast, "Green calc: ");
-
-
-		if(line_points.size() == 1) {
-
-			if (line_points[1].x > 575) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 180);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 180);
-			} else if (line_points[1].x < 65) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 180);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 180);
-			} else if (line_points[1].x > 500) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if (line_points[1].x < 140) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-			} else if (line_points[1].x > 400) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 10);
-			} else if (line_points[1].x < 240) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 10);
-			} else if (line_points[1].x > 340) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
-			} else if (line_points[1].x < 300) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
-			} else {
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-			}
-
-			/*float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
-
-					//			ostringstream s;
-					//			s << "Rad: " << rad;
-
-					//			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
-
-					//			cout << "Line radiant: " << rad << endl;
-
-					if(rad > 50) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
-					} else if(rad < -50) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
-					} else if(rad > 20) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-					} else if(rad < -20) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-					} else if(rad > 3) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
-					} else if(rad < -3) {
-						writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-						this_thread::sleep_for(chrono::microseconds(500));
-						writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
-					} else {
-						writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-					}*/
-
-		} else {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-		}
-
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
