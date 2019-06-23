@@ -15,7 +15,6 @@
 #endif
 
 
-
 using namespace std;
 using namespace cv;
 
@@ -199,27 +198,27 @@ int main() {
 
 			if(rad > 50) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
 			} else if(rad < -50) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
 			} else if(rad > 35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
 			} else if(rad < -35) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else if(rad > 10) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
 			} else if(rad < -10) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
-				this_thread::sleep_for(chrono::microseconds(500));
+				this_thread::sleep_for(chrono::microseconds(750));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
 			} else {
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
