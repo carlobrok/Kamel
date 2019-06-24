@@ -19,11 +19,11 @@ Stephan Swiatek
 #### Sensors
 * Raspberry Camera v2.1
 * Sharp infrared distance sensor
-* ![Sparkfun 9DoF Razor IMU](https://www.sparkfun.com/products/14001)
+* [Sparkfun 9DoF Razor IMU](https://www.sparkfun.com/products/14001)
 
 #### Motordriver
 * [Dual MC33926 Motor Driver Carrier](https://www.pololu.com/product/1213)
 
 #### Motors
 
-* ![V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
+* [V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
