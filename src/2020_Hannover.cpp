@@ -80,7 +80,48 @@ void drive() {
 
 		mutex_linepoints.lock();
 
-		if(line_points.size() == 1) {
+		if (grstate == GRUEN_BEIDE) {
+
+			int64 last_gruen = getTickCount();
+			mutex_linepoints.unlock();
+			while (grstate != GRUEN_NICHT) {
+				if (grcenter.y > 350) {
+					vor(180);
+					delay(500);
+
+					/*motorLeft(false, 150);
+		        motorRight(true, 150);
+		        delay(3000);*/
+
+					turn_angle(180, ypr[2]);
+					aus();
+					delay_data(500);
+
+					break;
+				} else if (grcenter.x < 310) {
+					motorLeft();
+					motorRight(true, 90);
+				} else if (grcenter.x > 330) {
+					motorLeft(true, 90);
+					motorRight();
+				} else {
+					vor(50);
+				}
+			}
+			mutex_linepoints.lock();
+		} else if (grstate == GRUEN_LINKS && getGrPointY() > 480 - 150) {
+			vor(150);
+			delay(300);
+			motorLeft(false, 190);
+			motorRight(true, 150);
+			delay_data(500);
+		} else if (grstate == GRUEN_RECHTS && getGrPointY() > 480 - 150) {
+			vor(150);
+			delay(300);
+			motorRight(false, 190);
+			motorLeft(true, 150);
+			delay_data(500);
+		} else if(line_points.size() == 1) {
 //			cout << "Different value -> check motor output for line" << endl;
 
 			if (line_points[0].x > 575) {
@@ -130,13 +171,14 @@ void drive() {
 
 				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x > img_rgb.cols / 2 + 100)) {
 					mutex_linepoints.unlock();
-					this_thread::sleep_for(chrono::milliseconds(10));
+					this_thread::sleep_for(chrono::milliseconds(5));
 					mutex_linepoints.lock();
 				}
 
 				mutex_linepoints.unlock();
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
 				this_thread::sleep_for(chrono::milliseconds(500));
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
 				mutex_linepoints.lock();
 
 			} else if (last_line_points[0].x < 65) {
@@ -146,13 +188,14 @@ void drive() {
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
 				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x < img_rgb.cols / 2 - 100)) {
 					mutex_linepoints.unlock();
-					this_thread::sleep_for(chrono::milliseconds(10));
+					this_thread::sleep_for(chrono::milliseconds(5));
 					mutex_linepoints.lock();
 				}
 
 				mutex_linepoints.unlock();
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
 				this_thread::sleep_for(chrono::milliseconds(500));
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
 				mutex_linepoints.lock();
 
 			} else {
