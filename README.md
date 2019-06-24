@@ -1,15 +1,15 @@
-# KamelPi
+# Kamel Documentation
 
-### Team members 
+## Team members 
 
 Björn Ellwert, 
 Carlo Brokering, 
 Jamal Salif, 
 Stephan Swiatek
 
-### Images
+## Images
 
-### Roboter parts
+## Roboter parts
 
 #### Microcontroller
 
@@ -19,14 +19,11 @@ Stephan Swiatek
 #### Sensors
 * Raspberry Camera v2.1
 * Sharp infrared distance sensor
-* Tilt sensor
+* ![Sparkfun 9DoF Razor IMU](https://www.sparkfun.com/products/14001)
 
 #### Motordriver
-
+* [Dual MC33926 Motor Driver Carrier](https://www.pololu.com/product/1213)
 
 #### Motors
 
-* 
-* ling ling motors corporation
-
-
+* ![V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
