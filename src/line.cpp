@@ -1,7 +1,8 @@
 #include "opencv2/opencv.hpp"
-#include "line.h"
 #include "config.h"
 #include "math.h"
+
+#include "line.h"
 #include "util.h"
 
 Mat bin_ellipse;

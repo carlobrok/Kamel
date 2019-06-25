@@ -27,7 +27,8 @@ vector<Point> line_points;
 Point grcenter(0,0);
 int grstate = GRUEN_NICHT;
 
-mutex mutex_linepoints;
+mutex line_mutex;
+mutex green_mutex;
 
 
 #ifndef ON_PI
@@ -72,18 +73,36 @@ void drive() {
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
 
+
+	unique_lock<mutex> line_lock(line_mutex);
+	vector<Point> m_line_points = line_points;
 	vector<Point> last_line_points = line_points;
+	line_lock.unlock();
+
+	unique_lock<mutex> green_lock(line_mutex);
+	Point m_grcenter = grcenter;
+	int m_grstate = GRUEN_NICHT;
+	green_lock.unlock();
+
 
 	while(1) {
 
 		//		cout << "In thread" << endl;
 
-		mutex_linepoints.lock();
+		line_lock.lock();
+		green_lock.lock();
 
-		if (grstate == GRUEN_BEIDE) {
+		m_line_points = line_points;
+		m_grstate = grstate;
+		m_grcenter = grcenter;
+
+		line_lock.unlock();
+		green_lock.unlock();
+
+
+		if (m_grstate == GRUEN_BEIDE) {
 
 			int64 last_gruen = getTickCount();
-			mutex_linepoints.unlock();
 			while (grstate != GRUEN_NICHT) {
 				if (grcenter.y > 350) {
 					vor(180);
@@ -108,51 +127,50 @@ void drive() {
 					vor(50);
 				}
 			}
-			mutex_linepoints.lock();
-		} else if (grstate == GRUEN_LINKS && getGrPointY() > 480 - 150) {
+		} else if (m_grstate == GRUEN_LINKS && grcenter.y > 480 - 150) {
 			vor(150);
 			delay(300);
 			motorLeft(false, 190);
 			motorRight(true, 150);
 			delay_data(500);
-		} else if (grstate == GRUEN_RECHTS && getGrPointY() > 480 - 150) {
+		} else if (m_grstate == GRUEN_RECHTS && grcenter.y > 480 - 150) {
 			vor(150);
 			delay(300);
 			motorRight(false, 190);
 			motorLeft(true, 150);
 			delay_data(500);
-		} else if(line_points.size() == 1) {
-//			cout << "Different value -> check motor output for line" << endl;
+		} else if(m_line_points.size() == 1) {
+			//			cout << "Different value -> check motor output for line" << endl;
 
-			if (line_points[0].x > 575) {
+			if (m_line_points[0].x > 575) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 190);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 160);
-			} else if (line_points[0].x < 65) {
+			} else if (m_line_points[0].x < 65) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 190);
-			} else if (line_points[0].x > 500) {
+			} else if (m_line_points[0].x > 500) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
-			} else if (line_points[0].x < 140) {
+			} else if (m_line_points[0].x < 140) {
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
-			} else if (line_points[0].x > 400) {
+			} else if (m_line_points[0].x > 400) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 10);
-			} else if (line_points[0].x < 240) {
+			} else if (m_line_points[0].x < 240) {
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 10);
-			} else if (line_points[0].x > 340) {
+			} else if (m_line_points[0].x > 340) {
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
-			} else if (line_points[0].x < 300) {
+			} else if (m_line_points[0].x < 300) {
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
@@ -160,8 +178,8 @@ void drive() {
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 			}
 
-		} else if(line_points.size() == 0 && last_line_points.size() == 1) {
-			cout << "Lost line last:" << last_line_points << "  current:" << line_points;
+		} else if(m_line_points.size() == 0 && last_line_points.size() == 1) {
+			cout << "Lost line last:" << last_line_points << "  current:" << m_line_points;
 
 			if (last_line_points[0].x > 575) {
 				cout << "  correction right" << endl;
@@ -169,34 +187,26 @@ void drive() {
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 120);
 
-				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x > img_rgb.cols / 2 + 100)) {
-					mutex_linepoints.unlock();
+				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
 					this_thread::sleep_for(chrono::milliseconds(5));
-					mutex_linepoints.lock();
 				}
 
-				mutex_linepoints.unlock();
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
 				this_thread::sleep_for(chrono::milliseconds(500));
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
-				mutex_linepoints.lock();
 
 			} else if (last_line_points[0].x < 65) {
 				cout << "  correction left" << endl;
 				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 120);
 				this_thread::sleep_for(chrono::microseconds(500));
 				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				while(line_points.size() == 0 || (line_points.size() == 1 && line_points[0].x < img_rgb.cols / 2 - 100)) {
-					mutex_linepoints.unlock();
+				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
 					this_thread::sleep_for(chrono::milliseconds(5));
-					mutex_linepoints.lock();
 				}
 
-				mutex_linepoints.unlock();
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
 				this_thread::sleep_for(chrono::milliseconds(500));
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
-				mutex_linepoints.lock();
 
 			} else {
 				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
@@ -206,18 +216,13 @@ void drive() {
 			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 		}
 
-		last_line_points = line_points;
-		mutex_linepoints.unlock();
-
+		last_line_points = m_line_points;
 		this_thread::sleep_for(chrono::milliseconds(5));
 	}
 }
 
 
-
-// MAIN METHODE
-
-int main(int argc, char* argv[]) {
+void image_processing() {
 
 	/*
 	 * Mats for image with
@@ -226,9 +231,9 @@ int main(int argc, char* argv[]) {
 	 */
 
 	Mat hsv;
-
 	Mat bin_sw;
 	Mat bin_gr;
+
 
 	/*
 	 * Umgebungen unterscheiden durch Precompiler:
@@ -241,6 +246,7 @@ int main(int argc, char* argv[]) {
 	 *  - VideoCapture für Videoinput
 	 *  - kein Videoserver, lokale Bildausgabe
 	 */
+
 
 #ifdef ON_PI
 
@@ -273,22 +279,17 @@ int main(int argc, char* argv[]) {
 	namedWindow("Input", WINDOW_AUTOSIZE);
 #endif
 
-
-	thread drive_thread(drive);
-	//	drive_thread.join();
-
-	cout << "After thread start" << endl;
+	vector<Point> m_line_points;
+	Point m_grcenter(0,0);
+	int m_grstate = GRUEN_NICHT;
 
 	while(1) {
+		int64 tloop = getTickCount();			// Tickcount for whole loop
+
 		/*
 		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
 		 * wenn es auf dem PC läuft aus Video Array lesen
 		 */
-
-
-		int64 tloop = getTickCount();			// Tickcount for whole loop
-		int64 tlast = getTickCount();			// Tickcount to next measurement
-
 #ifdef ON_PI
 
 		while(!cam.read(img_rgb)){}
@@ -308,47 +309,50 @@ int main(int argc, char* argv[]) {
 		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);		// Gaussian blur to normalize image
 		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);		// Convert to HSV and save in Mat hsv
 
-//		log_timing(tlast, "Reading, color covert, gauss: ");
+		//		log_timing(tlast, "Reading, color covert, gauss: ");
 
 		separate_gruen(hsv, bin_gr);
-//		log_timing(tlast, "Green separation: ");
-
-		vector<Point> m_line_points;
+		//		log_timing(tlast, "Green separation: ");
 
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);
 
-		mutex_linepoints.lock();
+		unique_lock<mutex> line_lock(line_mutex);
 		line_points = m_line_points;
-		mutex_linepoints.unlock();
+		line_lock.unlock();
 
+		//		log_timing(tlast, "Line calculation: ");
 
-//		log_timing(tlast, "Line calculation: ");
+		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);
 
-		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, grstate, grcenter);
+		unique_lock<mutex> green_lock(line_mutex);
+		grcenter = m_grcenter;
+		grstate = m_grstate;
+		green_lock.unlock();
+
 
 		/*cout << "Gruenstate: " << grstate << " / ";
-		switch (grstate) {
-		case 0:
-			cout << "KEINER";
-			break;
-		case 1:
-			cout << "LINKS";
-			break;
-		case 2:
-			cout << "RECHTS";
-			break;
-		case 3:
-			cout << "BEIDE";
-			break;
-		}
+			switch (grstate) {
+			case 0:
+				cout << "KEINER";
+				break;
+			case 1:
+				cout << "LINKS";
+				break;
+			case 2:
+				cout << "RECHTS";
+				break;
+			case 3:
+				cout << "BEIDE";
+				break;
+			}
 
-		if(grstate > 0) {
-			cout << " " << grcenter;
-		}
+			if(grstate > 0) {
+				cout << " " << grcenter;
+			}
 
-		cout << endl;*/
+			cout << endl;*/
 
-//		log_timing(tlast, "Green calc: ");
+		//		log_timing(tlast, "Green calc: ");
 
 #ifdef ON_PI
 		srv.imshow("Input", img_rgb);
@@ -373,11 +377,27 @@ int main(int argc, char* argv[]) {
 		}
 #endif
 
-//		std::cout << "Sending images: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
-//		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
+		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
 
 		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
+}
+
+
+
+// MAIN METHOD TO CALL THREADS
+
+int main() {
+
+	thread image_proc_t(image_processing);
+
+	thread drive_t(drive);
+	drive_t.detach();
+
+	image_proc_t.join();
+	image_proc_t.detach();
+
+	cout << "After thread start" << endl;
 
 	return -1;
 }
