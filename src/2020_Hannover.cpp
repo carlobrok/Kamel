@@ -73,7 +73,6 @@ void drive() {
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
-
 	unique_lock<mutex> line_lock(line_mutex);
 	vector<Point> m_line_points = line_points;
 	vector<Point> last_line_points = line_points;
@@ -99,6 +98,7 @@ void drive() {
 		line_lock.unlock();
 		green_lock.unlock();
 
+		cout << "after mutex" << endl;
 
 		if (m_grstate == GRUEN_BEIDE) {
 
@@ -374,12 +374,8 @@ void image_processing() {
 
 int main() {
 
-	thread image_proc_t(image_processing);
 	thread drive_t(drive);
-	image_proc_t.join();
-
-	drive_t.detach();
-	image_proc_t.detach();
+	image_processing();
 
 	cout << "All threads closed" << endl;
 
