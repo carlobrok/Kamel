@@ -71,7 +71,7 @@ int open_new_vid(VideoCapture & cap) {
 void drive() {
 
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
-	writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 0); 		// Beide Motoren ausschalten
+	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
 
 	unique_lock<mutex> line_lock(line_mutex);
@@ -105,77 +105,54 @@ void drive() {
 			int64 last_gruen = getTickCount();
 			while (grstate != GRUEN_NICHT) {
 				if (grcenter.y > 350) {
-					vor(180);
-					delay(500);
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
+					thread_delay(500);
 
-					/*motorLeft(false, 150);
-		        motorRight(true, 150);
-		        delay(3000);*/
-
-					turn_angle(180, ypr[2]);
-					aus();
-					delay_data(500);
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+					thread_delay(3000);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(500);
 
 					break;
 				} else if (grcenter.x < 310) {
-					motorLeft();
-					motorRight(true, 90);
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);
 				} else if (grcenter.x > 330) {
-					motorLeft(true, 90);
-					motorRight();
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);
 				} else {
-					vor(50);
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
 				}
 			}
 		} else if (m_grstate == GRUEN_LINKS && grcenter.y > 480 - 150) {
-			vor(150);
-			delay(300);
-			motorLeft(false, 190);
-			motorRight(true, 150);
-			delay_data(500);
+			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
+			thread_delay(300);
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);
+			thread_delay(500);
 		} else if (m_grstate == GRUEN_RECHTS && grcenter.y > 480 - 150) {
-			vor(150);
-			delay(300);
-			motorRight(false, 190);
-			motorLeft(true, 150);
-			delay_data(500);
+			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
+			thread_delay(300);
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);
+			thread_delay(500);
 		} else if(m_line_points.size() == 1) {
 			//			cout << "Different value -> check motor output for line" << endl;
 
 			if (m_line_points[0].x > 575) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 190);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 160);
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
 			} else if (m_line_points[0].x < 65) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 190);
+				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
 			} else if (m_line_points[0].x > 500) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
 			} else if (m_line_points[0].x < 140) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
 			} else if (m_line_points[0].x > 400) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 10);
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
 			} else if (m_line_points[0].x < 240) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 10);
+				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
 			} else if (m_line_points[0].x > 340) {
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_OFF, 0);
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
 			} else if (m_line_points[0].x < 300) {
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_OFF, 0);
+				setMotorDirPwmBoth(motor_fd, MOTOR_OFF, 0, MOTOR_FORWARD, 160);
 			} else {
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			}
 
 		} else if(m_line_points.size() == 0 && last_line_points.size() == 1) {
@@ -183,41 +160,46 @@ void drive() {
 
 			if (last_line_points[0].x > 575) {
 				cout << "  correction right" << endl;
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 160);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 120);
+
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
 
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
-					this_thread::sleep_for(chrono::milliseconds(5));
+					thread_delay(5);
+					line_lock.lock();
+					m_line_points  = line_points;
+					line_lock.unlock();
 				}
 
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
-				this_thread::sleep_for(chrono::milliseconds(500));
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+				thread_delay(500);
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
 			} else if (last_line_points[0].x < 65) {
 				cout << "  correction left" << endl;
-				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 120);
-				this_thread::sleep_for(chrono::microseconds(500));
-				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 160);
+
+				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
+
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
-					this_thread::sleep_for(chrono::milliseconds(5));
+					thread_delay(5);
+					line_lock.lock();
+					m_line_points  = line_points;
+					line_lock.unlock();
 				}
 
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
-				this_thread::sleep_for(chrono::milliseconds(500));
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_OFF, 100);
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+				thread_delay(500);
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
 			} else {
-				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 				cout << endl;
 			}
 		} else {
-			writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 		}
 
 		last_line_points = m_line_points;
-		this_thread::sleep_for(chrono::milliseconds(5));
+		thread_delay(1);
 	}
 }
 
@@ -397,7 +379,7 @@ int main() {
 	image_proc_t.join();
 	image_proc_t.detach();
 
-	cout << "After thread start" << endl;
+	cout << "All threads closed" << endl;
 
 	return -1;
 }
