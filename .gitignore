@@ -93,3 +93,12 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+
+#  VIDEOS AND TEST IMAGES
+# ===============================
+
+.jpg
+.png
+
+.mp4
+.avi
