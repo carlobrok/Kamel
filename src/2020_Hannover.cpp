@@ -102,7 +102,7 @@ void drive() {
 
 		if (m_grstate == GRUEN_BEIDE) {
 
-			int64 last_gruen = getTickCount();
+//			int64 last_gruen = getTickCount();
 			while (grstate != GRUEN_NICHT) {
 				if (grcenter.y > 350) {
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
