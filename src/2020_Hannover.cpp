@@ -309,7 +309,7 @@ void image_processing() {
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);
 
-		unique_lock<mutex> green_lock(line_mutex);
+		unique_lock<mutex> green_lock(green_mutex);
 		grcenter = m_grcenter;
 		grstate = m_grstate;
 		green_lock.unlock();
