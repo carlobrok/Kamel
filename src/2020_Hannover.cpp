@@ -86,7 +86,7 @@ void drive() {
 
 	while(1) {
 
-		cout << "Drive thread running" << endl;
+//		cout << "Drive thread running" << endl;
 
 		line_lock.lock();
 		green_lock.lock();
@@ -98,7 +98,7 @@ void drive() {
 		line_lock.unlock();
 		green_lock.unlock();
 
-		cout << "after mutex" << endl;
+//		cout << "after mutex" << endl;
 
 		if (m_grstate == GRUEN_BEIDE) {
 
@@ -267,7 +267,7 @@ void image_processing() {
 
 	while(1) {
 
-		cout << "Image processing thread running" << endl;
+//		cout << "Image processing thread running" << endl;
 
 		int64 tloop = getTickCount();			// Tickcount for whole loop
 
@@ -375,9 +375,11 @@ void image_processing() {
 int main() {
 
 	thread drive_t (drive);
-	thread image_proc_t (image_processing);
+//	thread image_proc_t (image_processing);
 
-	while(1) {}
+//	while(1) {}
+
+	image_processing();
 
 	cout << "All threads closed" << endl;
 
