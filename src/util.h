@@ -14,4 +14,12 @@ void log_sensordata(std::vector<cv::Point> & line_points, int & grstate, cv::Poi
 
 bool inMat(cv::Point p, int w, int h);
 
+inline void thread_delay(int64 ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
+inline void thread_delay_micros(int64 us) {
+	std::this_thread::sleep_for(std::chrono::microseconds(us));
+}
+
 #endif

@@ -72,4 +72,3 @@ bool inMat(cv::Point p, int cols, int rows) {
 		return false;
 	}
 }
-
