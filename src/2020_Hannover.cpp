@@ -375,7 +375,9 @@ void image_processing() {
 int main() {
 
 	thread drive_t (drive);
-	image_processing();
+	thread image_proc_t (image_processing);
+
+	while(1) {}
 
 	cout << "All threads closed" << endl;
 
