@@ -78,7 +78,7 @@ void drive() {
 	vector<Point> last_line_points = line_points;
 	line_lock.unlock();
 
-	unique_lock<mutex> green_lock(line_mutex);
+	unique_lock<mutex> green_lock(green_mutex);
 	Point m_grcenter = grcenter;
 	int m_grstate = GRUEN_NICHT;
 	green_lock.unlock();
@@ -374,7 +374,7 @@ void image_processing() {
 
 int main() {
 
-	thread drive_t(drive);
+	thread drive_t (drive);
 	image_processing();
 
 	cout << "All threads closed" << endl;
