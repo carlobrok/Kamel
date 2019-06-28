@@ -375,9 +375,6 @@ void image_processing() {
 int main() {
 
 	thread drive_t (drive);
-//	thread image_proc_t (image_processing);
-
-//	while(1) {}
 
 	image_processing();
 
