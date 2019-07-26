@@ -1,10 +1,15 @@
-#include <iostream>
 #include "opencv2/opencv.hpp"
 #include "math.h"
+
+#include <iostream>
 #include <sstream>
 #include <cstdio>
 #include <fstream>
+
+#include <vector>
+#include <array>
 #include <mutex>
+#include <boost/circular_buffer.hpp>
 
 #include "config.h"
 #include "gruen.h"
@@ -73,15 +78,46 @@ void drive() {
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
+	int sensor_fd = kamelI2Copen(0x09);
+
 	unique_lock<mutex> line_lock(line_mutex);
 	vector<Point> m_line_points = line_points;
-	vector<Point> last_line_points = line_points;
+	boost::circular_buffer<vector<Point>> last_line_points(50);
+	last_line_points.push_back(line_points);
 	line_lock.unlock();
 
 	unique_lock<mutex> green_lock(green_mutex);
 	Point m_grcenter = grcenter;
 	int m_grstate = GRUEN_NICHT;
+	boost::circular_buffer<Point> last_grcenter;
 	green_lock.unlock();
+
+
+
+	bool digital_sensor_data[8];
+	uint16_t analog_sensor_data[1];
+
+	array<boost::circular_buffer<bool>, 8> last_digital_data;
+	array<boost::circular_buffer<bool>, 8> last_digital_time;
+	for (auto& cb : last_digital_data) {
+		cb.resize(100);
+	}
+	for (auto& cb : last_digital_time) {
+		cb.resize(100);
+	}
+
+	boost::circular_buffer<uint16_t> last_analog_data(100);
+	boost::circular_buffer<uint64_t> last_analog_time(100);
+
+	float imu_data[3];
+	array<boost::circular_buffer<float>, 3> last_imu_data;
+	array<boost::circular_buffer<float>, 3> last_imu_time;
+	for (auto& cb : last_imu_data) {
+		cb.resize(100);
+	}
+	for (auto& cb : last_imu_time) {
+		cb.resize(100);
+	}
 
 
 	while(1) {
@@ -97,6 +133,13 @@ void drive() {
 
 		line_lock.unlock();
 		green_lock.unlock();
+
+		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
+
+		last_analog_data.push_back(analog_sensor_data[0]);
+		for(int i = 0; i < 8; i++) {
+			last_digital_data[i].push_back(digital_sensor_data[i]);
+		}
 
 //		cout << "after mutex" << endl;
 
@@ -155,10 +198,10 @@ void drive() {
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			}
 
-		} else if(m_line_points.size() == 0 && last_line_points.size() == 1) {
-			cout << "Lost line last:" << last_line_points << "  current:" << m_line_points;
+		} else if(m_line_points.size() == 0 && last_line_points.back().size() == 1) {
+			cout << "Lost line last:" << last_line_points.back() << "  current:" << m_line_points;
 
-			if (last_line_points[0].x > 575) {
+			if (last_line_points.back()[0].x > 575) {
 				cout << "  correction right" << endl;
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
@@ -174,7 +217,7 @@ void drive() {
 				thread_delay(500);
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
-			} else if (last_line_points[0].x < 65) {
+			} else if (last_line_points[0][0].x < 65) {
 				cout << "  correction left" << endl;
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
@@ -198,7 +241,7 @@ void drive() {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 		}
 
-		last_line_points = m_line_points;
+		last_line_points.push_back(m_line_points);
 		thread_delay(1);
 	}
 }
@@ -378,6 +421,7 @@ int main() {
 
 	image_processing();
 
+	drive_t.detach();
 	cout << "All threads closed" << endl;
 
 	return -1;
