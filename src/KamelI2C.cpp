@@ -41,7 +41,7 @@ int setMotorState(int &fd, uint8_t side, uint8_t state) {
  */
 
 bool get_bit(int8_t byte, uint8_t bit_index) {
-	return (byte & (1 << bit_index-1)) != 0;
+	return (byte & (1 << bit_index - 1)) != 0;
 }
 
 
@@ -52,7 +52,7 @@ bool get_bit(int8_t byte, uint8_t bit_index) {
  *	IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
 
-int getSensorData(int &fd, bool &digital_sensor_data[8], uint16_t &analog_sensor_data[1]) {
+int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
 	uint8_t in_data[10];
 	int ret = i2c_smbus_read_block_data(fd, 0, 3, in_data);
 
