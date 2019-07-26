@@ -18,7 +18,7 @@ Stephan Swiatek
   **Important:** after finishing the installation run `sudo ldconfig`
 * WiringPi, install with `sudo apt-get install wiringpi`
 * Boost - [Getting started guide](https://www.boost.org/doc/libs/1_70_0/more/getting_started/unix-variants.html)
-  **Installation:**</br>
+  </br>**Installation:**</br>
   1. Download latest version of boost
   2. Extract folder and cd into it
   3. `./bootstrap.sh`
