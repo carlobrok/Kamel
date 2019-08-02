@@ -73,12 +73,17 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
-void drive() {
+void m_drive() {
+
+	// init i2c devices
 
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
 	int sensor_fd = kamelI2Copen(0x09);
+
+
+	// init line variables
 
 	unique_lock<mutex> line_lock(line_mutex);
 	vector<Point> m_line_points = line_points;
@@ -86,66 +91,84 @@ void drive() {
 	last_line_points.push_back(line_points);
 	line_lock.unlock();
 
+
+	// init green variables
+
 	unique_lock<mutex> green_lock(green_mutex);
 	Point m_grcenter = grcenter;
 	int m_grstate = GRUEN_NICHT;
-	boost::circular_buffer<Point> last_grcenter;
+	boost::circular_buffer<Point> last_grcenter(50);
 	green_lock.unlock();
 
 
+	// init digital sensor variables
 
 	bool digital_sensor_data[8];
-	uint16_t analog_sensor_data[1];
-
 	array<boost::circular_buffer<bool>, 8> last_digital_data;
-	array<boost::circular_buffer<bool>, 8> last_digital_time;
+//	array<boost::circular_buffer<double>, 8> last_digital_time;
 	for (auto& cb : last_digital_data) {
 		cb.resize(100);
 	}
-	for (auto& cb : last_digital_time) {
-		cb.resize(100);
-	}
+//	for (auto& cb : last_digital_time) {
+//		cb.resize(100);
+//	}
 
+
+	// init analog sensor variables
+
+	uint16_t analog_sensor_data[1];
 	boost::circular_buffer<uint16_t> last_analog_data(100);
-	boost::circular_buffer<uint64_t> last_analog_time(100);
+//	boost::circular_buffer<double> last_analog_time(100);
+
+
+	// Init IMU variables
 
 	float imu_data[3];
 	array<boost::circular_buffer<float>, 3> last_imu_data;
-	array<boost::circular_buffer<float>, 3> last_imu_time;
+
+//	array<boost::circular_buffer<double>, 3> last_imu_time;
 	for (auto& cb : last_imu_data) {
 		cb.resize(100);
 	}
-	for (auto& cb : last_imu_time) {
-		cb.resize(100);
-	}
-
+//	for (auto& cb : last_imu_time) {
+//		cb.resize(100);
+//	}
 
 	while(1) {
 
-//		cout << "Drive thread running" << endl;
+		// sensor value updating ======================
 
+		// lock variables
 		line_lock.lock();
 		green_lock.lock();
 
+		// update values
 		m_line_points = line_points;
 		m_grstate = grstate;
 		m_grcenter = grcenter;
 
+		// push_back last values
+		last_line_points.push_back(m_line_points);
+		last_grcenter.push_back(m_grcenter);
+
+		// unlock variables
 		line_lock.unlock();
 		green_lock.unlock();
 
+		// update arduino sensor data
 		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
 
+		// push_back last values
 		last_analog_data.push_back(analog_sensor_data[0]);
 		for(int i = 0; i < 8; i++) {
 			last_digital_data[i].push_back(digital_sensor_data[i]);
 		}
 
-//		cout << "after mutex" << endl;
+
+		// main part: drive decisions	=================================
 
 		if (m_grstate == GRUEN_BEIDE) {
 
-//			int64 last_gruen = getTickCount();
 			while (grstate != GRUEN_NICHT) {
 				if (grcenter.y > 350) {
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
@@ -165,16 +188,19 @@ void drive() {
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
 				}
 			}
+
 		} else if (m_grstate == GRUEN_LINKS && grcenter.y > 480 - 150) {
 			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
 			thread_delay(300);
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);
 			thread_delay(500);
+
 		} else if (m_grstate == GRUEN_RECHTS && grcenter.y > 480 - 150) {
 			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
 			thread_delay(300);
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);
 			thread_delay(500);
+
 		} else if(m_line_points.size() == 1) {
 			//			cout << "Different value -> check motor output for line" << endl;
 
@@ -241,10 +267,11 @@ void drive() {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 		}
 
-		last_line_points.push_back(m_line_points);
-		thread_delay(1);
+//		thread_delay(ms);
 	}
 }
+
+
 
 
 void image_processing() {
@@ -417,7 +444,7 @@ void image_processing() {
 
 int main() {
 
-	thread drive_t (drive);
+	thread drive_t (m_drive);
 
 	image_processing();
 
