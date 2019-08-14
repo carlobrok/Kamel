@@ -9,12 +9,15 @@
 #include <vector>
 #include <array>
 #include <mutex>
+
 #include <boost/circular_buffer.hpp>
 
+#include "Logger.h"
 #include "config.h"
 #include "gruen.h"
 #include "line.h"
 #include "util.h"
+
 
 #ifdef ON_PI
 #include "CameraCapture.h"
@@ -25,6 +28,7 @@
 
 using namespace std;
 using namespace cv;
+namespace lvl = spdlog::level;
 
 Mat img_rgb;			// input image
 
@@ -73,22 +77,39 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
+
+
 void m_drive() {
+
+	Logger behavior_lg("behavior");
+	Logger debug_lg("debug");
+	Logger sensor_lg("sensors");
+
+	debug_lg << "init i2c devices" << lvl::debug;
 
 	// init i2c devices
 
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	/*if(motor_fd == -1) {
+//		BOOST_LOG(debug_lg.m_lg) << "[" << cur_sec() << "] error initializing motor arduino";
+		return;
+	}*/
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
 	int sensor_fd = kamelI2Copen(0x09);
+/*	if(sensor_fd == -1) {
+//		BOOST_LOG(debug_lg.m_lg) << "[" << cur_sec() << "] error initializing sensor arduino";
+		return;
+	}*/
 
+	debug_lg << "successfully initialized i2c devices" << lvl::debug;
+	debug_lg << "init sensor / camera variables" << lvl::debug;
 
 	// init line variables
 
 	unique_lock<mutex> line_lock(line_mutex);
 	vector<Point> m_line_points = line_points;
 	boost::circular_buffer<vector<Point>> last_line_points(50);
-	last_line_points.push_back(line_points);
 	line_lock.unlock();
 
 
@@ -134,6 +155,8 @@ void m_drive() {
 //		cb.resize(100);
 //	}
 
+	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
+
 	while(1) {
 
 		// sensor value updating ======================
@@ -147,9 +170,9 @@ void m_drive() {
 		m_grstate = grstate;
 		m_grcenter = grcenter;
 
-		// push_back last values
-		last_line_points.push_back(m_line_points);
-		last_grcenter.push_back(m_grcenter);
+		// push_front last values - recent value is item [0]
+		last_line_points.push_front(m_line_points);
+		last_grcenter.push_front(m_grcenter);
 
 		// unlock variables
 		line_lock.unlock();
@@ -158,16 +181,18 @@ void m_drive() {
 		// update arduino sensor data
 		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
 
-		// push_back last values
-		last_analog_data.push_back(analog_sensor_data[0]);
+		// push_front last values - recent value is item [0]
+		last_analog_data.push_front(analog_sensor_data[0]);
 		for(int i = 0; i < 8; i++) {
-			last_digital_data[i].push_back(digital_sensor_data[i]);
+			last_digital_data[i].push_front(digital_sensor_data[i]);
 		}
 
 
 		// main part: drive decisions	=================================
 
 		if (m_grstate == GRUEN_BEIDE) {
+
+			debug_lg << "green point BOTH" << lvl::info;
 
 			while (grstate != GRUEN_NICHT) {
 				if (grcenter.y > 350) {
@@ -190,18 +215,26 @@ void m_drive() {
 			}
 
 		} else if (m_grstate == GRUEN_LINKS && grcenter.y > 480 - 150) {
+
+			debug_lg << "green point LEFT" << lvl::info;
+
 			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
 			thread_delay(300);
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);
 			thread_delay(500);
 
 		} else if (m_grstate == GRUEN_RECHTS && grcenter.y > 480 - 150) {
+
+			debug_lg << "green point RIGHT" << lvl::info;
+
 			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);
 			thread_delay(300);
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);
 			thread_delay(500);
 
 		} else if(m_line_points.size() == 1) {
+
+			debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
 			//			cout << "Different value -> check motor output for line" << endl;
 
 			if (m_line_points[0].x > 575) {
@@ -224,11 +257,11 @@ void m_drive() {
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			}
 
-		} else if(m_line_points.size() == 0 && last_line_points.back().size() == 1) {
-			cout << "Lost line last:" << last_line_points.back() << "  current:" << m_line_points;
+		} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {
+			debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
-			if (last_line_points.back()[0].x > 575) {
-				cout << "  correction right" << endl;
+			if (last_line_points[1][0].x > 575) {
+				debug_lg << " -  correction right" << lvl::warn;
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
 
@@ -243,8 +276,8 @@ void m_drive() {
 				thread_delay(500);
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
-			} else if (last_line_points[0][0].x < 65) {
-				cout << "  correction left" << endl;
+			} else if (last_line_points[1][0].x < 65) {
+				cout << " -   correction left" << lvl::warn;
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
 
@@ -261,13 +294,14 @@ void m_drive() {
 
 			} else {
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
-				cout << endl;
+				debug_lg << lvl::warn;
 			}
 		} else {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
+			debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 		}
 
-//		thread_delay(ms);
+		thread_delay(1);
 	}
 }
 
@@ -275,6 +309,8 @@ void m_drive() {
 
 
 void image_processing() {
+
+	Logger camera_lg("camera");
 
 	/*
 	 * Mats for image with
@@ -444,8 +480,9 @@ void image_processing() {
 
 int main() {
 
-	thread drive_t (m_drive);
+	init_clock();
 
+	thread drive_t (m_drive);
 	image_processing();
 
 	drive_t.detach();
