@@ -19,4 +19,7 @@ inline void thread_delay_micros(int64_t us) {
 	std::this_thread::sleep_for(std::chrono::microseconds(us));
 }
 
+void init_clock();
+double_t cur_sec();
+
 #endif
