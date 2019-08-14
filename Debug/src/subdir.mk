@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/2020_Hannover.cpp \
 ../src/CameraCapture.cpp \
 ../src/KamelI2C.cpp \
+../src/Logger.cpp \
 ../src/VideoServer.cpp \
 ../src/gruen.cpp \
 ../src/line.cpp \
@@ -16,6 +17,7 @@ OBJS += \
 ./src/2020_Hannover.o \
 ./src/CameraCapture.o \
 ./src/KamelI2C.o \
+./src/Logger.o \
 ./src/VideoServer.o \
 ./src/gruen.o \
 ./src/line.o \
@@ -25,6 +27,7 @@ CPP_DEPS += \
 ./src/2020_Hannover.d \
 ./src/CameraCapture.d \
 ./src/KamelI2C.d \
+./src/Logger.d \
 ./src/VideoServer.d \
 ./src/gruen.d \
 ./src/line.d \
@@ -35,7 +38,7 @@ CPP_DEPS += \
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -std=c++0x -I/usr/local/boost/include -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -std=c++0x -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
