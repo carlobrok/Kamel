@@ -47,6 +47,11 @@ public:
 		return *this;
 	}
 
+	Logger& operator<<(const size_t& s) {
+		_buffer += std::to_string((int)s);
+		return *this;
+	}
+
 	Logger& operator<<(const cv::Point& p) {
 		_buffer += "("  + std::to_string(p.x) + "," + std::to_string(p.y) + ")";
 		return *this;
