@@ -21,7 +21,4 @@ Stephan Swiatek
   </br>**Installation:**</br>
   1. Download latest version of boost
   2. Extract folder and cd into it
-  3. `./bootstrap.sh`
-  4. `./b2 headers`
-  5. `./b2 -a`
-  6. `./b2 install --prefix=/usr/local/boost`
+  3. `sudo ./b2 install`
