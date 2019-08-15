@@ -144,13 +144,13 @@ void m_drive() {
 
 	// Init IMU variables
 
-	float imu_data[3];
+	/*float imu_data[3];
 	array<boost::circular_buffer<float>, 3> last_imu_data;
 
 //	array<boost::circular_buffer<double>, 3> last_imu_time;
 	for (auto& cb : last_imu_data) {
 		cb.resize(100);
-	}
+	}*/
 //	for (auto& cb : last_imu_time) {
 //		cb.resize(100);
 //	}
@@ -179,13 +179,13 @@ void m_drive() {
 		green_lock.unlock();
 
 		// update arduino sensor data
-		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
+//		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
 
 		// push_front last values - recent value is item [0]
-		last_analog_data.push_front(analog_sensor_data[0]);
+		/*last_analog_data.push_front(analog_sensor_data[0]);
 		for(int i = 0; i < 8; i++) {
 			last_digital_data[i].push_front(digital_sensor_data[i]);
-		}
+		}*/
 
 
 		// main part: drive decisions	=================================
@@ -299,6 +299,9 @@ void m_drive() {
 		} else {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
+
+
+
 		}
 
 		thread_delay(1);
