@@ -28,7 +28,9 @@
 
 using namespace std;
 using namespace cv;
+
 namespace lvl = spdlog::level;
+Logger debug_lg("debug");
 
 Mat img_rgb;			// input image
 
@@ -77,12 +79,9 @@ int open_new_vid(VideoCapture & cap) {
 
 #endif
 
-
-
 void m_drive() {
 
 	Logger behavior_lg("behavior");
-	Logger debug_lg("debug");
 	Logger sensor_lg("sensors");
 
 	debug_lg << "init i2c devices" << lvl::debug;
@@ -471,7 +470,7 @@ void image_processing() {
 		}
 #endif
 
-		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << endl << endl;
+		debug_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
 
 		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
