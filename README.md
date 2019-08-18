@@ -9,7 +9,7 @@ Stephan Swiatek
 
 </br>
 
-## Roboter parts - Hardware
+## Robot parts - Hardware
 
 ### Microcontroller
 
