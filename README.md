@@ -1,6 +1,6 @@
 # Kamel Documentation
 
-## Team members 
+### Team members 
 
 Björn Ellwert - 
 Carlo Brokering - 
