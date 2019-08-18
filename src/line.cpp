@@ -1,22 +1,15 @@
 #include "opencv2/opencv.hpp"
-#include "line.h"
 #include "config.h"
 #include "math.h"
+
+#include "line.h"
+#include "util.h"
 
 Mat bin_ellipse;
 
 void init_line_ellipse(Mat & img_rgb) {
 	bin_ellipse = Mat(img_rgb.rows, img_rgb.cols, CV_8U, Scalar(0));
 	ellipse(bin_ellipse, Point(img_rgb.cols/2, img_rgb.rows), Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, Scalar(255), ELLIPSE_THICKNESS);
-}
-
-bool inMat(Point p, int w, int h) {
-	if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h)
-	{
-		return true;
-	} else {
-		return false;
-	}
 }
 
 float line_radiant(Point & p, int rows, int cols) {
