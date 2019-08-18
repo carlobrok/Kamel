@@ -7,10 +7,9 @@ Carlo Brokering -
 Jamal Salif -
 Stephan Swiatek
 
+</br>
 
----
-
-## Roboter parts
+## Roboter parts - Hardware
 
 ### Microcontroller
 
@@ -34,7 +33,7 @@ Stephan Swiatek
 
 * [V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
 
----
+</br>
 
 ## Software
 
@@ -53,3 +52,8 @@ Stephan Swiatek
   1. Download latest version of boost
   2. Extract folder and cd into it
   3. `sudo ./b2 install`
+* spdlog - [Wiki](https://github.com/gabime/spdlog/wiki/)
+  </br>**Installation:**</br>
+  1. `git clone https://github.com/gabime/spdlog.git`
+  2. `cd spdlog/`
+  3. `sudo cp -r include/spdlog/ /usr/local/include/`
