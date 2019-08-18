@@ -1,8 +1,17 @@
-#include "opencv2/opencv.hpp"
 #include "gruen.h"
+#include "util.h"
 #include "config.h"
 
-//Point gruen_center(vector <Point>, vector <Point>)
+Point gruen_center(vector <Point> cont1, vector <Point> cont2) {
+	Moments m1 = moments(cont1);
+	Moments m2 = moments(cont2);
+
+	return Point((m1.m10 / m1.m00 + m2.m10 / m2.m00) / 2, (m1.m01 / m1.m00 + m2.m01 / m2.m00) / 2);
+}
+
+Point gruen_center(Point p1, Point p2) {
+	return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+}
 
 Point gruen_center(vector<Point> contour) {
 	Moments m = moments(contour);
@@ -48,7 +57,7 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> 
 	Point top_checkpoint = mittegr;
 	top_checkpoint.y -= point_distance;
 
-	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.6) {
+	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.5) {
 		Point left_checkpoint = mittegr;
 		Point right_checkpoint = mittegr;
 		left_checkpoint.x -= point_distance;
@@ -67,9 +76,10 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> 
 	return GRUEN_NICHT;
 }
 
-int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
+void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, Point & grcenter) {
 
 	vector< vector<Point> > contg;
+
 	//morphologyEx(img_bingr, img_bingr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 	findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
@@ -89,7 +99,6 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 		/*
 		 * Mehr als 1 Grüner Punkt
 		 */
-
 
 		for(unsigned int i = 0; i < contg.size()-1; i++) {
 			Moments m1 = moments(contg[i]), m2 = moments(contg[i+1]);
@@ -129,7 +138,9 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 #endif
 
 					if(ratio_left_point > 0.4 && ratio_right_point > 0.4) {
-						return GRUEN_BEIDE;
+						grstate = GRUEN_BEIDE;
+						grcenter = gruen_center(p1_new, p2_new);
+						return;
 					}
 				}
 			}
@@ -137,6 +148,7 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 
 		int index_nearest = 0;
 		double nearest_distance = -1;
+		Point nearest_point;
 
 		for(unsigned int i = 0; i < contg.size(); i++) {
 			Point center = gruen_center(contg[i]);
@@ -145,20 +157,27 @@ int gruen_state(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr) {
 			if(distance_to_point < nearest_distance || nearest_distance == -1) {
 				nearest_distance = distance_to_point;
 				index_nearest = i;
+				nearest_point = center;
 			}
 		}
 
-		return gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]);
+		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]);
+		grcenter = nearest_point;
+		return;
 
 	} else if(contg.size() == 1){
 		/*
 		 * Nur 1 Grüner Punkt
 		 */
-		return gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
+		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
+		grcenter = gruen_center(contg[0]);
+		return;
 
 	}
 
-	return GRUEN_NICHT;
+	grstate = GRUEN_NICHT;
+	grcenter = Point(0,0);
+	return;
 }
 
 
@@ -193,28 +212,33 @@ float ratio_black_points(Point & origin, Point & destination, Mat & bin_sw, Mat 
 		cur_pixel.x = origin.x + (float)i/30 * (destination.x - origin.x);
 		cur_pixel.y = origin.y + (float)i/30 * (destination.y - origin.y);
 
-		color_sw = (int)bin_sw.at<uchar>(cur_pixel);
-		color_gr = (int)bin_gr.at<uchar>(cur_pixel);
+		if(inMat(cur_pixel, bin_sw.cols, bin_sw.rows)) {
 
-		//cout << "gr_punkt: " << id << "; Pixel: " << cur_pixel << " bin_colors:  sw:" << color_sw << " gr:" << color_gr << endl;
+			color_sw = (int)bin_sw.at<uchar>(cur_pixel);
+			color_gr = (int)bin_gr.at<uchar>(cur_pixel);
 
-		if(color_sw == 255 && color_gr == 0) {
-			black_pixels++;
+			//cout << "gr_punkt: " << id << "; Pixel: " << cur_pixel << " bin_colors:  sw:" << color_sw << " gr:" << color_gr << endl;
 
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(50, 50, 50), 2);
-#endif
-		} else if(color_gr == 255) {
-			green_pixels++;
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(20, 150, 20), 2);
-#endif
+			if(color_sw == 255 && color_gr == 0) {
+				black_pixels++;
+
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(50, 50, 50), 2);
+	#endif
+			} else if(color_gr == 255) {
+				green_pixels++;
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(20, 150, 20), 2);
+	#endif
+			} else {
+	#ifdef VISUAL_DEBUG
+				circle(img_rgb, cur_pixel, 1, Scalar(200,200,200), 2);
+	#endif
+			}
 		} else {
-#ifdef VISUAL_DEBUG
-			circle(img_rgb, cur_pixel, 1, Scalar(200,200,200), 2);
-#endif
+			i = NUM_ITERATIONS_BLACK_POINTS;
 		}
 	}
 
-	return (float) black_pixels / (NUM_ITERATIONS_BLACK_POINTS-1 - green_pixels);
+	return (float) black_pixels / (NUM_ITERATIONS_BLACK_POINTS - 1 - green_pixels);
 }

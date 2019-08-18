@@ -70,7 +70,6 @@ void VideoServer::update(){
 }
 
 void VideoServer::run(){
-	int64_t t1, t2;
 	waitForConnection();
 	while(1){
 
@@ -80,14 +79,10 @@ void VideoServer::run(){
 			m_work.pop();
 			lock.unlock();
 
-			t1 = cv::getTickCount();
 			std::vector<uchar> img_buf;
 			cv::imencode(".jpg", l_tmpWindow.image, img_buf, m_jpegParams);
-			t2 = cv::getTickCount();
-			//std::cout << "Size: " << img_buf.size() / 1024.0 << std::endl << "Encode took " << (t2-t1) / cv::getTickFrequency() * 1000.0 << std::endl;
 			m_windowMap[l_tmpWindow.windowName].readyForData = true;
 
-			t1 = cv::getTickCount();
 			uint32_t sz = img_buf.size();
 			try{
 				boost::asio::write(m_socket, boost::asio::buffer(&sz, sizeof(sz)));
@@ -100,7 +95,6 @@ void VideoServer::run(){
 				waitForConnection();
 			}
 
-			t2 = cv::getTickCount();
 			//std::cout << "Send took " << (t2-t1) / cv::getTickFrequency() * 1000.0 << std::endl;
 
 			if(m_work.empty()){
