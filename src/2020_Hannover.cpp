@@ -405,38 +405,78 @@ void image_processing() {
 		//		log_timing(tlast, "Reading, color covert, gauss: ");
 
 		separate_gruen(hsv, bin_gr);
-		//		log_timing(tlast, "Green separation: ");
 
-		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);
+		std::cout << "Green separation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
 
-		unique_lock<mutex> line_lock(line_mutex);
-		line_points = m_line_points;
-		line_lock.unlock();
+		line_calc(img_rgb, hsv, bin_sw, bin_gr, line_points);
 
-		//		log_timing(tlast, "Line calculation: ");
-
-		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);
-
-		unique_lock<mutex> green_lock(green_mutex);
-		grcenter = m_grcenter;
-		grstate = m_grstate;
-		green_lock.unlock();
+		std::cout << "Line calculation: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
 
 
-		/*cout << "Gruenstate: " << grstate << " / ";
-			switch (grstate) {
-			case 0:
-				cout << "KEINER";
-				break;
-			case 1:
-				cout << "LINKS";
-				break;
-			case 2:
-				cout << "RECHTS";
-				break;
-			case 3:
-				cout << "BEIDE";
-				break;
+		grstate = gruen_state(img_rgb, hsv, bin_sw, bin_gr);
+
+		cout << "Gruenstate: " << grstate << " / ";
+
+		switch (grstate) {
+		case 0:
+			cout << "KEINER";
+			break;
+		case 1:
+			cout << "LINKS";
+			break;
+		case 2:
+			cout << "RECHTS";
+			break;
+		case 3:
+			cout << "BEIDE";
+			break;
+		}
+
+		cout << endl;
+
+		std::cout << "Green calc: " << (getTickCount() - tlast) / getTickFrequency() * 1000.0 << " ms" << endl;
+		tlast = getTickCount();
+
+
+		if(line_points.size() == 1) {
+
+			float rad = line_radiant(line_points[0], img_rgb.rows, img_rgb.cols);
+
+			ostringstream s;
+			s << "Rad: " << rad;
+
+			putText(img_rgb, s.str(), line_points[0],  FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255),1);
+
+			cout << "Line radiant: " << rad << endl;
+
+			if(rad > 50) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 150);
+			} else if(rad < -50) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 150);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 150);
+			} else if(rad > 35) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_BACKWARD, 80);
+			} else if(rad < -35) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_BACKWARD, 80);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+			} else if(rad > 10) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 120);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 100);
+			} else if(rad < -10) {
+				writeMotor(motor_fd, MOTOR_LEFT, MOTOR_FORWARD, 100);
+				this_thread::sleep_for(chrono::microseconds(750));
+				writeMotor(motor_fd, MOTOR_RIGHT, MOTOR_FORWARD, 120);
+			} else {
+				writeMotor(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
 			}
 
 			if(grstate > 0) {
