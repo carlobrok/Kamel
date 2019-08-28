@@ -2,6 +2,19 @@
 #include "util.h"
 #include "config.h"
 
+shared_mutex green_mutex;				// mutex for global green values
+
+Point m_grcenter(0,0);
+int grstate = GRUEN_NICHT;
+
+void set_gruen_data(Point grcenter, int grstate) {
+
+}
+
+void get_gruen_data(Point grcenter, int grstate) {
+
+}
+
 Point gruen_center(vector <Point> cont1, vector <Point> cont2) {
 	Moments m1 = moments(cont1);
 	Moments m2 = moments(cont2);

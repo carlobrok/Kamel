@@ -9,6 +9,7 @@
 #include <vector>
 #include <array>
 #include <mutex>
+#include <thread>
 
 #include <boost/circular_buffer.hpp>
 
@@ -30,59 +31,22 @@ using namespace std;
 using namespace cv;
 
 namespace lvl = spdlog::level;
-Logger debug_lg("debug");
+Logger debug_lg("debug");			// logger class for log file 'debug.log'
 
-Mat img_rgb;			// input image
+Mat img_rgb;				// input image
 
-vector<Point> line_points;
-Point grcenter(0,0);
-int grstate = GRUEN_NICHT;
+vector<Point> line_points;			// global line points holding vector
+Point grcenter(0,0);				// global green center holding cv::Point
+int grstate = GRUEN_NICHT;			// global green state holding value, possible states are defined in config.h
 
-mutex line_mutex;
-mutex green_mutex;
+mutex line_mutex;				// mutex for gobal line value
+mutex green_mutex;				// mutex for global green values
 
-
-#ifndef ON_PI
-#define VIDEO_NAME video_name[vid_name_idx]
-
-String video_name[4] = {
-		"201905_line1.mp4",
-		"201905_line2.mp4",
-		"201905_line3.mp4",
-		"201905_line4.mp4"
-};
-
-int vid_name_idx = 0;
-
-
-
-// NÄCHSTES VIDEO AUS STRING ARRAY ÖFFNEN
-
-int open_new_vid(VideoCapture & cap) {
-	if(cap.isOpened()) {
-		cap.release();
-	}
-	cap.open(VIDEO_NAME);
-
-	if(!cap.isOpened()){
-		cout << "Video not opened!" << endl;
-		return -2;
-	}
-
-	if(vid_name_idx < 3) {
-		vid_name_idx++;
-	} else {
-		vid_name_idx = 0;
-	}
-	return 1;
-}
-
-#endif
 
 void m_drive() {
 
-	Logger behavior_lg("behavior");
-	Logger sensor_lg("sensors");
+	Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
+	Logger sensor_lg("sensors");					// logger class for log file 'sensors.log'
 
 	debug_lg << "init i2c devices" << lvl::debug;
 
@@ -104,21 +68,22 @@ void m_drive() {
 	debug_lg << "successfully initialized i2c devices" << lvl::debug;
 	debug_lg << "init sensor / camera variables" << lvl::debug;
 
+
 	// init line variables
 
-	unique_lock<mutex> line_lock(line_mutex);
-	vector<Point> m_line_points = line_points;
-	boost::circular_buffer<vector<Point>> last_line_points(50);
-	line_lock.unlock();
+	unique_lock<mutex> line_lock(line_mutex);			// line_mutex wird gelockt, sodass kein anderer thread auf line_points zugreifen kann
+	vector<Point> m_line_points = line_points;			// m_line_points ist temporäre kopie von line_points, gilt nur im drive thread
+	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
+	line_lock.unlock();				// mutex unlocken
 
 
 	// init green variables
 
-	unique_lock<mutex> green_lock(green_mutex);
-	Point m_grcenter = grcenter;
-	int m_grstate = GRUEN_NICHT;
-	boost::circular_buffer<Point> last_grcenter(50);
-	green_lock.unlock();
+	unique_lock<mutex> green_lock(green_mutex);		// green_mutex locken, s.o.
+	Point m_grcenter = grcenter;				// temporäre kopie für den drive thread
+	int m_grstate = GRUEN_NICHT;				// temporäre kopie für den drive thread
+	boost::circular_buffer<Point> last_grcenter(50);		// circular_buffer initialisieren
+	green_lock.unlock();			// green_mutex
 
 
 	// init digital sensor variables

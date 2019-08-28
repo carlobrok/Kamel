@@ -1,10 +1,14 @@
 #ifndef _GRUEN_H
 #define _GRUEN_H
 
+#include <mutex>
 #include "opencv2/opencv.hpp"
 
 using namespace cv;
 using namespace std;
+
+void set_gruen_data(Point grcenter, int grstate);
+void get_gruen_data(Point grcenter, int grstate);
 
 Point gruen_center(vector <Point> cont1, vector <Point> cont2);
 Point gruen_center(Point p1, Point p2);
