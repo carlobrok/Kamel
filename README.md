@@ -49,9 +49,10 @@ Stephan Swiatek
 * WiringPi, install with `sudo apt-get install wiringpi`
 * Boost - [Getting started guide](https://www.boost.org/doc/libs/1_70_0/more/getting_started/unix-variants.html)
   </br>**Installation:**</br>
-  1. Download latest version of boost
+  1. Download latest version of [boost](https://www.boost.org/)
   2. Extract folder and cd into it
-  3. `sudo ./b2 install`
+  3. `./bootstrap.sh`
+  4. `sudo ./b2 install`
 * spdlog - [Wiki](https://github.com/gabime/spdlog/wiki/)
   </br>**Installation:**</br>
   1. `git clone https://github.com/gabime/spdlog.git`
