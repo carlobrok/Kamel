@@ -2,13 +2,13 @@
 #include "util.h"
 #include "config.h"
 
-shared_mutex green_mutex;				// mutex for global green values
+mutex gruen_mutex;				// mutex for global green values
 
 Point m_grcenter(0,0);
 int grstate = GRUEN_NICHT;
 
 void set_gruen_data(Point grcenter, int grstate) {
-
+	shared_mutex
 }
 
 void get_gruen_data(Point grcenter, int grstate) {

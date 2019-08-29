@@ -35,10 +35,6 @@ Logger debug_lg("debug");			// logger class for log file 'debug.log'
 
 Mat img_rgb;				// input image
 
-vector<Point> line_points;			// global line points holding vector
-Point grcenter(0,0);				// global green center holding cv::Point
-int grstate = GRUEN_NICHT;			// global green state holding value, possible states are defined in config.h
-
 mutex line_mutex;				// mutex for gobal line value
 mutex green_mutex;				// mutex for global green values
 
@@ -54,14 +50,12 @@ void m_drive() {
 
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	/*if(motor_fd == -1) {
-//		BOOST_LOG(debug_lg.m_lg) << "[" << cur_sec() << "] error initializing motor arduino";
 		return;
 	}*/
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
 	int sensor_fd = kamelI2Copen(0x09);
 /*	if(sensor_fd == -1) {
-//		BOOST_LOG(debug_lg.m_lg) << "[" << cur_sec() << "] error initializing sensor arduino";
 		return;
 	}*/
 

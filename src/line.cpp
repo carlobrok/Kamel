@@ -5,6 +5,16 @@
 #include "line.h"
 #include "util.h"
 
+mutex line_mutex;
+
+vector<Point> line_points;			// global line points holding vector
+Point grcenter(0,0);				// global green center holding cv::Point
+int grstate = GRUEN_NICHT;			// global green state holding value, possible states are defined in config.h
+
+
+
+
+
 Mat bin_ellipse;
 
 void init_line_ellipse(Mat & img_rgb) {
