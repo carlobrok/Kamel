@@ -1,5 +1,5 @@
-#ifndef _KAMELI2C_H
-#define _KAMELI2C_H
+#ifndef KAMELI2C_H
+#define KAMELI2C_H
 
 #include <cstdint>
 

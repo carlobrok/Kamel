@@ -1,31 +1,23 @@
-#include "opencv2/opencv.hpp"
-#include "math.h"
-
-#include <iostream>
-#include <sstream>
-#include <cstdio>
-#include <fstream>
+#include <iostream>		// cout
+#include <cstdio>			// uint.._t
 
 #include <vector>
-#include <array>
-#include <mutex>
-#include <thread>
+#include <array>			// letzte sensorwerte
+#include <thread>			// multithreading
 
-#include <boost/circular_buffer.hpp>
+#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
+#include "opencv2/opencv.hpp"				// opencv für bildauswertung
+#include "math.h"
 
-#include "Logger.h"
-#include "config.h"
-#include "gruen.h"
-#include "line.h"
-#include "util.h"
+#include "Logger.h"			// Logger class
+#include "config.h"			// defines
+#include "gruen.h"			// alles mit grünpunkt
+#include "line.h"				// alles mit linie
+#include "util.h"				// sonstige funktionen
 
-
-#ifdef ON_PI
-#include "CameraCapture.h"
-#include "VideoServer.h"
-#include "KamelI2C.h"
-#endif
-
+#include "CameraCapture.h"		// thread zum kamera einlesen
+#include "VideoServer.h"			// thread für Videoausgabe über IP
+#include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
 
 using namespace std;
 using namespace cv;
@@ -34,9 +26,6 @@ namespace lvl = spdlog::level;
 Logger debug_lg("debug");			// logger class for log file 'debug.log'
 
 Mat img_rgb;				// input image
-
-mutex line_mutex;				// mutex for gobal line value
-mutex green_mutex;				// mutex for global green values
 
 
 void m_drive() {
@@ -64,21 +53,16 @@ void m_drive() {
 
 
 	// init line variables
-
-	unique_lock<mutex> line_lock(line_mutex);			// line_mutex wird gelockt, sodass kein anderer thread auf line_points zugreifen kann
-	vector<Point> m_line_points = line_points;			// m_line_points ist temporäre kopie von line_points, gilt nur im drive thread
+	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
+	get_line_data(m_line_points);
 	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
-	line_lock.unlock();				// mutex unlocken
 
 
 	// init green variables
-
-	unique_lock<mutex> green_lock(green_mutex);		// green_mutex locken, s.o.
-	Point m_grcenter = grcenter;				// temporäre kopie für den drive thread
-	int m_grstate = GRUEN_NICHT;				// temporäre kopie für den drive thread
+	Point m_grcenter;				// temporäre kopie für den drive thread
+	int m_grstate;				// temporäre kopie für den drive thread
+	get_gruen_data(m_grcenter, m_grstate);
 	boost::circular_buffer<Point> last_grcenter(50);		// circular_buffer initialisieren
-	green_lock.unlock();			// green_mutex
-
 
 	// init digital sensor variables
 
@@ -119,22 +103,13 @@ void m_drive() {
 
 		// sensor value updating ======================
 
-		// lock variables
-		line_lock.lock();
-		green_lock.lock();
-
 		// update values
-		m_line_points = line_points;
-		m_grstate = grstate;
-		m_grcenter = grcenter;
+		get_gruen_data(m_grcenter, m_grstate);
+		get_line_data(m_line_points);
 
 		// push_front last values - recent value is item [0]
 		last_line_points.push_front(m_line_points);
 		last_grcenter.push_front(m_grcenter);
-
-		// unlock variables
-		line_lock.unlock();
-		green_lock.unlock();
 
 		// update arduino sensor data
 //		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
@@ -225,9 +200,7 @@ void m_drive() {
 
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
 					thread_delay(5);
-					line_lock.lock();
-					m_line_points  = line_points;
-					line_lock.unlock();
+					get_line_data(m_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -241,9 +214,7 @@ void m_drive() {
 
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
 					thread_delay(5);
-					line_lock.lock();
-					m_line_points  = line_points;
-					line_lock.unlock();
+					get_line_data(m_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -271,163 +242,66 @@ void m_drive() {
 
 void image_processing() {
 
-	Logger camera_lg("camera");
+	Logger camera_lg("camera");		// Logger für Dateiname des aktuellen Bilds, sowie andere Bildinformationen
 
-	/*
-	 * Mats for image with
-	 * colorspace rgb and hsv
-	 * binary image for line and green points
-	 */
-
-	Mat hsv;
-	Mat bin_sw;
-	Mat bin_gr;
+	Mat hsv;			// input Bild im hsv Format
+	Mat bin_sw;		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
+	Mat bin_gr;		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
 
 
-	/*
-	 * Umgebungen unterscheiden durch Precompiler:
-	 *
-	 * Pi:
-	 *  - CameraCapture als Videoquelle mit neuem Thread
-	 *  - VideoServer als Bildausgabe über IP
-	 *
-	 * PC:
-	 *  - VideoCapture für Videoinput
-	 *  - kein Videoserver, lokale Bildausgabe
-	 */
+	CameraCapture cam(0);		// Video eingabe der Kamera '0'; 0, wenn nur eine Kamera angeschlossen ist
+	VideoServer srv;				// Klasse für den VideoServer
 
-
-#ifdef ON_PI
-
-	CameraCapture cam(0);
-	VideoServer srv;
-
-	cam.set(cv::CAP_PROP_FPS, 30);
-	cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+	cam.set(cv::CAP_PROP_FPS, 30);			// Kamera Framerate auf 30 fps
+	cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);			// Bildauflösung auf 640 x 480px
 	cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
 
-	//Füge Fenster zum Server hinzu
+	//Füge Fenster zum VideoServer hinzu
 	srv.namedWindow("Mask Green");
 	srv.namedWindow("Mask SW");
 	srv.namedWindow("HSV");
 	srv.namedWindow("Input");
 
-
-#else
-	// CONTAINER FÜR GEÖFFNETES VIDEO
-	VideoCapture cap;
-
-	if(open_new_vid(cap) == -2) {		// wenn kein Video vorhanden abbruch
-		return -2;
-	}
-
-	// Fenster für Output erstellen
-	namedWindow("Mask Green", WINDOW_AUTOSIZE);
-	namedWindow("Mask SW", WINDOW_AUTOSIZE);
-	namedWindow("HSV", WINDOW_AUTOSIZE);
-	namedWindow("Input", WINDOW_AUTOSIZE);
-#endif
-
-	vector<Point> m_line_points;
-	Point m_grcenter(0,0);
-	int m_grstate = GRUEN_NICHT;
+	vector<Point> m_line_points;		// lokaler vector mit allen Punkten der Linie
+	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
+	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
 
 	while(1) {
 
-//		cout << "Image processing thread running" << endl;
-
 		int64 tloop = getTickCount();			// Tickcount for whole loop
 
-		/*
-		 * Wenn das Programm auf dem Pi läuft aus der Kamera auslesen,
-		 * wenn es auf dem PC läuft aus Video Array lesen
-		 */
-#ifdef ON_PI
-
-		while(!cam.read(img_rgb)){}
-
-#else
-		// Bild einlesen
-		cap.read(img_rgb);
-		if(img_rgb.empty()) {			// wenn Video zuende, neues öffnen
-			cout << "No image!" << endl;
-
-			open_new_vid(cap);
-			cap.read(img_rgb);
-		}
-#endif
+		while(!cam.read(img_rgb)){}		// warten bis das aktuelle bild einlesbar ist, dann in img_rbg einlesen
 
 		// Filter image and convert to hsv
 		GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);		// Gaussian blur to normalize image
-		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);		// Convert to HSV and save in Mat hsv
+		cvtColor(img_rgb, hsv, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
 
 		//		log_timing(tlast, "Reading, color covert, gauss: ");
 
+		// grün auf dem Bild erkennen und in bin_gr schreiben,
+		// muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
 		separate_gruen(hsv, bin_gr);
+
 		//		log_timing(tlast, "Green separation: ");
 
-		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);
+		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);		// linienpunkte berechnen, in m_line_points schreiben
 
-		unique_lock<mutex> line_lock(line_mutex);
-		line_points = m_line_points;
-		line_lock.unlock();
+		set_line_data(m_line_points);
 
 		//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);
 
-		unique_lock<mutex> green_lock(green_mutex);
-		grcenter = m_grcenter;
-		grstate = m_grstate;
-		green_lock.unlock();
-
-
-		/*cout << "Gruenstate: " << grstate << " / ";
-			switch (grstate) {
-			case 0:
-				cout << "KEINER";
-				break;
-			case 1:
-				cout << "LINKS";
-				break;
-			case 2:
-				cout << "RECHTS";
-				break;
-			case 3:
-				cout << "BEIDE";
-				break;
-			}
-
-			if(grstate > 0) {
-				cout << " " << grcenter;
-			}
-
-			cout << endl;*/
+		set_gruen_data(m_grcenter, m_grstate);
 
 		//		log_timing(tlast, "Green calc: ");
 
-#ifdef ON_PI
 		srv.imshow("Input", img_rgb);
 		srv.imshow("HSV", hsv);
 		srv.imshow("Mask SW", bin_sw);
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();
 
-
-#else
-		imshow("Input", img_rgb);
-		imshow("HSV", hsv);
-		imshow("Mask SW", bin_sw);
-		imshow("Mask Green", bin_gr);
-
-		int key = waitKey(0);
-		if(key == 'q') {
-			//cout << "Exit by key q" << endl;
-			return -1;
-		} else if(key == 'n') {
-			open_new_vid(cap);
-		}
-#endif
 
 		debug_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
 

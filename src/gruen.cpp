@@ -1,40 +1,48 @@
+#include <mutex>
 #include "gruen.h"
 #include "util.h"
 #include "config.h"
 
-mutex gruen_mutex;				// mutex for global green values
+using namespace std;			// löschen und überall std:: schreiben
+using namespace cv;				// löschen und überall cv:: schreiben
 
-Point m_grcenter(0,0);
-int grstate = GRUEN_NICHT;
+std::mutex gruen_mutex;				// mutex for global green values
 
-void set_gruen_data(Point grcenter, int grstate) {
-	shared_mutex
+cv::Point m_grcenter(0,0);
+int m_grstate = GRUEN_NICHT;
+
+void set_gruen_data(cv::Point & grcenter, int & grstate) {
+	std::lock_guard<std::mutex> m_lock(gruen_mutex);
+	m_grcenter = grcenter;
+	m_grstate =  grstate;
 }
 
-void get_gruen_data(Point grcenter, int grstate) {
-
+void get_gruen_data(cv::Point & grcenter, int & grstate) {
+	std::lock_guard<std::mutex> m_lock(gruen_mutex);
+	grcenter = m_grcenter;
+	grstate = m_grstate;
 }
 
-Point gruen_center(vector <Point> cont1, vector <Point> cont2) {
+cv::Point gruen_center(vector <cv::Point> cont1, vector <cv::Point> cont2) {
 	Moments m1 = moments(cont1);
 	Moments m2 = moments(cont2);
 
-	return Point((m1.m10 / m1.m00 + m2.m10 / m2.m00) / 2, (m1.m01 / m1.m00 + m2.m01 / m2.m00) / 2);
+	return cv::Point((m1.m10 / m1.m00 + m2.m10 / m2.m00) / 2, (m1.m01 / m1.m00 + m2.m01 / m2.m00) / 2);
 }
 
-Point gruen_center(Point p1, Point p2) {
-	return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+cv::Point gruen_center(cv::Point p1, cv::Point p2) {
+	return cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
 }
 
-Point gruen_center(vector<Point> contour) {
+cv::Point gruen_center(vector<cv::Point> contour) {
 	Moments m = moments(contour);
-	return Point(m.m10 / m.m00, m.m01 / m.m00);
+	return cv::Point(m.m10 / m.m00, m.m01 / m.m00);
 }
 
-Point rotate_point(Point & origin_point, Point & rotating_point, float rotation, float length_factor) {
+cv::Point rotate_point(cv::Point & origin_point, cv::Point & rotating_point, float rotation, float length_factor) {
 	float rad = CV_PI / 180 * rotation;
 
-	Point new_point;
+	cv::Point new_point;
 
 	new_point.x = ((rotating_point.x - origin_point.x) * cos(rad) - (rotating_point.y - origin_point.y) * sin(rad)) * length_factor + origin_point.x;
 	new_point.y = ((rotating_point.x - origin_point.x) * sin(rad) + (rotating_point.y - origin_point.y) * cos(rad)) * length_factor + origin_point.y;
@@ -44,11 +52,11 @@ Point rotate_point(Point & origin_point, Point & rotating_point, float rotation,
 
 
 /*
-Point rotated_point_lenght(Point & origin_point, float rotation, float length) {
+cv::Point rotated_point_lenght(cv::Point & origin_point, float rotation, float length) {
 	float rad = CV_PI / 180 * rotation;
 
-	Point temporary_point = Point(origin_point.x, origin_point.y + length);
-	Point new_point;
+	cv::Point temporary_point = cv::Point(origin_point.x, origin_point.y + length);
+	cv::Point new_point;
 
 	new_point.x = (temporary_point.x - origin_point.x) * cos(rad) - (temporary_point.y - origin_point.y) * sin(rad) + origin_point.x;
 	new_point.y = (temporary_point.x - origin_point.x) * sin(rad) + (temporary_point.y - origin_point.y) * cos(rad) + origin_point.y;
@@ -61,18 +69,18 @@ Point rotated_point_lenght(Point & origin_point, float rotation, float length) {
  * Checkt bei einem grünen Punkt vertikal nach oben den anteil der Schwarzen linie.
  */
 
-int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> contour) {
+int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<cv::Point> contour) {
 
 	Moments m = moments(contour);
 	float point_distance = sqrt(m.m00) * 1.2;
 
-	Point mittegr = gruen_center(contour);
-	Point top_checkpoint = mittegr;
+	cv::Point mittegr = gruen_center(contour);
+	cv::Point top_checkpoint = mittegr;
 	top_checkpoint.y -= point_distance;
 
 	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.5) {
-		Point left_checkpoint = mittegr;
-		Point right_checkpoint = mittegr;
+		cv::Point left_checkpoint = mittegr;
+		cv::Point right_checkpoint = mittegr;
 		left_checkpoint.x -= point_distance;
 		right_checkpoint.x += point_distance;
 
@@ -89,9 +97,9 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<Point> 
 	return GRUEN_NICHT;
 }
 
-void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, Point & grcenter) {
+void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, cv::Point & grcenter) {
 
-	vector< vector<Point> > contg;
+	vector< vector<cv::Point> > contg;
 
 	//morphologyEx(img_bingr, img_bingr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 	findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -117,8 +125,8 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 			Moments m1 = moments(contg[i]), m2 = moments(contg[i+1]);
 			//cout << "m00: " << m1.m00 << " / " << m2.m00 << endl;
 			if(abs(m1.m00 - m2.m00) < 1500 || (m1.m00 > 3500 && m2.m00 > 3500)) {
-				Point p1 = Point(m1.m10 / m1.m00, m1.m01 / m1.m00);
-				Point p2 = Point(m2.m10 / m2.m00, m2.m01 / m2.m00);
+				cv::Point p1 = cv::Point(m1.m10 / m1.m00, m1.m01 / m1.m00);
+				cv::Point p2 = cv::Point(m2.m10 / m2.m00, m2.m01 / m2.m00);
 
 #ifdef VISUAL_DEBUG
 				line(img_rgb, p1, p2, Scalar(255,0,100), 2);
@@ -127,13 +135,13 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 				if(abs(p1.y-p2.y < sqrt((m1.m00 + m2.m00) / 2))) {
 
 					if(p1.x > p2.x) {
-						Point p_tmp = p2;
+						cv::Point p_tmp = p2;
 						p2 = p1;
 						p1 = p_tmp;
 					}
 
-					Point p1_new = rotate_point(p1, p2, -135, 0.8);
-					Point p2_new = rotate_point(p2, p1, 135, 0.8);
+					cv::Point p1_new = rotate_point(p1, p2, -135, 0.8);
+					cv::Point p2_new = rotate_point(p2, p1, 135, 0.8);
 
 #ifdef VISUAL_DEBUG
 					circle(img_rgb, p1, 2, Scalar(0,255,0), 2);
@@ -161,10 +169,10 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 
 		int index_nearest = 0;
 		double nearest_distance = -1;
-		Point nearest_point;
+		cv::Point nearest_point;
 
 		for(unsigned int i = 0; i < contg.size(); i++) {
-			Point center = gruen_center(contg[i]);
+			cv::Point center = gruen_center(contg[i]);
 			float distance_to_point = sqrt((center.x-img_rgb.cols/2)*(center.x-img_rgb.cols/2) + (center.y-img_rgb.rows)*(center.y-img_rgb.rows));
 
 			if(distance_to_point < nearest_distance || nearest_distance == -1) {
@@ -189,7 +197,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 	}
 
 	grstate = GRUEN_NICHT;
-	grcenter = Point(0,0);
+	grcenter = cv::Point(0,0);
 	return;
 }
 
@@ -214,10 +222,10 @@ void separate_gruen(Mat & hsv, Mat & bin_gr) {
  */
 
 
-float ratio_black_points(Point & origin, Point & destination, Mat & bin_sw, Mat & bin_gr, Mat & img_rgb) {
+float ratio_black_points(cv::Point & origin, cv::Point & destination, Mat & bin_sw, Mat & bin_gr, Mat & img_rgb) {
 	int black_pixels = 0;
 	int green_pixels = 0;
-	Point cur_pixel;
+	cv::Point cur_pixel;
 	int color_sw;
 	int color_gr;
 

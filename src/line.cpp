@@ -1,3 +1,4 @@
+#include <mutex>
 #include "opencv2/opencv.hpp"
 #include "config.h"
 #include "math.h"
@@ -7,15 +8,18 @@
 
 mutex line_mutex;
 
-vector<Point> line_points;			// global line points holding vector
-Point grcenter(0,0);				// global green center holding cv::Point
-int grstate = GRUEN_NICHT;			// global green state holding value, possible states are defined in config.h
-
-
-
-
+vector<Point> m_line_points;			// global line points holding vector
 
 Mat bin_ellipse;
+Mat bin_intersection;
+
+
+void set_line_data(std::vector<cv::Point> & line_points) {
+	m_line_points = line_points;
+}
+void get_line_data(std::vector<cv::Point> & line_points) {
+	line_points = m_line_points;
+}
 
 void init_line_ellipse(Mat & img_rgb) {
 	bin_ellipse = Mat(img_rgb.rows, img_rgb.cols, CV_8U, Scalar(0));
@@ -134,10 +138,6 @@ void sepatare_line(Mat & hsv, Mat & bin_sw) {
 			}
 			timing_find += getTickCount() - ts;
 		}
-		/*cout << "Neue schwarze Punkte: " << endl;
-				for(unsigned int i = 0; i < temp_neue_punkte.size(); i++) {
-					cout << i << ": " << temp_neue_punkte[i] << endl;
-				}*/
 
 		if(temp_neue_punkte.size() == 0) {
 			check_for_points = false;
@@ -145,7 +145,6 @@ void sepatare_line(Mat & hsv, Mat & bin_sw) {
 		neue_punkte = temp_neue_punkte;
 	}
 
-	cout << "1" << endl;
 	bin_sw = Scalar(0);
 
 	for(unsigned int i = 0; i < schwarze_punkte.size(); i++) {
@@ -153,7 +152,7 @@ void sepatare_line(Mat & hsv, Mat & bin_sw) {
 	}
 }
 
-void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Point> & line_points) {
+void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Point> & line_points, bool separate_line = false) {
 	inRange(hsv, Scalar(0, 0, 0), Scalar(180, 255, THRESH_BLACK), bin_sw);
 	bin_sw -= bin_gr;
 	morphologyEx(bin_sw, bin_sw, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
@@ -161,9 +160,12 @@ void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Poin
 	if(bin_ellipse.empty()) {
 		init_line_ellipse(img_rgb);
 	}
-	Mat bin_intersection;
-	//sepatare_line(hsv, bin_sw);
 
+	bin_intersection.release();
+
+	if(sepatare_line) {
+		sepatare_line(hsv, bin_sw);
+	}
 
 	bitwise_and(bin_sw, bin_ellipse, bin_intersection);
 	vector< vector<Point> > contours_line;
@@ -177,12 +179,10 @@ void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Poin
 	line_points.clear();
 	for (unsigned int i = 0; i < contours_line.size(); ++i) {
 		Moments m = moments(contours_line[i]);
-		//cout << "Cont " << i << "; size: " << m.m00 << " |";
 
 		if(m.m00 < 300) {
 			contours_line.erase(contours_line.begin()+i);
 			i--;
-			//cout << ", too small > erasing";
 		} else {
 			Point mitte;
 			mitte.x = m.m10/m.m00;
@@ -195,6 +195,4 @@ void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Poin
 		}
 
 	}
-	//cout << endl;
-
 }

@@ -1,19 +1,18 @@
-#ifndef _LINE_H
-#define _LINE_H
+#ifndef LINE_H
+#define LINE_H
 
+#include <vector>
 #include "opencv2/opencv.hpp"
 
-using namespace cv;
-using namespace std;
 
-//void binarize_line();
-//void ellipse_calc();
+void set_line_data(std::vector<cv::Point> & line_points);
+void get_line_data(std::vector<cv::Point> & line_points);
 
-float line_radiant(Point & p, int rows, int cols);
+float line_radiant(cv::Point & p, int rows, int cols);
 
-void sepatare_line(Mat & hsv, Mat & bin_sw);
+void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw);
 
-void line_calc(Mat & img_rgb, Mat & hsv, Mat & bin_sw, Mat & bin_gr, vector<Point> & line_points);
+void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points);
 
 
 #endif

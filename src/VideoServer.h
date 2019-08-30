@@ -5,8 +5,8 @@
  *      Author: joern
  */
 
-#ifndef VIDEOSERVER_H_
-#define VIDEOSERVER_H_
+#ifndef VIDEOSERVER_H
+#define VIDEOSERVER_H
 
 #include <iostream>
 #include <string>
