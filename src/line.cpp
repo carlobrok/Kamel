@@ -13,11 +13,15 @@ std::vector<cv::Point> m_line_points;			// global line points holding vector
 cv::Mat bin_ellipse;
 cv::Mat bin_intersection;
 
-
+// set line_points buffer
 void set_line_data(std::std::vector<cv::Point> & line_points) {
+	std::lock_guard<std::mutex> m_lock(line_mutex);
 	m_line_points = line_points;
 }
+
+// get line_points buffer
 void get_line_data(std::std::vector<cv::Point> & line_points) {
+	std::lock_guard<std::mutex> m_lock(line_mutex);
 	line_points = m_line_points;
 }
 
