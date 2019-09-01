@@ -12,35 +12,45 @@ cv::Point m_grcenter(0,0);
 int m_grstate = GRUEN_NICHT;
 
 void set_gruen_data(cv::Point & grcenter, int & grstate) {
-	std::lock_guard<std::mutex> m_lock(gruen_mutex);
-	m_grcenter = grcenter;
-	m_grstate =  grstate;
+	std::lock_guard<std::mutex> m_lock(gruen_mutex);				// lock gruen_mutex
+	m_grcenter = grcenter;																	// write to grcenter buffer
+	m_grstate =  grstate;																		// write to grstate buffer
 }
 
 void get_gruen_data(cv::Point & grcenter, int & grstate) {
-	std::lock_guard<std::mutex> m_lock(gruen_mutex);
-	grcenter = m_grcenter;
-	grstate = m_grstate;
+	std::lock_guard<std::mutex> m_lock(gruen_mutex);				// lock gruen_mutex
+	grcenter = m_grcenter;														// write grcenter buffer to variable passed by reference
+	grstate = m_grstate;															// write grstate buffer to variable passed by reference
 }
 
-cv::Point gruen_center(vector <cv::Point> cont1, vector <cv::Point> cont2) {
-	Moments m1 = moments(cont1);
-	Moments m2 = moments(cont2);
+
+// returns the center of two green point contours
+cv::Point gruen_center(vector <cv::Point> & cont1, vector <cv::Point> & cont2) {
+	cv::Moments m1 = cv::moments(cont1);
+	cv::Moments m2 = cv::moments(cont2);
 
 	return cv::Point((m1.m10 / m1.m00 + m2.m10 / m2.m00) / 2, (m1.m01 / m1.m00 + m2.m01 / m2.m00) / 2);
+	// x = (x1 + x2) / 2; y = (y1 + y2) / 2
 }
 
-cv::Point gruen_center(cv::Point p1, cv::Point p2) {
+// returns the center of two points
+cv::Point gruen_center(cv::Point & p1, cv::Point & p2) {
 	return cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+	// x = (x1 + x2) / 2; y = (y1 + y2) / 2
 }
 
-cv::Point gruen_center(vector<cv::Point> contour) {
-	Moments m = moments(contour);
+cv::Point gruen_center(vector<cv::Point> & contour) {
+	cv::Moments m = cv::moments(contour);
 	return cv::Point(m.m10 / m.m00, m.m01 / m.m00);
 }
 
-cv::Point rotate_point(cv::Point & origin_point, cv::Point & rotating_point, float rotation, float length_factor) {
-	float rad = CV_PI / 180 * rotation;
+/* gibt einen Punkt zurück, der von rotating_point um origin_point gedreht wird.
+	rotation ist dabei der Winkel in Grad.
+ 	Die Distanz, die der neue Punkt vom Punkt origin entfernt ist, wird mit length_factor angegeben.
+*/
+
+cv::Point rotate_point(cv::Point & origin_point, cv::Point & rotating_point, float rotation, float length_factor = 1) {
+	float rad = CV_PI / 180 * rotation;			// bogenmaß von rotation berechnen
 
 	cv::Point new_point;
 
@@ -69,33 +79,35 @@ cv::Point rotated_point_lenght(cv::Point & origin_point, float rotation, float l
  * Checkt bei einem grünen Punkt vertikal nach oben den anteil der Schwarzen linie.
  */
 
-int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<cv::Point> contour) {
+int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<cv::Point> & contour) {
 
-	Moments m = moments(contour);
-	float point_distance = sqrt(m.m00) * 1.2;
+	cv::Moments m = cv::moments(contour);
+	float point_distance = sqrt(m.m00) * 1.2;			// Länge, in die geprüft wird ist: Wurzel aus der Fläche des Grünen Punktes * 1.2
 
-	cv::Point mittegr = gruen_center(contour);
-	cv::Point top_checkpoint = mittegr;
-	top_checkpoint.y -= point_distance;
+	cv::Point mittegr = gruen_center(contour);		// Mitte des grünen Punktes
+	cv::Point top_checkpoint = mittegr;						// Prüfpunkt oberhalb des grünen Punktes
+	top_checkpoint.y -= point_distance;						// y um point_distance nach oben verschieben
 
-	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.5) {
-		cv::Point left_checkpoint = mittegr;
-		cv::Point right_checkpoint = mittegr;
-		left_checkpoint.x -= point_distance;
-		right_checkpoint.x += point_distance;
+	if(ratio_black_points(mittegr, top_checkpoint, bin_sw, bin_gr, img_rgb) > 0.5) {		// wenn mehr als 50% der geprüften Punkte schwarz ist
+		cv::Point left_checkpoint = mittegr;		// linker Prüfpunkt
+		cv::Point right_checkpoint = mittegr;		// rechter Prüfpunkt
+		left_checkpoint.x -= point_distance;		// nach links verschieben
+		right_checkpoint.x += point_distance;		// nach rechts verschieben
 
-		int ratio_left = ratio_black_points(mittegr, left_checkpoint, bin_sw, bin_gr, img_rgb);
-		int ratio_right = ratio_black_points(mittegr, right_checkpoint, bin_sw, bin_gr, img_rgb);
+		float ratio_left = ratio_black_points(mittegr, left_checkpoint, bin_sw, bin_gr, img_rgb);		// Anteil an schwarz links
+		float ratio_right = ratio_black_points(mittegr, right_checkpoint, bin_sw, bin_gr, img_rgb);	// Anteil an schwarz rechts
 
-		if(ratio_left > ratio_right) {
+		if(ratio_left > ratio_right) {		// links ist mehr schwarz
 			return GRUEN_RECHTS;
-		} else if(ratio_right > ratio_left) {
+		} else if(ratio_right > ratio_left) {			// rechts ist mehr schwarz
 			return GRUEN_LINKS;
 		}
 	}
 
 	return GRUEN_NICHT;
 }
+
+
 
 void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, cv::Point & grcenter) {
 
@@ -105,7 +117,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 	findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
 	for(unsigned int i = 0; i < contg.size(); i++) {
-		Moments m = moments(contg[i]);
+		cv::Moments m = cv::moments(contg[i]);
 		if(m.m00 < 800) {
 			contg.erase(contg.begin() + i--);
 		}
@@ -122,7 +134,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 		 */
 
 		for(unsigned int i = 0; i < contg.size()-1; i++) {
-			Moments m1 = moments(contg[i]), m2 = moments(contg[i+1]);
+			cv::Moments m1 = cv::moments(contg[i]), m2 = cv::moments(contg[i+1]);
 			//cout << "m00: " << m1.m00 << " / " << m2.m00 << endl;
 			if(abs(m1.m00 - m2.m00) < 1500 || (m1.m00 > 3500 && m2.m00 > 3500)) {
 				cv::Point p1 = cv::Point(m1.m10 / m1.m00, m1.m01 / m1.m00);
@@ -144,10 +156,10 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 					cv::Point p2_new = rotate_point(p2, p1, 135, 0.8);
 
 #ifdef VISUAL_DEBUG
-					circle(img_rgb, p1, 2, Scalar(0,255,0), 2);
-					circle(img_rgb, p2, 2, Scalar(0,255,0), 2);
-					circle(img_rgb, p1_new, 2, Scalar(0,0,255), 2);
-					circle(img_rgb, p2_new, 2, Scalar(0,0,255), 2);
+					cv::circle(img_rgb, p1, 2, Scalar(0,255,0), 2);
+					cv::circle(img_rgb, p2, 2, Scalar(0,255,0), 2);
+					cv::circle(img_rgb, p1_new, 2, Scalar(0,0,255), 2);
+					cv::circle(img_rgb, p2_new, 2, Scalar(0,0,255), 2);
 #endif
 
 					float ratio_left_point = ratio_black_points(p1, p1_new, bin_sw, bin_gr, img_rgb);
@@ -207,8 +219,8 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
  */
 
 void separate_gruen(Mat & hsv, Mat & bin_gr) {
-	inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
-	morphologyEx(bin_gr, bin_gr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+	cv::inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
+	cv::morphologyEx(bin_gr, bin_gr, MORPH_OPEN, cv::getStructuringElement(MORPH_ELLIPSE, cv::Size(5,5)));
 }
 
 
@@ -233,7 +245,7 @@ float ratio_black_points(cv::Point & origin, cv::Point & destination, Mat & bin_
 		cur_pixel.x = origin.x + (float)i/30 * (destination.x - origin.x);
 		cur_pixel.y = origin.y + (float)i/30 * (destination.y - origin.y);
 
-		if(inMat(cur_pixel, bin_sw.cols, bin_sw.rows)) {
+		if(inMat(cur_pixel, bin_sw)) {
 
 			color_sw = (int)bin_sw.at<uchar>(cur_pixel);
 			color_gr = (int)bin_gr.at<uchar>(cur_pixel);
@@ -244,16 +256,16 @@ float ratio_black_points(cv::Point & origin, cv::Point & destination, Mat & bin_
 				black_pixels++;
 
 	#ifdef VISUAL_DEBUG
-				circle(img_rgb, cur_pixel, 1, Scalar(50, 50, 50), 2);
+				cv::circle(img_rgb, cur_pixel, 1, cv::Scalar(50, 50, 50), 2);
 	#endif
 			} else if(color_gr == 255) {
 				green_pixels++;
 	#ifdef VISUAL_DEBUG
-				circle(img_rgb, cur_pixel, 1, Scalar(20, 150, 20), 2);
+				cv::circle(img_rgb, cur_pixel, 1, cv::Scalar(20, 150, 20), 2);
 	#endif
 			} else {
 	#ifdef VISUAL_DEBUG
-				circle(img_rgb, cur_pixel, 1, Scalar(200,200,200), 2);
+				cv::circle(img_rgb, cur_pixel, 1, cv::Scalar(200,200,200), 2);
 	#endif
 			}
 		} else {
