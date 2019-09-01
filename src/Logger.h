@@ -21,6 +21,16 @@ public:
 	void log(std::string msg, spdlog::level::level_enum lvl);
 	void log_buffer(spdlog::level::level_enum lvl);
 
+	/*
+		'<<' nutzen um in den buffer zu schreiben.
+		Als letztes Element spdlog::level::level_enum hinzufügen, um den buffer in die Datei zu schreiben.
+		Alternativ kann log_buffer genutzt werden.
+
+		Bsp.:
+		Logger example_log("example");
+		example_log << "This is only for testing purposes!" << spdlog::level::info;
+	*/
+
 	template< typename T >
 	Logger& operator<<(const T& val) {
 		_buffer += val;
