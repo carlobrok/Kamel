@@ -139,16 +139,16 @@ void m_drive() {
 					thread_delay(500);																	// delay 500ms
 
 					break;
-				} else if (grcenter.x < 310) {						// m_grcenter im linken Bildbereich
+				} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
-				} else if (grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
+				} else if (m_grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);			// rechts Kurve
 				} else {																	// m_grcenter im mittleren, oberen Bildbereich
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
 				}
 			}
 
-		} else if (m_grstate == GRUEN_LINKS && grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
+		} else if (m_grstate == GRUEN_LINKS && m_grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
 
 			debug_lg << "green point LEFT" << lvl::info;					// in debug.log loggen
 
@@ -157,7 +157,7 @@ void m_drive() {
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
 			thread_delay(500);						// delay 500ms
 
-		} else if (m_grstate == GRUEN_RECHTS && grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
+		} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
 
 			debug_lg << "green point RIGHT" << lvl::info;			// in debug.log loggen
 

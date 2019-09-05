@@ -70,6 +70,6 @@ int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sen
 		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
 	}
 
-	analog_sensor_data[0] = in_data[8] | (in_data[9] << 8);
+	analog_sensor_data[0] = in_data[1] | (in_data[2] << 8);
 	return ret;
 }

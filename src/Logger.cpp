@@ -9,7 +9,7 @@ Logger::Logger(std::string log_name) {
 		fs::create_directory(cur_path);
 	}
 
-	_logger = spdlog::basic_logger_mt<spdlog::async_factory>(channel_name, "logs/" + channel_name + ".log");
+	_logger = spdlog::basic_logger_mt<spdlog::async_factory>(log_name, "logs/" + log_name + ".log");
 	_logger->set_pattern("[%^%l%$] %T %v");
 }
 

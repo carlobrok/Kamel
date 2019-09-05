@@ -21,6 +21,6 @@ inline void thread_delay_micros(int64_t us) {
 }
 
 void init_clock(void);
-double_t cur_sec(void);
+double_t cur_ms(void);
 
 #endif
