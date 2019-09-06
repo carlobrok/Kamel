@@ -1,8 +1,8 @@
 #include <mutex>
 #include "opencv2/opencv.hpp"
-#include "config.h"
-#include "math.h"
+#include "math.h"				// atan2
 
+#include "config.h"
 #include "line.h"
 #include "util.h"
 
@@ -14,20 +14,20 @@ cv::Mat bin_ellipse;
 cv::Mat bin_intersection;
 
 // set line_points buffer
-void set_line_data(std::std::vector<cv::Point> & line_points) {
+void set_line_data(std::vector<cv::Point> & line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);
 	m_line_points = line_points;
 }
 
 // get line_points buffer
-void get_line_data(std::std::vector<cv::Point> & line_points) {
+void get_line_data(std::vector<cv::Point> & line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);
 	line_points = m_line_points;
 }
 
 void init_line_ellipse(cv::Mat & img_rgb) {
-	bin_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, Scalar(0));
-	cv::ellipse(bin_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, Scalar(255), ELLIPSE_THICKNESS);
+	bin_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
+	cv::ellipse(bin_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
 }
 
 float line_radiant(cv::Point & p, int rows, int cols) {
@@ -54,7 +54,7 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 			near_mitte = abs(i-hsv.cols/2);
 		}
 		if(abs(i-hsv.cols/2) > near_mitte) {
-			cout << "Weiter entfernt als nähester Punkt" << endl;
+			std::cout << "Weiter entfernt als nähester Punkt" << std::endl;
 			i = hsv.cols;
 		} else if(abs(i-hsv.cols/2) < near_mitte && color == 255) {
 			p_near_mitte.x = i;
@@ -63,7 +63,7 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 		}
 	}
 
-	cout << "P_near_mitte: " << p_near_mitte << endl;
+	std::cout << "P_near_mitte: " << p_near_mitte << std::endl;
 
 	neue_punkte.push_back(p_near_mitte);
 
@@ -149,7 +149,7 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 		neue_punkte = temp_neue_punkte;
 	}
 
-	bin_sw = Scalar(0);
+	bin_sw = cv::Scalar(0);
 
 	for(unsigned int i = 0; i < schwarze_punkte.size(); i++) {
 		bin_sw.at<uchar>(schwarze_punkte[i]) = 255;
@@ -157,9 +157,9 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 }
 
 void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool separate_line = false) {
-	inRange(hsv, Scalar(0, 0, 0), Scalar(180, 255, THRESH_BLACK), bin_sw);
+	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);
 	bin_sw -= bin_gr;
-	morphologyEx(bin_sw, bin_sw, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+	cv::morphologyEx(bin_sw, bin_sw, MORPH_OPEN, cv::getStructuringElement(MORPH_ELLIPSE, cv::Size(3,3)));
 
 	if(bin_ellipse.empty()) {
 		init_line_ellipse(img_rgb);
@@ -171,18 +171,18 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 		sepatare_line(hsv, bin_sw);
 	}
 
-	bitwise_and(bin_sw, bin_ellipse, bin_intersection);
+	cv::bitwise_and(bin_sw, bin_ellipse, bin_intersection);
 	std::vector< std::vector<cv::Point> > contours_line;
 
 #ifdef VISUAL_DEBUG
 	findContours(bin_intersection, contours_line, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-	drawContours(img_rgb, contours_line, -1, Scalar(50, 140, 200), 1);
+	drawContours(img_rgb, contours_line, -1, cv::Scalar(50, 140, 200), 1);
 #endif
 
 
 	line_points.clear();
 	for (unsigned int i = 0; i < contours_line.size(); ++i) {
-		Moments m = moments(contours_line[i]);
+		cv::Moments m = cv::moments(contours_line[i]);
 
 		if(m.m00 < 300) {
 			contours_line.erase(contours_line.begin()+i);
@@ -194,7 +194,7 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 			line_points.push_back(mitte);
 
 #ifdef VISUAL_DEBUG
-			circle(img_rgb, mitte, 1, Scalar(50, 90, 200),2);
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);
 #endif
 		}
 

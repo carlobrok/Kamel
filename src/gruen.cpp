@@ -1,10 +1,15 @@
 #include <mutex>
+#include "opencv2/opencv.hpp"
+#include "math.h"
+
 #include "gruen.h"
 #include "util.h"
 #include "config.h"
 
-using namespace std;			// löschen und überall std:: schreiben
-using namespace cv;				// löschen und überall cv:: schreiben
+
+
+//using namespace std;			// löschen und überall std:: schreiben
+//using namespace cv;				// löschen und überall cv:: schreiben
 
 std::mutex gruen_mutex;				// mutex for global green values
 
@@ -25,7 +30,7 @@ void get_gruen_data(cv::Point & grcenter, int & grstate) {
 
 
 // returns the center of two green point contours
-cv::Point gruen_center(vector <cv::Point> & cont1, vector <cv::Point> & cont2) {
+cv::Point gruen_center(std::vector <cv::Point> & cont1, std::vector <cv::Point> & cont2) {
 	cv::Moments m1 = cv::moments(cont1);
 	cv::Moments m2 = cv::moments(cont2);
 
@@ -39,7 +44,7 @@ cv::Point gruen_center(cv::Point & p1, cv::Point & p2) {
 	// x = (x1 + x2) / 2; y = (y1 + y2) / 2
 }
 
-cv::Point gruen_center(vector<cv::Point> & contour) {
+cv::Point gruen_center(std::vector<cv::Point> & contour) {
 	cv::Moments m = cv::moments(contour);
 	return cv::Point(m.m10 / m.m00, m.m01 / m.m00);
 }
@@ -79,7 +84,7 @@ cv::Point rotated_point_lenght(cv::Point & origin_point, float rotation, float l
  * Checkt bei einem grünen Punkt vertikal nach oben den anteil der Schwarzen linie.
  */
 
-int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<cv::Point> & contour) {
+int gruen_check_normal(cv::Mat & img_rgb, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & contour) {
 
 	cv::Moments m = cv::moments(contour);
 	float point_distance = sqrt(m.m00) * 1.2;			// Länge, in die geprüft wird ist: Wurzel aus der Fläche des Grünen Punktes * 1.2
@@ -109,12 +114,12 @@ int gruen_check_normal(Mat & img_rgb, Mat & bin_sw, Mat & bin_gr, vector<cv::Poi
 
 
 
-void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & grstate, cv::Point & grcenter) {
+void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, int & grstate, cv::Point & grcenter) {
 
-	vector< vector<cv::Point> > contg;
+	std::vector< std::vector<cv::Point> > contg;
 
 	//morphologyEx(img_bingr, img_bingr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-	findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	cv::findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
 	for(unsigned int i = 0; i < contg.size(); i++) {
 		cv::Moments m = cv::moments(contg[i]);
@@ -124,7 +129,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 	}
 
 #ifdef VISUAL_DEBUG
-	drawContours(img_rgb, contg, -1, Scalar(50, 230, 50), 1);
+	cv::drawContours(img_rgb, contg, -1, cv::Scalar(50, 230, 50), 1);
 #endif
 
 	if(contg.size() > 1) {
@@ -141,7 +146,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 				cv::Point p2 = cv::Point(m2.m10 / m2.m00, m2.m01 / m2.m00);
 
 #ifdef VISUAL_DEBUG
-				line(img_rgb, p1, p2, Scalar(255,0,100), 2);
+				cv::line(img_rgb, p1, p2, cv::Scalar(255,0,100), 2);
 #endif
 
 				if(abs(p1.y-p2.y < sqrt((m1.m00 + m2.m00) / 2))) {
@@ -156,18 +161,18 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
 					cv::Point p2_new = rotate_point(p2, p1, 135, 0.8);
 
 #ifdef VISUAL_DEBUG
-					cv::circle(img_rgb, p1, 2, Scalar(0,255,0), 2);
-					cv::circle(img_rgb, p2, 2, Scalar(0,255,0), 2);
-					cv::circle(img_rgb, p1_new, 2, Scalar(0,0,255), 2);
-					cv::circle(img_rgb, p2_new, 2, Scalar(0,0,255), 2);
+					cv::circle(img_rgb, p1, 2, cv::Scalar(0,255,0), 2);
+					cv::circle(img_rgb, p2, 2, cv::Scalar(0,255,0), 2);
+					cv::circle(img_rgb, p1_new, 2, cv::Scalar(0,0,255), 2);
+					cv::circle(img_rgb, p2_new, 2, cv::Scalar(0,0,255), 2);
 #endif
 
 					float ratio_left_point = ratio_black_points(p1, p1_new, bin_sw, bin_gr, img_rgb);
 					float ratio_right_point = ratio_black_points(p2, p2_new, bin_sw, bin_gr, img_rgb);
 
 #ifdef DEBUG_GRUEN
-					cout << "Ratio Blackpoints:	Links: " << ratio_left_point
-							<< "		Rechts: " << ratio_right_point << endl;
+					std::cout << "Ratio Blackpoints:	Links: " << ratio_left_point
+							<< "		Rechts: " << ratio_right_point << std::endl;
 #endif
 
 					if(ratio_left_point > 0.4 && ratio_right_point > 0.4) {
@@ -218,7 +223,7 @@ void gruen_calc(Mat & img_rgb, Mat & img_hsv, Mat & bin_sw, Mat & bin_gr, int & 
  * Alle bereiche, wo grün vorhanden ist in bin_gr schreiben.
  */
 
-void separate_gruen(Mat & hsv, Mat & bin_gr) {
+void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr) {
 	cv::inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
 	cv::morphologyEx(bin_gr, bin_gr, MORPH_OPEN, cv::getStructuringElement(MORPH_ELLIPSE, cv::Size(5,5)));
 }
@@ -234,7 +239,7 @@ void separate_gruen(Mat & hsv, Mat & bin_gr) {
  */
 
 
-float ratio_black_points(cv::Point & origin, cv::Point & destination, Mat & bin_sw, Mat & bin_gr, Mat & img_rgb) {
+float ratio_black_points(cv::Point & origin, cv::Point & destination, cv::Mat & bin_sw, cv::Mat & bin_gr, cv::Mat & img_rgb) {
 	int black_pixels = 0;
 	int green_pixels = 0;
 	cv::Point cur_pixel;
