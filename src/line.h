@@ -12,7 +12,7 @@ float line_radiant(cv::Point & p, int rows, int cols);
 
 void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw);
 
-void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points);
+void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool do_separate_line = false);
 
 
 #endif

@@ -228,7 +228,7 @@ void m_drive() {
 			}
 		} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
-			debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
+			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 		}
 
 		//thread_delay_micros(200);			// microsecond delay, experimentell gegen hohe Auslastung
@@ -270,6 +270,8 @@ void image_processing() {
 
 		tloop = getTickCount();			// Tickcount for whole loop
 
+		cout << "proc loop" << endl;
+
 		while(!cam.read(img_rgb)){}		// warten bis das aktuelle bild einlesbar ist, dann in img_rbg einlesen
 
 		// Filter image and convert to hsv
@@ -284,13 +286,13 @@ void image_processing() {
 
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);		// linienpunkte berechnen, in m_line_points schreiben
 
-		set_line_data(m_line_points);		// m_line_points in global buffer schreiben
+		// set_line_data(m_line_points);		// m_line_points in global buffer schreiben
 
 		//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
 
-		set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
+		// set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
 
 		//		log_timing(tlast, "Green calc: ");
 
@@ -300,6 +302,8 @@ void image_processing() {
 		srv.imshow("Mask SW", bin_sw);
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();			// VideoServer updaten
+
+		cout << "image proc loop" << endl;
 
 		debug_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
 
@@ -315,10 +319,10 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
+	// thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	image_processing();						// start void image_processing
 
-	drive_t.detach();							// drive_t anhalten
+	// drive_t.detach();							// drive_t anhalten
 	cout << "All threads closed" << endl;
 
 	return -1;						// fehler

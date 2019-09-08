@@ -10,8 +10,8 @@
 
 // Grünpunkt defines
 
-#define LOWER_GREEN Scalar(50, 60, 25)
-#define UPPER_GREEN Scalar(90, 255, 115)
+#define LOWER_GREEN cv::Scalar(50, 60, 25)
+#define UPPER_GREEN cv::Scalar(90, 255, 115)
 
 #define GRUEN_NICHT 0
 #define GRUEN_BEIDE 3

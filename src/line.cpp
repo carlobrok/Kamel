@@ -156,10 +156,10 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	}
 }
 
-void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool separate_line = false) {
+void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool do_separate_line) {
 	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);
 	bin_sw -= bin_gr;
-	cv::morphologyEx(bin_sw, bin_sw, MORPH_OPEN, cv::getStructuringElement(MORPH_ELLIPSE, cv::Size(3,3)));
+	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));
 
 	if(bin_ellipse.empty()) {
 		init_line_ellipse(img_rgb);
@@ -167,15 +167,15 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 
 	bin_intersection.release();
 
-	if(sepatare_line) {
-		sepatare_line(hsv, bin_sw);
-	}
+	// if(do_separate_line) {
+	// 	sepatare_line(hsv, bin_sw);
+	// }
 
 	cv::bitwise_and(bin_sw, bin_ellipse, bin_intersection);
 	std::vector< std::vector<cv::Point> > contours_line;
 
 #ifdef VISUAL_DEBUG
-	findContours(bin_intersection, contours_line, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	findContours(bin_intersection, contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 	drawContours(img_rgb, contours_line, -1, cv::Scalar(50, 140, 200), 1);
 #endif
 

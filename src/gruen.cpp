@@ -119,7 +119,7 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 	std::vector< std::vector<cv::Point> > contg;
 
 	//morphologyEx(img_bingr, img_bingr, MORPH_OPEN, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-	cv::findContours(bin_gr, contg, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	cv::findContours(bin_gr, contg, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
 	for(unsigned int i = 0; i < contg.size(); i++) {
 		cv::Moments m = cv::moments(contg[i]);
@@ -225,7 +225,7 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 
 void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr) {
 	cv::inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
-	cv::morphologyEx(bin_gr, bin_gr, MORPH_OPEN, cv::getStructuringElement(MORPH_ELLIPSE, cv::Size(5,5)));
+	cv::morphologyEx(bin_gr, bin_gr, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
 }
 
 
