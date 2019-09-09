@@ -37,16 +37,23 @@ void m_drive() {
 
 	// init i2c devices
 
-	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
-	/*if(motor_fd == -1) {
+	/*int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	if(motor_fd == -1) {
+		cout << "error opening motor_arduino" << endl;
 		return;
+	} else {
+		cout << "Motor_fd: " << motor_fd << endl;
 	}*/
-	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
-	int sensor_fd = kamelI2Copen(0x09);
-/*	if(sensor_fd == -1) {
+//	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
+
+	int sensor_fd = kamelI2Copen(0x08);
+	if(sensor_fd == -1) {
+		cout << "error opening sensor_arduino" << endl;
 		return;
-	}*/
+	} else {
+		cout << "Sensor_fd: " << sensor_fd << endl;
+	}
 
 	debug_lg << "successfully initialized i2c devices" << lvl::debug;
 	debug_lg << "init sensor / camera variables" << lvl::debug;
@@ -101,18 +108,30 @@ void m_drive() {
 
 	while(1) {
 
+		//setMotorDirPwmBoth(sensor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
+
 		// sensor value updating ======================
 
 		// update values
-		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
-		get_line_data(m_line_points);					 		// line data updaten
+
+		//get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
+		//get_line_data(m_line_points);					 		// line data updaten
 
 
-		last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
-		last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
+		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
+		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
 
 		// update arduino sensor data
-//		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
+		//cout << "Read data: " << getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data) << endl;
+
+		setMotorDirPwm(sensor_fd, MOTOR_BOTH, MOTOR_FORWARD, 200);
+
+		for (int i = 0; i < 8; i++) {
+			cout << "D" << i << "  " << digital_sensor_data[i] << "  ";
+		}
+		cout << endl;
+
+		thread_delay(100);
 
 		// push_front last values - recent value is item [0]
 		/*last_analog_data.push_front(analog_sensor_data[0]);
@@ -120,10 +139,11 @@ void m_drive() {
 			last_digital_data[i].push_front(digital_sensor_data[i]);
 		}*/
 
+		// cout << "drive routine; line_points: " << m_line_points << endl;
 
 		// main part: drive decisions	=================================
 
-		if (m_grstate == GRUEN_BEIDE) {
+		/*if (m_grstate == GRUEN_BEIDE) {
 
 			debug_lg << "green point BOTH" << lvl::info;
 
@@ -229,7 +249,7 @@ void m_drive() {
 		} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
 			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
-		}
+		}*/
 
 		//thread_delay_micros(200);			// microsecond delay, experimentell gegen hohe Auslastung
 	}
@@ -270,8 +290,6 @@ void image_processing() {
 
 		tloop = getTickCount();			// Tickcount for whole loop
 
-		cout << "proc loop" << endl;
-
 		while(!cam.read(img_rgb)){}		// warten bis das aktuelle bild einlesbar ist, dann in img_rbg einlesen
 
 		// Filter image and convert to hsv
@@ -286,13 +304,13 @@ void image_processing() {
 
 		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);		// linienpunkte berechnen, in m_line_points schreiben
 
-		// set_line_data(m_line_points);		// m_line_points in global buffer schreiben
+		set_line_data(m_line_points);		// m_line_points in global buffer schreiben
 
 		//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
 
-		// set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
+		set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
 
 		//		log_timing(tlast, "Green calc: ");
 
@@ -303,9 +321,6 @@ void image_processing() {
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();			// VideoServer updaten
 
-		cout << "image proc loop" << endl;
-
-		debug_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
 
 		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
@@ -319,10 +334,10 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	// thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
+	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	image_processing();						// start void image_processing
 
-	// drive_t.detach();							// drive_t anhalten
+	drive_t.detach();							// drive_t anhalten
 	cout << "All threads closed" << endl;
 
 	return -1;						// fehler

@@ -64,7 +64,7 @@ bool get_bit(int8_t byte, uint8_t bit_index) {
 
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
 	uint8_t in_data[3];
-	int ret = i2c_smbus_read_i2c_block_data(fd, 0, 3, in_data);
+	int ret = i2c_smbus_read_block_data(fd, 1, in_data);
 
 	for(int i = 0; i < 8; i++) {
 		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
