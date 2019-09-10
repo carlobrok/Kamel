@@ -7,7 +7,7 @@
 
 #include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 #include "opencv2/opencv.hpp"				// opencv für bildauswertung
-#include "math.h"
+#include "math.h"					// abs, cos, sin, ...
 
 #include "Logger.h"			// Logger class
 #include "config.h"			// defines
@@ -124,13 +124,25 @@ void m_drive() {
 		// update arduino sensor data
 		//cout << "Read data: " << getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data) << endl;
 
-		setMotorDirPwm(sensor_fd, MOTOR_BOTH, MOTOR_FORWARD, 200);
+		//getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
 
-		for (int i = 0; i < 8; i++) {
-			cout << "D" << i << "  " << digital_sensor_data[i] << "  ";
+		uint8_t data[6];
+		cout << "Returns: " << readBytes(sensor_fd, data, 6) << endl;
+
+		for(int i = 0; i < 6; i++) {
+			cout << to_string(data[i]) << " ";#include "VideoServer.h"			// thread für Videoausgabe über IP
+#include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
+
+#include <linux/i2c-dev.h>
+
+using namespace std;
+using namespace cv;
+
 		}
 		cout << endl;
 
+		//i2c_smbus_write_byte(sensor_fd, 5);  // FUNKTIONIERT
+		cout << "send data" << endl;
 		thread_delay(100);
 
 		// push_front last values - recent value is item [0]
