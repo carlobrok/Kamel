@@ -2,7 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-# Add inputs and outputs from these tool invocations to the build variables 
+# Add inputs and outputs from these tool invocations to the build variables
 CPP_SRCS += \
 ../src/2020_Hannover.cpp \
 ../src/CameraCapture.cpp \
@@ -11,7 +11,7 @@ CPP_SRCS += \
 ../src/VideoServer.cpp \
 ../src/gruen.cpp \
 ../src/line.cpp \
-../src/util.cpp 
+../src/util.cpp
 
 OBJS += \
 ./src/2020_Hannover.o \
@@ -21,7 +21,7 @@ OBJS += \
 ./src/VideoServer.o \
 ./src/gruen.o \
 ./src/line.o \
-./src/util.o 
+./src/util.o
 
 CPP_DEPS += \
 ./src/2020_Hannover.d \
@@ -31,15 +31,13 @@ CPP_DEPS += \
 ./src/VideoServer.d \
 ./src/gruen.d \
 ./src/line.d \
-./src/util.d 
+./src/util.d
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -std=c++0x -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -std=c++14 -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
-
-
