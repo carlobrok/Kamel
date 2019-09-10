@@ -130,14 +130,7 @@ void m_drive() {
 		cout << "Returns: " << readBytes(sensor_fd, data, 6) << endl;
 
 		for(int i = 0; i < 6; i++) {
-			cout << to_string(data[i]) << " ";#include "VideoServer.h"			// thread für Videoausgabe über IP
-#include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
-
-#include <linux/i2c-dev.h>
-
-using namespace std;
-using namespace cv;
-
+			cout << to_string(data[i]) << " ";
 		}
 		cout << endl;
 
