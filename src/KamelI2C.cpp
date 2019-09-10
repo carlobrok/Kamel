@@ -62,9 +62,14 @@ bool get_bit(int8_t byte, uint8_t bit_index) {
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
 
+
+int readBytes(int &fd, uint8_t *in_data, uint16_t data_length) {
+	return i2c_smbus_read_i2c_block_data(fd, 2, data_length, in_data);
+}
+
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
 	uint8_t in_data[3];
-	int ret = i2c_smbus_read_block_data(fd, 1, in_data);
+	int ret = i2c_smbus_read_i2c_block_data(fd, 1, 3, in_data);
 
 	for(int i = 0; i < 8; i++) {
 		digital_sensor_data[i] = get_bit(in_data[0], 7-i);

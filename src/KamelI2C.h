@@ -29,6 +29,9 @@ int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_
 int setMotorState(int &fd, uint8_t side, uint8_t state);
 
 bool get_bit(int8_t byte, uint8_t bit_number);
+
+int readBytes(int &fd, uint8_t *in_data, uint16_t data_length);
+
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]);
 
 #endif
