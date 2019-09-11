@@ -63,18 +63,36 @@ bool get_bit(int8_t byte, uint8_t bit_index) {
  */
 
 
-int readBytes(int &fd, uint8_t *in_data, uint16_t data_length) {
-	return i2c_smbus_read_i2c_block_data(fd, 2, data_length, in_data);
+int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command) {
+	return i2c_smbus_read_i2c_block_data(fd, command, data_length, in_data);
 }
 
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
 	uint8_t in_data[3];
-	int ret = i2c_smbus_read_i2c_block_data(fd, 1, 3, in_data);
+	int ret = i2c_smbus_read_i2c_block_data(fd, ALL_SENSOR_VALUES, 3, in_data);
 
 	for(int i = 0; i < 8; i++) {
 		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
 	}
 
 	analog_sensor_data[0] = in_data[1] | (in_data[2] << 8);
+	return ret;
+}
+
+int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]) {
+	uint8_t in_data[1];
+	int ret = i2c_smbus_read_i2c_block_data(fd, DIGITAL_SENSOR_VALUES, 1, in_data);
+
+	for(int i = 0; i < 8; i++) {
+		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
+	}
+	return ret;
+}
+
+int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]) {
+	uint8_t in_data[2];
+	int ret = i2c_smbus_read_i2c_block_data(fd, ANALOG_SENSOR_VALUES, 2, in_data);
+
+	analog_sensor_data[0] = in_data[0] | (in_data[1] << 8);
 	return ret;
 }
