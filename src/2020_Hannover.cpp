@@ -19,6 +19,8 @@
 #include "VideoServer.h"			// thread für Videoausgabe über IP
 #include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
 
+
+
 using namespace std;
 using namespace cv;
 
@@ -37,22 +39,20 @@ void m_drive() {
 
 	// init i2c devices
 
-	/*int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
+	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	if(motor_fd == -1) {
+		debug_lg << "error opening motor_arduino" << lvl::off;
 		cout << "error opening motor_arduino" << endl;
 		return;
-	} else {
-		cout << "Motor_fd: " << motor_fd << endl;
-	}*/
+	}
 
 //	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF); 		// Beide Motoren ausschalten
 
-	int sensor_fd = kamelI2Copen(0x08);
+	int sensor_fd = kamelI2Copen(0x09);
 	if(sensor_fd == -1) {
+		debug_lg << "error opening sensor_arduino" << lvl::off;
 		cout << "error opening sensor_arduino" << endl;
 		return;
-	} else {
-		cout << "Sensor_fd: " << sensor_fd << endl;
 	}
 
 	debug_lg << "successfully initialized i2c devices" << lvl::debug;
@@ -114,8 +114,8 @@ void m_drive() {
 
 		// update values
 
-		//get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
-		//get_line_data(m_line_points);					 		// line data updaten
+		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
+		get_line_data(m_line_points);					 		// line data updaten
 
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
@@ -124,19 +124,7 @@ void m_drive() {
 		// update arduino sensor data
 		//cout << "Read data: " << getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data) << endl;
 
-		//getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
-
-		uint8_t data[6];
-		cout << "Returns: " << readBytes(sensor_fd, data, 6) << endl;
-
-		for(int i = 0; i < 6; i++) {
-			cout << to_string(data[i]) << " ";
-		}
-		cout << endl;
-
-		//i2c_smbus_write_byte(sensor_fd, 5);  // FUNKTIONIERT
-		cout << "send data" << endl;
-		thread_delay(100);
+		getDigitalSensorData(sensor_fd, digital_sensor_data);
 
 		// push_front last values - recent value is item [0]
 		/*last_analog_data.push_front(analog_sensor_data[0]);
@@ -148,7 +136,7 @@ void m_drive() {
 
 		// main part: drive decisions	=================================
 
-		/*if (m_grstate == GRUEN_BEIDE) {
+		if (m_grstate == GRUEN_BEIDE) {
 
 			debug_lg << "green point BOTH" << lvl::info;
 
@@ -254,7 +242,7 @@ void m_drive() {
 		} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
 			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
-		}*/
+		}
 
 		//thread_delay_micros(200);			// microsecond delay, experimentell gegen hohe Auslastung
 	}
@@ -326,8 +314,8 @@ void image_processing() {
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();			// VideoServer updaten
 
+		camera_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::debug;
 
-		//		log_sensordata(line_points, grstate, grcenter, img_rgb);
 	}
 }
 
