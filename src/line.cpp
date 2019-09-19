@@ -8,30 +8,57 @@
 
 std::mutex line_mutex;
 
-std::vector<cv::Point> m_line_points;			// global line points holding vector
+std::vector<cv::Point> m_prim_line_points;			// global line points holding vector
+std::vector<cv::Point> m_sec_line_points;			// global line points holding vector
 
-cv::Mat bin_ellipse;
-cv::Mat bin_intersection;
+cv::Mat bin_prim_ellipse;
+cv::Mat bin_prim_intersection;
+cv::Mat bin_sec_ellipse;
+cv::Mat bin_sec_intersection;
 
 // set line_points buffer
-void set_line_data(std::vector<cv::Point> & line_points) {
+void set_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);
-	m_line_points = line_points;
+	m_prim_line_points = prim_line_points;
+	m_sec_line_points = sec_line_points;
 }
 
 // get line_points buffer
-void get_line_data(std::vector<cv::Point> & line_points) {
+void get_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);
-	line_points = m_line_points;
+	prim_line_points = m_prim_line_points;
+	sec_line_points = m_sec_line_points;
 }
 
+// initialisieren der Ellipsen-Masken
+// ! Nur 1 mal aufrufen !
 void init_line_ellipse(cv::Mat & img_rgb) {
-	bin_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
-	cv::ellipse(bin_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
+	// Beide masken komplett schwarz malen, alle Werte im Bild auf cv::Scalar(0)
+	bin_prim_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
+	bin_sec_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
+
+	// Weiße Halbellipsen auf Masken zeichnen
+	cv::ellipse(bin_prim_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows * 3/4), cv::Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
+	cv::ellipse(bin_sec_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2- ELLIPSE_THICKNESS/2 - ELLIPSE_THICKNESS, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
+
+	// Balken links und rechts zeichnen für bin_prim_ellipse
+	cv::Rect left_rect(0 , img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);
+	cv::Rect right_rect(img_rbg.cols - ELLIPSE_THICKNESS, img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);
+	cv::rectangle(img_rbg, left_rect, cv::Scalar(255), cv::FILLED);
+	cv::rectangle(img_rbg, right_rect, cv::Scalar(255), cv::FILLED);
 }
 
+// Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+// rows: Höhe des Bildes in Zeilen
+// cols: Breite des Bildes in Spalten
 float line_radiant(cv::Point & p, int rows, int cols) {
 	return atan2(p.y - rows, p.x - cols/2)  * 180 / CV_PI + 90;
+}
+
+// Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+// img: input image mit dem die Auswertung statt findet
+float line_radiant(cv::Point & p, cv::Mat & img) {
+	return atan2(p.y - img.rows, p.x - img.cols/2)  * 180 / CV_PI + 90;
 }
 
 void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
