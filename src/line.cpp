@@ -18,14 +18,14 @@ cv::Mat bin_sec_intersection;
 
 // set line_points buffer
 void set_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
-	std::lock_guard<std::mutex> m_lock(line_mutex);
+	std::lock_guard<std::mutex> m_lock(line_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	m_prim_line_points = prim_line_points;
 	m_sec_line_points = sec_line_points;
 }
 
 // get line_points buffer
 void get_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
-	std::lock_guard<std::mutex> m_lock(line_mutex);
+	std::lock_guard<std::mutex> m_lock(line_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	prim_line_points = m_prim_line_points;
 	sec_line_points = m_sec_line_points;
 }
@@ -42,10 +42,10 @@ void init_line_ellipse(cv::Mat & img_rgb) {
 	cv::ellipse(bin_sec_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2- ELLIPSE_THICKNESS/2 - ELLIPSE_THICKNESS, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
 
 	// Balken links und rechts zeichnen für bin_prim_ellipse
-	cv::Rect left_rect(0 , img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);
-	cv::Rect right_rect(img_rbg.cols - ELLIPSE_THICKNESS, img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);
-	cv::rectangle(img_rbg, left_rect, cv::Scalar(255), cv::FILLED);
-	cv::rectangle(img_rbg, right_rect, cv::Scalar(255), cv::FILLED);
+	cv::Rect left_rect(0 , img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);		// neues rechteck für links
+	cv::Rect right_rect(img_rbg.cols - ELLIPSE_THICKNESS, img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);		// neues rechteck für rechts
+	cv::rectangle(bin_prim_ellipse, left_rect, cv::Scalar(255), cv::FILLED);			// Rechteck links weiß auf bin_prim_ellipse zeichnen
+	cv::rectangle(bin_sec_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_sec_ellipse zeichnen
 }
 
 // Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
