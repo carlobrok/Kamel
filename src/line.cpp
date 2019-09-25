@@ -48,19 +48,28 @@ void init_line_ellipse(cv::Mat & img_rgb) {
 	cv::rectangle(bin_sec_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_sec_ellipse zeichnen
 }
 
-// Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
-// rows: Höhe des Bildes in Zeilen
-// cols: Breite des Bildes in Spalten
+/*
+ * Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+ * rows: Höhe des Bildes in Zeilen
+ * cols: Breite des Bildes in Spalten
+ */
 float line_radiant(cv::Point & p, int rows, int cols) {
 	return atan2(p.y - rows, p.x - cols/2)  * 180 / CV_PI + 90;
 }
 
-// Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
-// img: input image mit dem die Auswertung statt findet
+/*
+ * Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+ * img: input image mit dem die Auswertung statt findet
+ */
 float line_radiant(cv::Point & p, cv::Mat & img) {
 	return atan2(p.y - img.rows, p.x - img.cols/2)  * 180 / CV_PI + 90;
 }
 
+/*
+ * Schreibt nur die schwarzen Flächen in bin_sw, welche direkten Kontakt zur Ausgangsfläche haben.
+ * Die Ausgangsfläche wird bestimmt durch den Punkt, der am nähesten zum Punkt P(480|320), bei einem Format von
+ * 640x480p, liegt und sich in der unteren Reihe befindet.
+ */
 void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	bool abgefragte_punkte[hsv.cols][hsv.rows];
 	for(int x = 0; x < hsv.cols; x++) {
@@ -183,6 +192,11 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	}
 }
 
+/*
+ * Hauptfunktion zum auswerten der linepoints
+ * Die ausgewerteten prim_line_points und sec_line_points werden zwischen gespeichert und können
+ * mit get_line_data abgerufen werden.
+ */
 void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool do_separate_line) {
 	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);
 	bin_sw -= bin_gr;
