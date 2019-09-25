@@ -273,7 +273,6 @@ void image_processing() {
 	srv.namedWindow("HSV");
 	srv.namedWindow("Input");
 
-	vector<Point> m_line_points;		// lokaler vector mit allen Punkten der Linie
 	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
 	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
 
@@ -295,10 +294,7 @@ void image_processing() {
 
 		//		log_timing(tlast, "Green separation: ");
 
-		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);		// linienpunkte berechnen, in m_line_points schreiben
-
-		set_line_data(m_line_points);		// m_line_points in global buffer schreiben
-
+		line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
 		//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen

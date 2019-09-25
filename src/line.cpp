@@ -197,47 +197,80 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
  * Die ausgewerteten prim_line_points und sec_line_points werden zwischen gespeichert und können
  * mit get_line_data abgerufen werden.
  */
-void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool do_separate_line) {
-	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);
-	bin_sw -= bin_gr;
-	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));
-
-	if(bin_ellipse.empty()) {
-		init_line_ellipse(img_rgb);
-	}
-
-	bin_intersection.release();
+void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, bool do_separate_line) {
 
 	// if(do_separate_line) {
 	// 	sepatare_line(hsv, bin_sw);
 	// }
 
-	cv::bitwise_and(bin_sw, bin_ellipse, bin_intersection);
-	std::vector< std::vector<cv::Point> > contours_line;
+	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+
+	// Grünpunkt wird oft auch als schwarz erkannt, aktuelle Matrix des Grünpunktes, bin_gr, von bin_sw subtrahieren.
+	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
+	bin_sw -= bin_gr;
+
+	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));	// alle kleinstflecken entfernen
+
+	if(bin_prim_ellipse.empty() || bin_sec_ellipse.empty()) {			// Ellipsen initialisieren, wenn diese Matritzen leer sind
+		init_line_ellipse(img_rgb);
+	}
+
+	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
+	bin_sec_intersection.release();			// Überschneidungsmatrix leeren
+
+	cv::bitwise_and(bin_sw, bin_prim_ellipse, bin_prim_intersection);
+	cv::bitwise_and(bin_sw, bin_sec_ellipse, bin_sec_intersection);
+	std::vector< std::vector<cv::Point> > prim_contours_line;
+	std::vector< std::vector<cv::Point> > sec_contours_line;
 
 #ifdef VISUAL_DEBUG
-	findContours(bin_intersection, contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-	drawContours(img_rgb, contours_line, -1, cv::Scalar(50, 140, 200), 1);
+	findContours(bin_prim_intersection, prim_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+	findContours(bin_sec_intersection, sec_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+	drawContours(img_rgb, sec_contours_line, -1, cv::Scalar(50, 180, 180), 1);
+	drawContours(img_rgb, prim_contours_line, -1, cv::Scalar(50, 140, 200), 1);
 #endif
 
+	std::vector<cv::Point> l_prim_line_points;			// local line points holding vector
+	std::vector<cv::Point> l_sec_line_points;			// local line points holding vector
 
-	line_points.clear();
-	for (unsigned int i = 0; i < contours_line.size(); ++i) {
-		cv::Moments m = cv::moments(contours_line[i]);
+	// Prim. ellipse
+	for (unsigned int i = 0; i < prim_contours_line.size(); ++i) {
+		cv::Moments m = cv::moments(prim_contours_line[i]);
 
 		if(m.m00 < 300) {
-			contours_line.erase(contours_line.begin()+i);
+			prim_contours_line.erase(prim_contours_line.begin()+i);
 			i--;
 		} else {
 			cv::Point mitte;
 			mitte.x = m.m10/m.m00;
 			mitte.y = m.m01/m.m00;
-			line_points.push_back(mitte);
+			l_prim_line_points.push_back(mitte);
 
 #ifdef VISUAL_DEBUG
 			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);
 #endif
 		}
-
 	}
+
+	// Sec. ellipse
+	for (unsigned int i = 0; i < sec_contours_line.size(); ++i) {
+		cv::Moments m = cv::moments(sec_contours_line[i]);
+
+		if(m.m00 < 300) {
+			sec_contours_line.erase(sec_contours_line.begin()+i);
+			i--;
+		} else {
+			cv::Point mitte;
+			mitte.x = m.m10/m.m00;
+			mitte.y = m.m01/m.m00;
+			l_prim_line_points.push_back(mitte);
+
+	#ifdef VISUAL_DEBUG
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);
+	#endif
+		}
+	}
+
+	// Die neuen prim_line_points und sec_line_points in die globalen Variablen schreiben
+	set_line_data(l_prim_line_points, l_sec_line_points);
 }
