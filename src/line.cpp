@@ -11,23 +11,23 @@ std::mutex line_mutex;
 std::vector<cv::Point> m_prim_line_points;			// global line points holding vector
 std::vector<cv::Point> m_sec_line_points;			// global line points holding vector
 
-cv::Mat bin_prim_ellipse;
-cv::Mat bin_prim_intersection;
-cv::Mat bin_sec_ellipse;
-cv::Mat bin_sec_intersection;
+cv::Mat bin_prim_ellipse;								// Maske mit primärer Ellipse
+cv::Mat bin_prim_intersection;					// Überschneidungsmatrix von bin_sw und bin_prim_ellipse
+cv::Mat bin_sec_ellipse;								// Maske mit sekundärer Ellipse
+cv::Mat bin_sec_intersection;						// Überschneidungsmatrix von bin_sw und bin_sec_ellipse
 
 // set line_points buffer
 void set_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
-	m_prim_line_points = prim_line_points;
-	m_sec_line_points = sec_line_points;
+	m_prim_line_points = prim_line_points;			// prim_line_points in buffer speichern
+	m_sec_line_points = sec_line_points;				// sec_line_points in buffer speichern
 }
 
 // get line_points buffer
 void get_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
-	prim_line_points = m_prim_line_points;
-	sec_line_points = m_sec_line_points;
+	prim_line_points = m_prim_line_points;			// buffer zurückgeben in Referenz prim_line_points
+	sec_line_points = m_sec_line_points;				// buffer zurückgeben in Referenz sec_line_points
 }
 
 // initialisieren der Ellipsen-Masken
@@ -211,8 +211,8 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 
 	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));	// alle kleinstflecken entfernen
 
-	if(bin_prim_ellipse.empty() || bin_sec_ellipse.empty()) {			// Ellipsen initialisieren, wenn diese Matritzen leer sind
-		init_line_ellipse(img_rgb);
+	if(bin_prim_ellipse.empty() || bin_sec_ellipse.empty()) {			//Wenn diese Matritzen leer sind
+		init_line_ellipse(img_rgb);					//  Ellipsen initialisieren
 	}
 
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
@@ -239,42 +239,44 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 
 	// Prim. ellipse
 	for (unsigned int i = 0, cv::Moments m; i < prim_contours_line.size(); ++i) {		// vector prim_contours_line durchlaufen
-		m = cv::moments(prim_contours_line[i]);
+		m = cv::moments(prim_contours_line[i]);						// Moments von aktueller Kontur in m schreiben
 
-		if(m.m00 < 300) {
-			prim_contours_line.erase(prim_contours_line.begin()+i);
-			i--;
+		if(m.m00 < 300) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
+			prim_contours_line.erase(prim_contours_line.begin() + i);			// Kontur i löschen
+			i--;							// counter i einen runter setzen, da sonst die nächste Kontur übersprungen wird
 		} else {
+			// Punkt der Mitte berechnen und an l_prim_line_points anhängen
 			cv::Point mitte;
 			mitte.x = m.m10/m.m00;
 			mitte.y = m.m01/m.m00;
 			l_prim_line_points.push_back(mitte);
 
 #ifdef VISUAL_DEBUG
-			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);			// Mitte der Kontur auf Bild img_rbg malen
 #endif
 		}
 	}
 
 	// Sec. ellipse
 	for (unsigned int i = 0, cv::Moments m; i < sec_contours_line.size(); ++i) {		// vector sec_contours_line durchlaufen
-		m = cv::moments(sec_contours_line[i]);
+		m = cv::moments(sec_contours_line[i]);					// Moments von aktueller Kontur in m schreiben
 
-		if(m.m00 < 300) {
-			sec_contours_line.erase(sec_contours_line.begin()+i);
-			i--;
+		if(m.m00 < 300) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
+			sec_contours_line.erase(sec_contours_line.begin()+i);					// Kontur i löschen
+			i--;						// counter i einen runter setzen, da sonst die nächste Kontur übersprungen wird
 		} else {
+			// Punkt der Mitte berechnen und an l_sec_line_points anhängen
 			cv::Point mitte;
 			mitte.x = m.m10/m.m00;
 			mitte.y = m.m01/m.m00;
-			l_prim_line_points.push_back(mitte);
+			l_sec_line_points.push_back(mitte);
 
 	#ifdef VISUAL_DEBUG
-			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);					// Mitte der Kontur auf Bild img_rbg malen
 	#endif
 		}
 	}
 
-	// Die neuen prim_line_points und sec_line_points in die globalen Variablen schreiben
-	set_line_data(l_prim_line_points, l_sec_line_points);
+
+	set_line_data(l_prim_line_points, l_sec_line_points);			// Die neuen prim_line_points und sec_line_points in die globalen Variablen schreiben
 }
