@@ -218,24 +218,28 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
 	bin_sec_intersection.release();			// Überschneidungsmatrix leeren
 
+	// Maske bin_prim_ellipse / bin_sec_ellipse auf bin_sw anwenden
+	// Output: bin_prim_intersection / bin_sec_intersection
 	cv::bitwise_and(bin_sw, bin_prim_ellipse, bin_prim_intersection);
 	cv::bitwise_and(bin_sw, bin_sec_ellipse, bin_sec_intersection);
-	std::vector< std::vector<cv::Point> > prim_contours_line;
-	std::vector< std::vector<cv::Point> > sec_contours_line;
+
+	std::vector< std::vector<cv::Point> > prim_contours_line; // vector, der alle Konturen aus bin_prim_intersection enthält
+	std::vector< std::vector<cv::Point> > sec_contours_line;	// vector, der alle Konturen aus bin_sec_intersection enthält
+
+	findContours(bin_prim_intersection, prim_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);	// alle Konturen in bin_prim_intersection finden und in prim_contours_line schreiben
+	findContours(bin_sec_intersection, sec_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);	// alle Konturen in bin_sec_intersection finden und in sec_contours_line schreiben
 
 #ifdef VISUAL_DEBUG
-	findContours(bin_prim_intersection, prim_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-	findContours(bin_sec_intersection, sec_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-	drawContours(img_rgb, sec_contours_line, -1, cv::Scalar(50, 180, 180), 1);
-	drawContours(img_rgb, prim_contours_line, -1, cv::Scalar(50, 140, 200), 1);
+	drawContours(img_rgb, prim_contours_line, -1, cv::Scalar(50, 180, 180), 1);		// alle Konturen aus prim_contours_line auf img_rbg malen
+	drawContours(img_rgb, sec_contours_line, -1, cv::Scalar(50, 140, 200), 1);		// alle Konturen aus sec_contours_line auf img_rbg malen
 #endif
 
 	std::vector<cv::Point> l_prim_line_points;			// local line points holding vector
 	std::vector<cv::Point> l_sec_line_points;			// local line points holding vector
 
 	// Prim. ellipse
-	for (unsigned int i = 0; i < prim_contours_line.size(); ++i) {
-		cv::Moments m = cv::moments(prim_contours_line[i]);
+	for (unsigned int i = 0, cv::Moments m; i < prim_contours_line.size(); ++i) {		// vector prim_contours_line durchlaufen
+		m = cv::moments(prim_contours_line[i]);
 
 		if(m.m00 < 300) {
 			prim_contours_line.erase(prim_contours_line.begin()+i);
@@ -253,8 +257,8 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	}
 
 	// Sec. ellipse
-	for (unsigned int i = 0; i < sec_contours_line.size(); ++i) {
-		cv::Moments m = cv::moments(sec_contours_line[i]);
+	for (unsigned int i = 0, cv::Moments m; i < sec_contours_line.size(); ++i) {		// vector sec_contours_line durchlaufen
+		m = cv::moments(sec_contours_line[i]);
 
 		if(m.m00 < 300) {
 			sec_contours_line.erase(sec_contours_line.begin()+i);
