@@ -299,7 +299,6 @@ void image_processing() {
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
 
-		set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
 
 		//		log_timing(tlast, "Green calc: ");
 

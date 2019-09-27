@@ -7,10 +7,6 @@
 #include "config.h"
 
 
-
-//using namespace std;			// löschen und überall std:: schreiben
-//using namespace cv;				// löschen und überall cv:: schreiben
-
 std::mutex gruen_mutex;				// mutex for global green values
 
 cv::Point m_grcenter(0,0);
@@ -29,7 +25,9 @@ void get_gruen_data(cv::Point & grcenter, int & grstate) {
 }
 
 
-// returns the center of two green point contours
+/*
+ * returns the center of two green point contours
+ */
 cv::Point gruen_center(std::vector <cv::Point> & cont1, std::vector <cv::Point> & cont2) {
 	cv::Moments m1 = cv::moments(cont1);
 	cv::Moments m2 = cv::moments(cont2);
@@ -38,7 +36,10 @@ cv::Point gruen_center(std::vector <cv::Point> & cont1, std::vector <cv::Point> 
 	// x = (x1 + x2) / 2; y = (y1 + y2) / 2
 }
 
-// returns the center of two points
+
+/*
+ * returns the center of two points
+ */
 cv::Point gruen_center(cv::Point & p1, cv::Point & p2) {
 	return cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
 	// x = (x1 + x2) / 2; y = (y1 + y2) / 2
@@ -49,11 +50,11 @@ cv::Point gruen_center(std::vector<cv::Point> & contour) {
 	return cv::Point(m.m10 / m.m00, m.m01 / m.m00);
 }
 
+
 /* gibt einen Punkt zurück, der von rotating_point um origin_point gedreht wird.
 	rotation ist dabei der Winkel in Grad.
  	Die Distanz, die der neue Punkt vom Punkt origin entfernt ist, wird mit length_factor angegeben.
 */
-
 cv::Point rotate_point(cv::Point & origin_point, cv::Point & rotating_point, float rotation, float length_factor = 1) {
 	float rad = CV_PI / 180 * rotation;			// bogenmaß von rotation berechnen
 
@@ -83,7 +84,6 @@ cv::Point rotated_point_lenght(cv::Point & origin_point, float rotation, float l
 /*
  * Checkt bei einem grünen Punkt vertikal nach oben den anteil der Schwarzen linie.
  */
-
 int gruen_check_normal(cv::Mat & img_rgb, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & contour) {
 
 	cv::Moments m = cv::moments(contour);
@@ -114,7 +114,7 @@ int gruen_check_normal(cv::Mat & img_rgb, cv::Mat & bin_sw, cv::Mat & bin_gr, st
 
 
 
-void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, int & grstate, cv::Point & grcenter) {
+void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr) {
 
 	std::vector< std::vector<cv::Point> > contg;
 
@@ -176,8 +176,8 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 #endif
 
 					if(ratio_left_point > 0.4 && ratio_right_point > 0.4) {
-						grstate = GRUEN_BEIDE;
-						grcenter = gruen_center(p1_new, p2_new);
+						// update green data
+						set_gruen_data(gruen_center(p1_new, p2_new), GRUEN_BEIDE);
 						return;
 					}
 				}
@@ -199,22 +199,15 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 			}
 		}
 
-		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]);
-		grcenter = nearest_point;
+		set_gruen_data(nearest_point, gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[index_nearest]));
 		return;
 
-	} else if(contg.size() == 1){
-		/*
-		 * Nur 1 Grüner Punkt
-		 */
-		grstate = gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]);
-		grcenter = gruen_center(contg[0]);
+	} else if(contg.size() == 1){   // Nur 1 Grüner Punkt
+		set_gruen_data(gruen_center(contg[0]), gruen_check_normal(img_rgb, bin_sw, bin_gr, contg[0]));
 		return;
-
 	}
 
-	grstate = GRUEN_NICHT;
-	grcenter = cv::Point(0,0);
+	set_gruen_data(cv::Point(0,0), GRUEN_NICHT);		// kein grüner Punkt oder Bedingungen nicht erfüllt
 	return;
 }
 
@@ -222,7 +215,6 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 /*
  * Alle bereiche, wo grün vorhanden ist in bin_gr schreiben.
  */
-
 void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr) {
 	cv::inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
 	cv::morphologyEx(bin_gr, bin_gr, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
@@ -237,8 +229,6 @@ void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr) {
  * Rückgabewert: Verhältnis der Punkte, die Schwarz waren.
  * Wert zwischen 0 und 1
  */
-
-
 float ratio_black_points(cv::Point & origin, cv::Point & destination, cv::Mat & bin_sw, cv::Mat & bin_gr, cv::Mat & img_rgb) {
 	int black_pixels = 0;
 	int green_pixels = 0;
