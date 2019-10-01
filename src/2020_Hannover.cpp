@@ -244,7 +244,7 @@ void m_drive() {
 			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 		}
 
-		//thread_delay_micros(200);			// microsecond delay, experimentell gegen hohe Auslastung
+		thread_delay(7);			// delay, da sonst der i2c buffer überschrieben wird und der Motorarduino falsche werte bekommt
 	}
 }
 
