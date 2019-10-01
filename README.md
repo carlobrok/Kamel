@@ -39,7 +39,6 @@ Stephan Swiatek
 
 ### Environment
 
-* Raspberry Pi 3B+
 * Raspbian Lite
 
 ### Required Librarys
