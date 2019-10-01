@@ -9,7 +9,7 @@
       1. Passwort eingeben
    1. Über Monitor und Tastatur
 1. [Anleitung](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md). für das 
-Hinzufügen von WLAN Netzwerken auf dem Raspberry Pi. Dabei **nicht** die Methode mit `sudo raspi-config`nutzen, 
+Hinzufügen von WLAN Netzwerken auf dem Raspberry Pi. Dabei **nicht** die Methode mit `sudo raspi-config` nutzen, 
 sondern das Netzwerk in der **wpa-supplicant** config hinzufügen.
 1. `sudo reboot`
 
