@@ -15,6 +15,15 @@ sondern das Netzwerk in der **wpa-supplicant** config hinzufügen.
 
 ### IP-Adresse herausfinden ###
 
+**nmap**
 
+1. [nmap](https://nmap.org/ "nmap.org") installieren mit
+`sudo apt install nmap`
 
-# Programmupload #
+2. Alle mit dem Netzwerk verbundenen Geräten anzeigen </br>
+`sudo nmap -n -sP xxx.xxx.xxx.0/24`</br>
+Das `xxx.xxx.xxx` muss durch die ersten Ziffern der lokalen Netzwerkadresse ersetzt werden.
+
+**Router**
+
+Bei Zugriff auf den Router kann die Adresse natürlich auch direkt ausgelesen werden, indem man sich auf der Verwaltungsoberfläche des Routers einloggt.
