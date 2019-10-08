@@ -26,4 +26,7 @@
 #define ELLIPSE_THICKNESS 30		// thickness of the ellipse in pixels
 #define THRESH_BLACK 70
 
+// IMU defines
+#define IMU_BAUD B115200
+
 #endif

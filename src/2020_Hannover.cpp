@@ -17,7 +17,7 @@
 
 #include "CameraCapture.h"		// thread zum kamera einlesen
 #include "VideoServer.h"			// thread für Videoausgabe über IP
-#include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
+#include "KamelDevices.h"					// kommunikation mit Arduino und Servosteuerung
 
 
 

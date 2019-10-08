@@ -1,7 +1,7 @@
 #ifndef KAMELI2C_H
 #define KAMELI2C_H
 
-#include <cstdint>
+#include <stdint.h>       	// int8_t, uint8_t, uint16_t, ...
 
 // WHAT TO DO   (DO NOT USE!)
 #define MOTOR_DIR_PWM 0

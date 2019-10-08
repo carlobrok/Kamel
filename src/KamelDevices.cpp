@@ -1,8 +1,14 @@
-#include "KamelI2C.h"
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <cstdint>
+#include <linux/i2c-dev.h>		// i2c_smbus_...
+#include <sys/ioctl.h>				// ioctl
+#include <fcntl.h>						// fcntl, O_RDWR
+#include <termios.h>					// termios
+#include <stdint.h>						// int8_t, uint8_t, uint16_t, ...
+#include <errno.h>						// errno
+#include <string.h>						// strerror
+#include <unistd.h>						// tcgetattr, tcsetattr, tcflush, ..
+
+#include "KamelDevices.h"
+#include "config.h"
 
 // returns a file descriptor of the opened I2C device
 
@@ -13,14 +19,21 @@ int kamelI2Copen(int devId) {
 	//device = "/dev/i2c-0";	// Older Raspberry Pi models
 	device = "/dev/i2c-1";	// Raspberry Pi 3B+
 
-	if((fd = open(device, O_RDWR)) < 0)
+	if((fd = open(device, O_RDWR)) < 0)	{
+		std::cout << "Unable to open " << device << ": " << strerror(errno) << endl;
 		return -1;
+	}
 
-	if (ioctl (fd, I2C_SLAVE, devId) < 0)
+	if (ioctl (fd, I2C_SLAVE, devId) < 0) {
+		std::cout << "Unable to open device " << devId << ": " << strerror(errno) << endl;
 		return -1;
+	}
 
 	return fd;
 }
+
+
+// ================== Motoren ==================
 
 // sets the direction and pwm rate of the given motors by sending the values over I2C to the motor-arduino
 
@@ -49,6 +62,9 @@ int setMotorState(int &fd, uint8_t side, uint8_t state) {
  * The bit_index has to be between 0 and 7
  * credit of this function: https://stackoverflow.com/questions/4854207/get-a-specific-bit-from-byte
  */
+
+
+// ================== Sensoren ==================
 
 bool get_bit(int8_t byte, uint8_t bit_index) {
 	return (byte & (1 << (bit_index - 1))) != 0;
@@ -95,4 +111,50 @@ int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]) {
 
 	analog_sensor_data[0] = in_data[0] | (in_data[1] << 8);
 	return ret;
+}
+
+
+// ================== IMU ===================
+
+int imu_fd = 0;
+
+int kamelIMUopen(const char *device) {
+	struct termios options ;
+  speed_t myBaud = ;
+  int status, fd ;
+
+  if ((fd = open (device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK)) == -1)
+    return -1 ;
+
+  fcntl (fd, F_SETFL, O_RDWR) ;
+
+	tcgetattr (fd, &options);
+
+  cfmakeraw   (&options);
+  cfsetispeed (&options, IMU_BAUD);
+  cfsetospeed (&options, IMU_BAUD);
+
+  options.c_cflag |= (CLOCAL | CREAD) ;
+  options.c_cflag &= ~PARENB ;
+  options.c_cflag &= ~CSTOPB ;
+  options.c_cflag &= ~CSIZE ;
+  options.c_cflag |= CS8 ;
+  options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG) ;
+  options.c_oflag &= ~OPOST ;
+
+  options.c_cc [VMIN] = 0 ;
+  options.c_cc [VTIME] = 100 ;	// Ten seconds (100 deciseconds)
+
+  tcsetattr (fd, TCSANOW, &options);
+
+  ioctl (fd, TIOCMGET, &status);
+
+  status |= TIOCM_DTR;
+  status |= TIOCM_RTS;
+
+  ioctl (fd, TIOCMSET, &status);
+
+  usleep (10000);	// 10mS
+
+	return fd;
 }
