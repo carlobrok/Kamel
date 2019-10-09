@@ -137,37 +137,42 @@ void set_imu_data(float (&imu_data)[3]) {
 }
 
 void m_imu(void) {
-	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);
-	float t_imu_data[3] = {0,0,0};
-	std::string in_str = "";
-	int in_idx = 0;					// Index
+	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);			// Serielle Schnittstelle öffnen, imu_fd ist der file descriptor
+	float t_imu_data[AMOUNT_IMU_DATA] = {0,0,0};						// lokaler Buffer mit den aktuellen Werten als Float
+	std::string in_str ("");																// Buffer der zueletzt gelesenen Bytes
+	int in_idx = 0;																					// Index d. Variable
 
 	while(true) {
-		if(serialDataAvail(imu_fd) > 0) {
-			int inByte = serialGetchar(imu_fd);      // READ INCOMING BYTE
+		if(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
+			int inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
 
-	    if (inByte == ':') {              // ":"  ->  beginning of array
-	      in_str = "";
-	      in_idx = 0;
-	    } else if (inByte == '!') {       // "!" ->  end of array
-	      t_imu_data[in_idx] = std::stof(in_str);    // write number from String into the array
-	      set_imu_data(t_imu_data);			//ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
+	    if (inByte == ':') {              							// ":"  ->  Zeichen für Beginn der Datenreihe
+	      in_str = "";																	// Buffer zurücksetzen
+	      in_idx = 0;																		// Index zurücksetzen
+	    }
+			else if (inByte == '!') {       								// "!" ->  Zeichen für Ende der Datenreihe
+	      t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 
-	      in_idx = 0;									// reset Index
-	    } else if (isdigit(inByte) || inByte == '.' || inByte == '-') {
-	      in_str += (char)inByte;             // add character to string
-	    } else if (inByte == ',') {      // number is complete
-	      t_imu_data[in_idx++] = std::stof(in_str);    // write number from String into the array, increment i
-	      in_str = "";                        // reset String to ""
-	    } else {                          // unknown / error -> reset array and index -> return 0
-	      // unknown char!!
+				if(in_idx == AMOUNT_IMU_DATA - 1)
+					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 
-	      for (auto& data : t_imu_data) data = 0;			// t_imu_data resetten
+	      in_idx = 0;																		// Index zurücksetzen
+	    }
+			else if (isdigit(inByte) || inByte == '.' || inByte == '-') {				// Zeichen, welche sich im Float befinden
+	      in_str += (char)inByte;             					// add character to string
+	    }
+			else if (inByte == ',') {      									// number is complete
+	      t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
+	      in_str = "";                        					// reset string
+	    }
+			else {                          								// unknown / error -> reset array and index -> return 0
+	      for (auto& data : t_imu_data) data = 0;				// t_imu_data resetten
 
+				// index und buffer zurücksetzen
 	      in_idx = 0;
 	      in_str = "";
 	    }
 		}
-		thread_delay(10);
+		thread_delay(10);																	// delay für andere threads
 	}
 }
