@@ -56,4 +56,8 @@ int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sen
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
 int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
 
+void get_imu_data(float (&imu_data)[3]);
+void set_imu_data(float (&imu_data)[3]);
+void m_imu(void);
+
 #endif

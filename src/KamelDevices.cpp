@@ -1,14 +1,17 @@
-#include <linux/i2c-dev.h>		// i2c_smbus_...
 #include <sys/ioctl.h>				// ioctl
 #include <fcntl.h>						// fcntl, O_RDWR
-#include <termios.h>					// termios
-#include <stdint.h>						// int8_t, uint8_t, uint16_t, ...
-#include <errno.h>						// errno
-#include <string.h>						// strerror
-#include <unistd.h>						// tcgetattr, tcsetattr, tcflush, ..
+#include <cstdint>						// int8_t, uint8_t, uint16_t, ...
+#include <cerrno>							// errno
+#include <cstring>						// strerror
+#include <string>							// string
+#include <cctype>							// isdigit
+#include <mutex>							// mutex
+#include <linux/i2c-dev.h>		// i2c_smbus_...
+#include <wiringSerial.h>
 
 #include "KamelDevices.h"
 #include "config.h"
+#include "util.h"							// thread_delay
 
 // returns a file descriptor of the opened I2C device
 
@@ -116,45 +119,55 @@ int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]) {
 
 // ================== IMU ===================
 
-int imu_fd = 0;
+std::mutex imu_mutex;
+float m_imu_data[3] = {0,0,0};
 
-int kamelIMUopen(const char *device) {
-	struct termios options ;
-  speed_t myBaud = ;
-  int status, fd ;
+void get_imu_data(float (&imu_data)[3]) {
+	std::lock_guard<std::mutex> m_lock(IMU_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	for(int i = 0; i < 3; ++i) {
+		imu_data[i] = m_imu_data[i];
+	}
+}
 
-  if ((fd = open (device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK)) == -1)
-    return -1 ;
+void set_imu_data(float (&imu_data)[3]) {
+	std::lock_guard<std::mutex> m_lock(IMU_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	for(int i = 0; i < 3; ++i) {
+		m_imu_data[i] = imu_data[i];
+	}
+}
 
-  fcntl (fd, F_SETFL, O_RDWR) ;
+void m_imu(void) {
+	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);
+	float t_imu_data[3] = {0,0,0};
+	std::string in_str = "";
+	int in_idx = 0;					// Index
 
-	tcgetattr (fd, &options);
+	while(true) {
+		if(serialDataAvail(imu_fd) > 0) {
+			int inByte = serialGetchar(imu_fd);      // READ INCOMING BYTE
 
-  cfmakeraw   (&options);
-  cfsetispeed (&options, IMU_BAUD);
-  cfsetospeed (&options, IMU_BAUD);
+	    if (inByte == ':') {              // ":"  ->  beginning of array
+	      in_str = "";
+	      in_idx = 0;
+	    } else if (inByte == '!') {       // "!" ->  end of array
+	      t_imu_data[in_idx] = std::stof(in_str);    // write number from String into the array
+	      set_imu_data(t_imu_data);			//ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 
-  options.c_cflag |= (CLOCAL | CREAD) ;
-  options.c_cflag &= ~PARENB ;
-  options.c_cflag &= ~CSTOPB ;
-  options.c_cflag &= ~CSIZE ;
-  options.c_cflag |= CS8 ;
-  options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG) ;
-  options.c_oflag &= ~OPOST ;
+	      in_idx = 0;									// reset Index
+	    } else if (isdigit(inByte) || inByte == '.' || inByte == '-') {
+	      in_str += (char)inByte;             // add character to string
+	    } else if (inByte == ',') {      // number is complete
+	      t_imu_data[in_idx++] = std::stof(in_str);    // write number from String into the array, increment i
+	      in_str = "";                        // reset String to ""
+	    } else {                          // unknown / error -> reset array and index -> return 0
+	      // unknown char!!
 
-  options.c_cc [VMIN] = 0 ;
-  options.c_cc [VTIME] = 100 ;	// Ten seconds (100 deciseconds)
+	      for (auto& data : t_imu_data) data = 0;			// t_imu_data resetten
 
-  tcsetattr (fd, TCSANOW, &options);
-
-  ioctl (fd, TIOCMGET, &status);
-
-  status |= TIOCM_DTR;
-  status |= TIOCM_RTS;
-
-  ioctl (fd, TIOCMSET, &status);
-
-  usleep (10000);	// 10mS
-
-	return fd;
+	      in_idx = 0;
+	      in_str = "";
+	    }
+		}
+		thread_delay(10);
+	}
 }
