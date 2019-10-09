@@ -2,7 +2,7 @@
 #define LINE_H
 
 #include <vector>
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
 
 void set_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points);

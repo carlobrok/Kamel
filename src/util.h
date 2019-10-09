@@ -2,7 +2,8 @@
 #define UTIL_H
 
 #include <thread>
-#include "opencv2/opencv.hpp"
+#include <chrono>
+#include <opencv2/opencv.hpp>
 
 inline void log_timing(int64 & tlast, const char* message) {
 	std::cout << message << (cv::getTickCount() - tlast) / cv::getTickFrequency() * 1000.0 << " ms" << std::endl;

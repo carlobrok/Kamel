@@ -27,6 +27,6 @@
 #define THRESH_BLACK 70
 
 // IMU defines
-#define IMU_BAUD B115200
+#define IMU_BAUD 115200
 
 #endif

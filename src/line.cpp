@@ -1,6 +1,6 @@
 #include <mutex>
-#include "opencv2/opencv.hpp"
-#include "math.h"				// atan2
+#include <math.h>				// atan2
+#include <opencv2/opencv.hpp>
 
 #include "config.h"
 #include "line.h"

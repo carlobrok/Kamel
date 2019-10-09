@@ -1,7 +1,7 @@
 #ifndef GRUEN_H
 #define GRUEN_H
 
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
 void set_gruen_data(cv::Point & grcenter, int & grstate);
 void get_gruen_data(cv::Point & grcenter, int & grstate);

@@ -2,11 +2,10 @@
 #define LOGGER_H
 
 #include <string>
+#include <spdlog/async.h> //support for async logging.
+#include <spdlog/sinks/basic_file_sink.h>
+#include <opencv2/opencv.hpp>
 
-#include "spdlog/async.h" //support for async logging.
-#include "spdlog/sinks/basic_file_sink.h"
-
-#include "opencv2/opencv.hpp"
 #include "util.h"
 
 class Logger {
