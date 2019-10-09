@@ -28,5 +28,9 @@
 
 // IMU defines
 #define IMU_BAUD 115200
+#define AMOUNT_IMU_DATA 3
+#define YAW 0
+#define PITCH 1
+#define ROLL 2
 
 #endif
