@@ -106,35 +106,35 @@ Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat
 
 # KamelDevices
 
-### kamelI2Copen
+## kamelI2Copen
 
-### setMotorDirPwm
+## setMotorDirPwm
 
-### setMotorDirPwmBoth
+## setMotorDirPwmBoth
 
-### setMotorState
+## setMotorState
 
-### get_bit
+## get_bit
 
-### readBytes
+## readBytes
 
-### getSensorData
+## getSensorData
 
-### getDigitalSensorData
+## getDigitalSensorData
 
-### getAnalogSensorData
+## getAnalogSensorData
 
 </br>
 
-#### mutex imu_mutex
+### mutex imu_mutex
 
-#### float m_imu_data[3]
+### float m_imu_data[3]
 
-### get_imu_data
+## get_imu_data
 
-### set_imu_data
+## set_imu_data
 
-### m_imu
+## m_imu
 
 ------
 
