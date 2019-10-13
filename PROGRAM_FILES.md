@@ -10,7 +10,7 @@ Log für allgemeine Debug Nachrichten
 #### Mat img_rgb
 Input img im [BGR Format](https://stackoverflow.com/questions/367449/what-exactly-is-bgr-color-space)
 
---------
+</br>
 
 ### void m_drive
 </br>
@@ -73,7 +73,7 @@ Enthält die Sensordaten des (zukünftig der) analogen Sensors(/en)
 #### boost::circular_buffer<uint16_t> last_analog_data(100)
 Enthält die letzten 100 Sensordaten des analogen Sensors
 
-------
+</br>
 
 ### void image_processing
 * Einlesen des aktuellen Bildes
@@ -101,24 +101,61 @@ Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat
 * Started neuen Thread und hosted die Bilder
 * Auslesbar durch den [VideoClient](https://github.com/carlobrok/VideoClient)
 
--------
+</br>
 
 ### int main
 * Startet [m_drive](#void-m_drive), [m_imu](#void-m_imu) und springt dann in [image_processing](#void-image_processing)
 
+------
+
 ## KamelDevices
 
+### kamelI2Copen
+
+### setMotorDirPwm
+
+### setMotorDirPwmBoth
+
+### setMotorState
+
+### get_bit
+
+### readBytes
+
+### getSensorData
+
+### getDigitalSensorData
+
+### getAnalogSensorData
+
+</br>
+
+#### mutex imu_mutex
+
+#### float m_imu_data[3]
+
+### get_imu_data
+
+### set_imu_data
+
+### m_imu
+
+------
 
 ## Logger
 
+------
 
 ## gruen
 
+------
 
 ## line
 
+------
 
 ## util
 
+------
 
 ## CameraCapture / VideoServer
