@@ -54,7 +54,7 @@ Enthält die letzten 50 Mittelpunkte des Grünpunktes
 
 #### bool digital_sensor_data[8]
 * Enthält Sensordaten der 6 digitalen IR-Sensoren und 2 Touchsensoren
-* Index der Sensoren *in KamelDevices.h*
+* Index der Sensoren *(in KamelDevices.h)*
   * IR_VORNE_L 0
   * IR_VORNE_R 1
   * IR_LINKS_V 2
@@ -82,7 +82,7 @@ Enthält die letzten 100 Sensordaten des analogen Sensors
 * Updaten der Grünpunktdaten
 
 #### Logger camera_lg
-Enthält Namen des abgespeicherten Bildes
+Enthält Namen der abgespeicherten Bilder
 
 #### Mat hsv
 Input Bild konvertiert ins [HSV Format](https://en.wikipedia.org/wiki/HSL_and_HSV)
@@ -91,7 +91,7 @@ Input Bild konvertiert ins [HSV Format](https://en.wikipedia.org/wiki/HSL_and_HS
 Binäres Bild, bei dem alles dunkler als THRESH_BLACK auf img_rgb ist, den Wert 255 hat, alles andere den Wert 0
 
 #### Mat bin_gr
-Binäres Bild, bei dem alles grüne auf img_rgb den Wert 255 hat, alles andere den Wert 0
+Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat, alles andere den Wert 0
 
 #### CameraCapture cam(0)
 * Klasse CameraCapture startet einen neuen Thread
@@ -104,7 +104,7 @@ Binäres Bild, bei dem alles grüne auf img_rgb den Wert 255 hat, alles andere d
 -------
 
 ### int main
-* Startet m_drive, m_imu und springt dann in [image_processing](#void-image_processing)
+* Startet [m_drive](#void-m_drive), [m_imu](#void-m_imu) und springt dann in [image_processing](#void-image_processing)
 
 ## KamelDevices
 
