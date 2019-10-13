@@ -16,7 +16,7 @@ cv::Point rotated_point_lenght(cv::Point & origin_point, float rotation, float l
 int gruen_check_normal(cv::Mat & img_rgb, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & contour);
 
 void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr);
-void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, int & grstate, cv::Point & grcenter);
+void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr);
 float ratio_black_points(cv::Point & origin, cv::Point & destination, cv::Mat & bin_sw, cv::Mat & bin_gr, cv::Mat & img_rgb);
 
 
