@@ -108,23 +108,23 @@ Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat
 
 # KamelDevices
 
-## kamelI2Copen
+## int kamelI2Copen
 
-## setMotorDirPwm
+## int setMotorDirPwm
 
-## setMotorDirPwmBoth
+## int setMotorDirPwmBoth
 
-## setMotorState
+## int setMotorState
 
-## get_bit
+## bool get_bit
 
-## readBytes
+## int readBytes
 
-## getSensorData
+## int getSensorData
 
-## getDigitalSensorData
+## int getDigitalSensorData
 
-## getAnalogSensorData
+## int getAnalogSensorData
 
 </br>
 
@@ -132,11 +132,11 @@ Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat
 
 ### float m_imu_data[3]
 
-## get_imu_data
+## void get_imu_data
 
-## set_imu_data
+## void void set_imu_data
 
-## m_imu
+## void m_imu
 
 ------
 
