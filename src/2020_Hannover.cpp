@@ -273,9 +273,6 @@ void image_processing() {
 	srv.namedWindow("HSV");
 	srv.namedWindow("Input");
 
-	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
-	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
-
 	int64 tloop;
 
 	while(1) {
