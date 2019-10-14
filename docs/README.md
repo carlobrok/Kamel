@@ -4,10 +4,10 @@ Es folgt eine genauere Beschreibung der einzelnen Methoden und relevanten Variab
 
 ## Dokumentation zu..
 
-* [**2020_Hannover.cpp**](docs/2020_Hannover.md)
-* [**gruen.cpp / gruen.h**](docs/gruen.md)
-* [**line.cpp / line.h**](docs/line.md)
-* [**KamelDevices.cpp / KamelDevices.h**](docs/KamelDevices.md)
-* [**Logger.cpp / Logger.h**](docs/Logger.md)
-* [**util.cpp / util.h**](docs/util.md)
+* [**2020_Hannover.cpp**](2020_Hannover.md)
+* [**gruen.cpp / gruen.h**](gruen.md)
+* [**line.cpp / line.h**](line.md)
+* [**KamelDevices.cpp / KamelDevices.h**](KamelDevices.md)
+* [**Logger.cpp / Logger.h**](Logger.md)
+* [**util.cpp / util.h**](util.md)
 
