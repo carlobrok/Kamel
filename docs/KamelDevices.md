@@ -100,7 +100,7 @@ int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
 
 ## void get_imu_data
 ```cpp
-void get_imu_data(float (&imu_data)[3])
+void get_imu_data(float (&imu_data)[3]);
 ```
 
 **Beschreibung:** Schreibt die Daten der [IMU](https://de.wikipedia.org/wiki/Inertiale_Messeinheit) in das übergebene Array.

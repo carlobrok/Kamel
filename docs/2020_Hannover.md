@@ -30,7 +30,7 @@ Filedescriptor für die I2C Schnittstelle des Sensorarduinos
 * kann nur im drive thread genutzt werden
 * muss immer durch get_line_data aktualisiert werden
 
-### boost::circular_buffer<vector<Point>> last_line_points(50)
+### circular_buffer<vector<Point>> last_line_points
 Enthält die letzten 50 linepoints
 
 ### Point m_grcenter
@@ -45,7 +45,7 @@ Enthält die letzten 50 linepoints
 * kann nur im drive thread genutzt werden
 * muss immer durch get_gruen_data aktualisiert werden
 
-### boost::circular_buffer<Point> last_grcenter(50)
+### boost::circular_buffer<Point> last_grcenter
 Enthält die letzten 50 Mittelpunkte des Grünpunktes
 
 ### bool digital_sensor_data[8]
@@ -66,7 +66,7 @@ Enthält alle letzten 100 Sensordaten der digitalen Sensoren
 ### uint16_t analog_sensor_data[1]
 Enthält die Sensordaten des (zukünftig der) analogen Sensors(/en)
 
-### boost::circular_buffer<uint16_t> last_analog_data(100)
+### boost::circular_buffer<uint16_t> last_analog_data
 Enthält die letzten 100 Sensordaten des analogen Sensors
 
 </br>
