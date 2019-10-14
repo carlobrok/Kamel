@@ -100,6 +100,18 @@ int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
 
 ## void get_imu_data
 
-## void void set_imu_data
+**Beschreibung:** Schreibt die Daten der [IMU](https://de.wikipedia.org/wiki/Inertiale_Messeinheit) in das übergebene Array.
 
 ## void m_imu
+
+**Beschreibung:** Startet einen neuen Thread und ließt die Daten der IMU im Hintergrund aus, welche über die serielle Schnittstelle empfangenen werden. Diese Daten können über [get_imu_data](#void-get_imu_data) genutzt werden.
+
+**Einstellungen in *config.h*:**
+* IMU_BAUD - Baudrate der seriellen Schnittstelle
+* IMU_REFRESH_DELAY - Zeit in ms, die am Ende einer Schleife auf neue Daten abgewartet wird
+* AMOUNT_IMU_DATA - Angabe, wie viele Zahlen ein Datenpaket enthält
+**Nutzbare defines zum erleichterten Auslesen der Daten:** </br>
+[Roll- / Nick- / Gier-Winkel](https://de.wikipedia.org/wiki/Roll-Nick-Gier-Winkel) des Roboters.
+* ROLL - Rollwinkel
+* PITCH - Nickwinkel
+* YAW - Gierwinkel

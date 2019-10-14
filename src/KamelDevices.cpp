@@ -173,6 +173,6 @@ void m_imu(void) {
 	      in_str = "";
 	    }
 		}
-		thread_delay(10);																	// delay für andere threads
+		thread_delay(IMU_REFRESH_DELAY);																	// delay für andere threads
 	}
 }
