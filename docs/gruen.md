@@ -45,10 +45,12 @@ Point rotate_point(Point & origin_point, Point & rotating_point, float rotation,
 ```
 
 **Beschreibung:**
+
 **parameters** | **possible values**
 -------------|--------------------
 rotation      | should be >= -180 <= 180, can be any value
 length_factor | should be > 0.0, can be any value, if < 0 the line is mirrored
+
 </br>
 
 
@@ -61,9 +63,10 @@ Point rotated_point_lenght(Point & origin_point, float rotation, float length);
 **Beschreibung:**
 
 **parameters** | **possible values**
--------------|--------------------
-rotation      | should be >= -180 <= 180, can be any value
-length        | should be > 0, can be any value
+---------------|--------------------
+rotation       | should be >= -180 <= 180, can be any value
+length         | should be > 0, can be any value
+
 </br>
 
 
