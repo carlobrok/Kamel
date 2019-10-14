@@ -101,6 +101,3 @@ Binäres Bild, bei dem alles grüne auf [img_rgb](#mat-img_rbg) den Wert 255 hat
 
 ## int main
 * Startet [m_drive](#void-m_drive), [m_imu](#void-m_imu) und springt dann in [image_processing](#void-image_processing)
-
-
-# CameraCapture / VideoServer
