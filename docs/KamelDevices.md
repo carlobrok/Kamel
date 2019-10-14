@@ -113,6 +113,7 @@ void get_imu_data(float (&imu_data)[3])
 * IMU_BAUD - Baudrate der seriellen Schnittstelle
 * IMU_REFRESH_DELAY - Zeit in ms, die am Ende einer Schleife auf neue Daten abgewartet wird
 * AMOUNT_IMU_DATA - Angabe, wie viele Zahlen ein Datenpaket enthält
+
 **Nutzbare defines zum erleichterten Auslesen der Daten:** </br>
 [Roll- / Nick- / Gier-Winkel](https://de.wikipedia.org/wiki/Roll-Nick-Gier-Winkel) des Roboters.
 * ROLL - Rollwinkel
