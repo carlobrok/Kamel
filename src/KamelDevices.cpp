@@ -16,18 +16,18 @@
 // returns a file descriptor of the opened I2C device
 
 int kamelI2Copen(int devId) {
-	const char *device ;
+	const char *device;
 	int fd;
 
 	//device = "/dev/i2c-0";	// Older Raspberry Pi models
 	device = "/dev/i2c-1";	// Raspberry Pi 3B+
 
-	if((fd = open(device, O_RDWR)) < 0)	{
+	if((fd = open(device, O_RDWR)) < 0)	{			// open "/dev/i2c-1"
 		std::cout << "Unable to open " << device << ": " << strerror(errno) << endl;
 		return -1;
 	}
 
-	if (ioctl (fd, I2C_SLAVE, devId) < 0) {
+	if (ioctl (fd, I2C_SLAVE, devId) < 0) {			// set device address of fd to devId
 		std::cout << "Unable to open device " << devId << ": " << strerror(errno) << endl;
 		return -1;
 	}
