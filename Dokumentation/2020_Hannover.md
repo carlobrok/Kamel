@@ -2,9 +2,7 @@
 
 **Hauptprogramm, indem alle Bibliotheken genutzt werden. Die zusammengefasste Bildauswertung und die Fahrentscheidungen finden hier statt**
 
-### ```cpp
-Logger debug_lg
-```
+### Logger debug_lg
 Log für allgemeine Debug Nachrichten
 
 ### Mat img_rgb
