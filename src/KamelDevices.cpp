@@ -129,7 +129,7 @@ void get_imu_data(float (&imu_data)[3]) {
 	}
 }
 
-void set_imu_data(float (&imu_data)[3]) {
+void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp available
 	std::lock_guard<std::mutex> m_lock(IMU_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		m_imu_data[i] = imu_data[i];
