@@ -48,7 +48,7 @@ int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
 int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
 int setMotorState(int &fd, uint8_t side, uint8_t state);
 
-bool get_bit(int8_t byte, uint8_t bit_number);
+bool get_bit(uint8_t byte, uint8_t bit_number);
 
 int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command);
 
