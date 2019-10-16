@@ -1,4 +1,4 @@
-#include <iostream>		// cout
+//#include <iostream>		// cout
 #include <cstdio>			// uint.._t
 
 #include <vector>
