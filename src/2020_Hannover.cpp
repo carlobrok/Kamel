@@ -1,4 +1,4 @@
-//#include <iostream>		// cout
+#include <iostream>		// cout
 #include <cstdio>			// uint.._t
 
 #include <vector>
@@ -60,8 +60,10 @@ void m_drive() {
 
 
 	// init line variables
-	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
-	get_line_data(m_line_points);
+	vector <Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
+	vector <Point> m_sec_line_points;
+	vector <Point> m_prim_line_points;
+	get_line_data(m_prim_line_points,m_sec_line_points);
 	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
 
 
@@ -115,7 +117,7 @@ void m_drive() {
 		// update values
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
-		get_line_data(m_line_points);					 		// line data updaten
+		get_line_data(m_line_points,m_prim_line_points);					 		// line data updaten
 
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
@@ -214,7 +216,7 @@ void m_drive() {
 
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
 					thread_delay(5);
-					get_line_data(m_line_points);
+					get_line_data(m_line_points,m_sec_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -228,7 +230,7 @@ void m_drive() {
 
 				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
 					thread_delay(5);
-					get_line_data(m_line_points);
+					get_line_data(m_prim_line_points,m_sec_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -294,6 +296,8 @@ void image_processing() {
 		line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
 		//		log_timing(tlast, "Line calculation: ");
 
+		int m_grstate;				// temporäre kopie für den drive thread
+		vector <Point> m_grcenter;
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
 
 
