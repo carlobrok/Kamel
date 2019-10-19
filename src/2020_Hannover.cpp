@@ -1,4 +1,4 @@
-//#include <iostream>		// cout
+#include <iostream>		// cout
 #include <cstdio>			// uint.._t
 
 #include <vector>
@@ -60,8 +60,9 @@ void m_drive() {
 
 
 	// init line variables
-	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
-	get_line_data(m_line_points);
+	vector<Point> m_prim_line_points;			// m_prim_line_points enthält lokale line_points des primären Kreises, gilt nur im drive thread
+	vector<Point> m_sec_line_points;			// m_sec_line_points enthält lokale line_points des sekundären Kreises, gilt nur im drive thread
+	get_line_data(m_prim_line_points, m_sec_line_points);				// daten updaten
 	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
 
 
@@ -115,7 +116,7 @@ void m_drive() {
 		// update values
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
-		get_line_data(m_line_points);					 		// line data updaten
+		get_line_data(m_prim_line_points, m_sec_line_points);				 		// line data updaten
 
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
@@ -179,32 +180,32 @@ void m_drive() {
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
 			thread_delay(500);					// delay 500ms
 
-		} else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
+		} else if(m_prim_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
 
-			debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
+			debug_lg << "single Line point: " << m_prim_line_points[0] << lvl::info;
 			//			cout << "Different value -> check motor output for line" << endl;
 
-			if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
+			if (m_prim_line_points[0].x > 575) {										// line_points[0] rechts außen
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
-			} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
+			} else if (m_prim_line_points[0].x < 65) {								// line_points[0] links außen
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
-			} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
+			} else if (m_prim_line_points[0].x > 500) {							// line_points[0] rechts
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
-			} else if (m_line_points[0].x < 140) {							// line_points[0] links
+			} else if (m_prim_line_points[0].x < 140) {							// line_points[0] links
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
-			} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
+			} else if (m_prim_line_points[0].x > 400) {							// line_points[0] halb rechts
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
-			} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
+			} else if (m_prim_line_points[0].x < 240) {							// line_points[0] halb links
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
-			} else if (m_line_points[0].x > 340) {							// line_points[0] mitte rechts
+			} else if (m_prim_line_points[0].x > 340) {							// line_points[0] mitte rechts
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
-			} else if (m_line_points[0].x < 300) {						 // line_points[0] mitte links
+			} else if (m_prim_line_points[0].x < 300) {						 // line_points[0] mitte links
 				setMotorDirPwmBoth(motor_fd, MOTOR_OFF, 0, MOTOR_FORWARD, 160);
 			} else {																					 // line_points[0] mitte
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			}
 
-		} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
+		} else if(m_prim_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
 			debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
 			if (last_line_points[1][0].x > 575) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
@@ -212,9 +213,9 @@ void m_drive() {
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
 
-				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
+				while(m_prim_line_points.size() == 0 || (m_prim_line_points.size() == 1 && m_prim_line_points[0].x > img_rgb.cols / 2 + 100)) {
 					thread_delay(5);
-					get_line_data(m_line_points);
+					get_line_data(m_prim_line_points, m_sec_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -226,9 +227,9 @@ void m_drive() {
 
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
 
-				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
+				while(m_prim_line_points.size() == 0 || (m_prim_line_points.size() == 1 && m_prim_line_points[0].x < img_rgb.cols / 2 - 100)) {
 					thread_delay(5);
-					get_line_data(m_line_points);
+					get_line_data(m_prim_line_points, m_sec_line_points);
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
@@ -294,7 +295,7 @@ void image_processing() {
 		line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
 		//		log_timing(tlast, "Line calculation: ");
 
-		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
+		gruen_calc(img_rgb, hsv, bin_sw, bin_gr);		// grstate und grcenter berechnen
 
 
 		//		log_timing(tlast, "Green calc: ");
