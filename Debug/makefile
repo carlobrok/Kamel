@@ -35,7 +35,9 @@ endif
 
 -include ../makefile.defs
 
-# Add inputs and outputs from these tool invocations to the build variables 
+CC = g++
+
+# Add inputs and outputs from these tool invocations to the build variables
 
 # All Target
 all: KamelPi
@@ -44,7 +46,7 @@ all: KamelPi
 KamelPi: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "KamelPi" $(OBJS) $(USER_OBJS) $(LIBS)
+	$(CC) -o "KamelPi" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
