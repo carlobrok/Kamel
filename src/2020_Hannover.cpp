@@ -325,6 +325,7 @@ int main() {
 	image_processing();						// start void image_processing
 
 	drive_t.detach();							// drive_t anhalten
+	imu_t.detach();							// imu_t anhalten
 	cout << "All threads closed" << endl;
 
 	return -1;						// fehler
