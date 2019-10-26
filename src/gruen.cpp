@@ -18,6 +18,12 @@ void set_gruen_data(cv::Point & grcenter, int & grstate) {
 	m_grstate =  grstate;																		// write to grstate buffer
 }
 
+void set_gruen_data(cv::Point grcenter, int grstate) {
+	std::lock_guard<std::mutex> m_lock(gruen_mutex);				// lock gruen_mutex
+	m_grcenter = grcenter;																	// write to grcenter buffer
+	m_grstate =  grstate;																		// write to grstate buffer
+}
+
 void get_gruen_data(cv::Point & grcenter, int & grstate) {
 	std::lock_guard<std::mutex> m_lock(gruen_mutex);				// lock gruen_mutex
 	grcenter = m_grcenter;														// write grcenter buffer to variable passed by reference

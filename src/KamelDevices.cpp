@@ -23,12 +23,12 @@ int kamelI2Copen(int devId) {
 	device = "/dev/i2c-1";	// Raspberry Pi 3B+
 
 	if((fd = open(device, O_RDWR)) < 0)	{			// open "/dev/i2c-1"
-		std::cout << "Unable to open " << device << ": " << strerror(errno) << endl;
+		std::cout << "Unable to open " << device << ": " << strerror(errno) << std::endl;
 		return -1;
 	}
 
 	if (ioctl (fd, I2C_SLAVE, devId) < 0) {			// set device address of fd to devId
-		std::cout << "Unable to open device " << devId << ": " << strerror(errno) << endl;
+		std::cout << "Unable to open device " << devId << ": " << strerror(errno) << std::endl;
 		return -1;
 	}
 
@@ -123,14 +123,14 @@ std::mutex imu_mutex;
 float m_imu_data[3] = {0,0,0};
 
 void get_imu_data(float (&imu_data)[3]) {
-	std::lock_guard<std::mutex> m_lock(IMU_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		imu_data[i] = m_imu_data[i];
 	}
 }
 
 void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp available
-	std::lock_guard<std::mutex> m_lock(IMU_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		m_imu_data[i] = imu_data[i];
 	}

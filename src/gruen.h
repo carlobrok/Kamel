@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 void set_gruen_data(cv::Point & grcenter, int & grstate);
+void set_gruen_data(cv::Point grcenter, int grstate);
 void get_gruen_data(cv::Point & grcenter, int & grstate);
 
 cv::Point gruen_center(std::vector <cv::Point> & cont1, std::vector <cv::Point> & cont2);

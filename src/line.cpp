@@ -32,7 +32,7 @@ void get_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Po
 
 // initialisieren der Ellipsen-Masken
 // ! Nur 1 mal aufrufen !
-void init_line_ellipse(cv::Mat & img_rgb) {
+void init_line_ellipse(cv::Mat& img_rgb) {
 	// Beide masken komplett schwarz malen, alle Werte im Bild auf cv::Scalar(0)
 	bin_prim_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
 	bin_sec_ellipse = cv::Mat(img_rgb.rows, img_rgb.cols, CV_8U, cv::Scalar(0));
@@ -42,8 +42,8 @@ void init_line_ellipse(cv::Mat & img_rgb) {
 	cv::ellipse(bin_sec_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2- ELLIPSE_THICKNESS/2 - ELLIPSE_THICKNESS, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
 
 	// Balken links und rechts zeichnen für bin_prim_ellipse
-	cv::Rect left_rect(0 , img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);		// neues rechteck für links
-	cv::Rect right_rect(img_rbg.cols - ELLIPSE_THICKNESS, img_rbg.rows * 3/4, ELLIPSE_THICKNESS, img_rbg.rows * 1/4);		// neues rechteck für rechts
+	cv::Rect left_rect(0 , img_rgb.rows * 3/4, ELLIPSE_THICKNESS, img_rgb.rows * 1/4);		// neues rechteck für links
+	cv::Rect right_rect(img_rgb.cols - ELLIPSE_THICKNESS, img_rgb.rows * 3/4, ELLIPSE_THICKNESS, img_rgb.rows * 1/4);		// neues rechteck für rechts
 	cv::rectangle(bin_prim_ellipse, left_rect, cv::Scalar(255), cv::FILLED);			// Rechteck links weiß auf bin_prim_ellipse zeichnen
 	cv::rectangle(bin_sec_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_sec_ellipse zeichnen
 }
@@ -230,16 +230,17 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	findContours(bin_sec_intersection, sec_contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);	// alle Konturen in bin_sec_intersection finden und in sec_contours_line schreiben
 
 #ifdef VISUAL_DEBUG
-	drawContours(img_rgb, prim_contours_line, -1, cv::Scalar(50, 180, 180), 1);		// alle Konturen aus prim_contours_line auf img_rbg malen
-	drawContours(img_rgb, sec_contours_line, -1, cv::Scalar(50, 140, 200), 1);		// alle Konturen aus sec_contours_line auf img_rbg malen
+	drawContours(img_rgb, prim_contours_line, -1, cv::Scalar(50, 180, 180), 1);		// alle Konturen aus prim_contours_line auf img_rgb malen
+	drawContours(img_rgb, sec_contours_line, -1, cv::Scalar(50, 140, 200), 1);		// alle Konturen aus sec_contours_line auf img_rgb malen
 #endif
 
 	std::vector<cv::Point> l_prim_line_points;			// local line points holding vector
 	std::vector<cv::Point> l_sec_line_points;			// local line points holding vector
 
 	// Prim. ellipse
-	for (unsigned int i = 0, cv::Moments m; i < prim_contours_line.size(); ++i) {		// vector prim_contours_line durchlaufen
-		m = cv::moments(prim_contours_line[i]);						// Moments von aktueller Kontur in m schreiben
+	for (unsigned int i = 0; i < prim_contours_line.size(); ++i) {		// vector prim_contours_line durchlaufen
+
+		cv::Moments m = cv::moments(prim_contours_line[i]);						// Moments von aktueller Kontur in m schreiben
 
 		if(m.m00 < 300) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
 			prim_contours_line.erase(prim_contours_line.begin() + i);			// Kontur i löschen
@@ -252,14 +253,14 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 			l_prim_line_points.push_back(mitte);
 
 #ifdef VISUAL_DEBUG
-			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);			// Mitte der Kontur auf Bild img_rbg malen
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);			// Mitte der Kontur auf Bild img_rgb malen
 #endif
 		}
 	}
 
 	// Sec. ellipse
-	for (unsigned int i = 0, cv::Moments m; i < sec_contours_line.size(); ++i) {		// vector sec_contours_line durchlaufen
-		m = cv::moments(sec_contours_line[i]);					// Moments von aktueller Kontur in m schreiben
+	for (unsigned int i = 0; i < sec_contours_line.size(); ++i) {		// vector sec_contours_line durchlaufen
+		cv::Moments m = cv::moments(sec_contours_line[i]);					// Moments von aktueller Kontur in m schreiben
 
 		if(m.m00 < 300) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
 			sec_contours_line.erase(sec_contours_line.begin()+i);					// Kontur i löschen
@@ -272,7 +273,7 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 			l_sec_line_points.push_back(mitte);
 
 	#ifdef VISUAL_DEBUG
-			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);					// Mitte der Kontur auf Bild img_rbg malen
+			cv::circle(img_rgb, mitte, 1, cv::Scalar(50, 90, 200),2);					// Mitte der Kontur auf Bild img_rgb malen
 	#endif
 		}
 	}
