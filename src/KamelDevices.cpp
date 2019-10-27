@@ -38,27 +38,71 @@ int kamelI2Copen(int devId) {
 
 // ================== Motoren ==================
 
+
+/* struct für die Daten des vergangenen Sendens
+	 - last_time:		time_point des letzten Mals senden
+	 - last_data:		die bytes/Daten des letzten Mals senden
+*/
+template <size_t N>
+struct last_values {
+  std::chrono::high_resolution_clock::time_point last_time;
+  uint8_t last_data[N];
+};
+
+
+/* prüft, ob es erforderlich ist die Daten zu senden,
+	 - true:  wenn das letzte Mal senden zu lange her ist oder die neuen Daten nicht die alten sind
+	 - false: wenn die neuen Daten gleich den alten Daten sind
+*/
+template <size_t N>
+bool send_req(uint8_t (&data)[N], last_values<N> &l_data) {
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - l_data.last_time).count() > I2C_MOTOR_REFRESH_TIME) {				// prüft ob das letzte Mal senden länger als 100ms her ist
+    std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));				// kopiert data in last_data.last_data
+		l_data.last_time = std::chrono::high_resolution_clock::now();							// aktualisiert den time_point des letzten Sendens
+		return true;
+  }
+  else if (!std::equal(std::begin(data), std::end(data), std::begin(l_data.last_data))) {			// prüft ob die Daten array gleich sind
+    std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));
+		l_data.last_time = std::chrono::high_resolution_clock::now();							// aktualisiert den time_point des letzten Sendens
+		return true;
+  }
+  return false;
+}
+
+
 // sets the direction and pwm rate of the given motors by sending the values over I2C to the motor-arduino
 
+last_values<3> last_dirPwm;
 int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
 	uint8_t data[3] = {side, direction, pwm};
-	return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM, 3, data);
+	if(send_req(data, last_dirPwm))
+		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM, 3, data);
+	else
+		return 0;
 }
 
 
 // sets the direction and pwm rate of both motors by sending the values over I2C to the motor-arduino
 
+last_values<4> last_dirPwmBoth;
 int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right) {
 	uint8_t data[4] = {direction_left, pwm_left, direction_right, pwm_right};
-	return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM_BOTH, 4, data);
+	if(send_req(data, last_dirPwmBoth))
+		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM_BOTH, 4, data);
+	else
+		return 0;
 }
 
 
 // sets the given motors to the given state by sending the values over I2C to the motor-arduino
 
+last_values<2> last_state;
 int setMotorState(int &fd, uint8_t side, uint8_t state) {
 	uint8_t data[2] = {side, state};
-	return i2c_smbus_write_block_data(fd, MOTOR_STATE, 2, data);
+	if(send_req(data, last_state))
+		return i2c_smbus_write_block_data(fd, MOTOR_STATE, 2, data);
+	else
+		return 0;
 }
 
 /* Returns a specific bit from a single byte.
@@ -74,18 +118,17 @@ bool get_bit(uint8_t byte, uint8_t bit_index) {
 }
 
 
+int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command) {
+	return i2c_smbus_read_i2c_block_data(fd, command, data_length, in_data);
+}
+
+
 /* function reads 3 bytes of sensordata and fetches it to the output arrays.
  * first 8 bit is for 8 digital sensors, last to bits are lowbyte and highbyt if 1 analog  10bit sensor.
  *
  * Sequence of digital sensors is:
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
-
-
-int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command) {
-	return i2c_smbus_read_i2c_block_data(fd, command, data_length, in_data);
-}
-
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
 	uint8_t in_data[3];
 	int ret = i2c_smbus_read_i2c_block_data(fd, ALL_SENSOR_VALUES, 3, in_data);
