@@ -45,7 +45,7 @@ void init_line_ellipse(cv::Mat& img_rgb) {
 	cv::Rect left_rect(0 , img_rgb.rows * 3/4, ELLIPSE_THICKNESS, img_rgb.rows * 1/4);		// neues rechteck für links
 	cv::Rect right_rect(img_rgb.cols - ELLIPSE_THICKNESS, img_rgb.rows * 3/4, ELLIPSE_THICKNESS, img_rgb.rows * 1/4);		// neues rechteck für rechts
 	cv::rectangle(bin_prim_ellipse, left_rect, cv::Scalar(255), cv::FILLED);			// Rechteck links weiß auf bin_prim_ellipse zeichnen
-	cv::rectangle(bin_sec_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_sec_ellipse zeichnen
+	cv::rectangle(bin_prim_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_prim_ellipse zeichnen
 }
 
 /*
