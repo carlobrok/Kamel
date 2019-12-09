@@ -17,15 +17,15 @@
 
 
 #define VIDEO_NAME video_name[vid_name_idx]
-#define VIDEOS_AMOUNT 6
+#define VIDEOS_AMOUNT 4
 
 using namespace std;
 using namespace cv;
 
 
 String video_name[VIDEOS_AMOUNT] = {
-	"20191207_line1.mp4",
-	"20191207_line2.mp4",
+	//"20191207_line1.mp4",
+	//"20191207_line2.mp4",
 	"201905_line1.mp4",
 	"201905_line2.mp4",
 	"201905_line3.mp4",
@@ -113,7 +113,7 @@ int main() {
 			tloop = getTickCount();			// Tickcount for whole loop
 
 			// Filter image and convert to hsv
-			GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);		// Gaussian blur to normalize image
+			GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);
 			cvtColor(img_rgb, hsv, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
 
 			separate_gruen(hsv, bin_gr);  // grün auf dem Bild erkennen und in bin_gr als weiß schreiben, muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
@@ -121,14 +121,13 @@ int main() {
 
 			gruen_calc(img_rgb, hsv, bin_sw, bin_gr);		// grstate und grcenter berechnen
 			get_gruen_data(m_grcenter, m_grstate);
-			cout << "GRSTATE: " << m_grstate << endl;
+			//cout << "GRSTATE: " << m_grstate << endl;
 
 			// Alle Bilder anzeigen
 			imshow("Input", img_rgb);
 			imshow("HSV", hsv);
 			imshow("Mask SW", bin_sw);
 			imshow("Mask Green", bin_gr);
-
 
 
 			camera_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
