@@ -1,4 +1,4 @@
-#   C++ 
+#   C++
 #===================
 
 # Prerequisites
@@ -34,7 +34,7 @@
 *.out
 *.app
 
-
+Debug/KamelPi
 
 #   ECLIPSE
 #====================
@@ -97,8 +97,10 @@ local.properties
 #  VIDEOS AND TEST IMAGES
 # ===============================
 
-.jpg
-.png
+*.jpg
+*.png
 
-.mp4
-.avi
+*.mp4
+*.avi
+
+*.log
