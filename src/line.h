@@ -13,7 +13,8 @@
 #define ELLIPSE_HEIGHT 75
 
 #define THRESH_BLACK 50
-
+#define LOW_BLACK cv::Scalar(0, 0, 0)
+#define HIGH_BLACK cv::Scalar(180, 255, THRESH_BLACK)
 
 
 void set_line_data(std::vector<cv::Point> & prim_line_points, std::vector<cv::Point> & sec_line_points);

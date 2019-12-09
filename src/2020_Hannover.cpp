@@ -77,8 +77,8 @@ int main() {
 	Logger camera_lg("camera");		// Logger für Dateiname des aktuellen Bilds, sowie andere Bildinformationen
 
 	Mat hsv;			// input Bild im hsv Format
-	Mat bin_sw;		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
-	Mat bin_gr;		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
+	Mat bin_sw(IMG_HEIGHT, IMG_WIDTH, CV_8U, cv::Scalar(0));		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
+	Mat bin_gr(IMG_HEIGHT, IMG_WIDTH, CV_8U);		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
 
 	VideoCapture cap;		// Video eingabe der Kamera '0'; 0, wenn nur eine Kamera angeschlossen ist
 
@@ -96,7 +96,7 @@ int main() {
 	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
 	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
 
-
+	init_line_ellipse(); //  Ellipse initialisieren
 
 	int64 tloop;
 

@@ -42,6 +42,9 @@ void init_line_ellipse() {
 	cv::rectangle(bin_prim_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_prim_ellipse zeichnen
 }
 
+bool inRange(cv::Vec3b pixel_color, cv::Scalar low, cv::Scalar high) {
+	return low[0] <= pixel_color[0] && pixel_color[0] <= high[0] && low[1] <= pixel_color[1] && pixel_color[1] <= high[1] && low[2] <= pixel_color[2] && pixel_color[2] <= high[2];
+}
 
 /*
  * WICHTIG: Das Bild muss eine Auflösung haben, wie sie als IMG_WIDTH und IMG_HEIGHT in der config.h definiert ist!
@@ -63,7 +66,8 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	int near_mitte = -1;
 	cv::Point2i p_near_mitte;
 	for(int i = 0; i < IMG_WIDTH; i++) {
-		int color = (int)bin_sw.at<uchar>(IMG_HEIGHT-1,i);
+		//int color = (int)bin_sw.at<uchar>(IMG_HEIGHT-1,i);
+
 		if(near_mitte == -1) {
 			p_near_mitte.y = IMG_HEIGHT-1;
 			p_near_mitte.x = i;
@@ -72,7 +76,7 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 		if(abs(i-IMG_WIDTH/2) > near_mitte) {
 			std::cout << "Weiter entfernt als nähester Punkt" << std::endl;
 			i = IMG_WIDTH;
-		} else if(abs(i-IMG_WIDTH/2) < near_mitte && color == 255) {
+		} else if(abs(i-IMG_WIDTH/2) < near_mitte && inRange(hsv.at<cv::Vec3b>(IMG_HEIGHT-1,i), LOW_BLACK, HIGH_BLACK)) {
 			p_near_mitte.x = i;
 			schwarze_punkte.push_back(p_near_mitte);
 			near_mitte = abs(i-IMG_WIDTH/2);
@@ -103,8 +107,8 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 			if(inMat(point_left, IMG_WIDTH, IMG_HEIGHT)) {
 
 				if(abgefragte_punkte[point_left.x][point_left.y] == false) {
-					int color = (int)bin_sw.at<uchar>(point_left.y,point_left.x);
-					if(color == 255) {
+					//int color = (int)bin_sw.at<uchar>(point_left.y,point_left.x);
+					if(inRange(hsv.at<cv::Vec3b>(point_left), LOW_BLACK, HIGH_BLACK)) {
 						schwarze_punkte.push_back(point_left);
 						temp_neue_punkte.push_back(point_left);
 					}
@@ -118,8 +122,8 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 			if(inMat(point_right, IMG_WIDTH, IMG_HEIGHT)) {
 				//					cout << "cv::Point right in cv::Mat. x:" << point_right.x << " y: " << point_right.y << endl;
 				if(abgefragte_punkte[point_right.x][point_right.y] == false) {
-					int color = (int)bin_sw.at<uchar>(point_right.y,point_right.x);
-					if(color == 255) {
+					//int color = (int)bin_sw.at<uchar>(point_right.y,point_right.x);
+					if(inRange(hsv.at<cv::Vec3b>(point_right), LOW_BLACK, HIGH_BLACK)) {
 						schwarze_punkte.push_back(point_right);
 						temp_neue_punkte.push_back(point_right);
 					}
@@ -133,8 +137,8 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 			if(inMat(point_over, IMG_WIDTH, IMG_HEIGHT)) {
 				//					cout << "cv::Point over in cv::Mat. " << point_over << endl;
 				if(abgefragte_punkte[point_over.x][point_over.y] == false) {
-					int color = (int)bin_sw.at<uchar>(point_over.y,point_over.x);
-					if(color == 255) {
+					//int color = (int)bin_sw.at<uchar>(point_over.y,point_over.x);
+					if(inRange(hsv.at<cv::Vec3b>(point_over), LOW_BLACK, HIGH_BLACK)) {
 						schwarze_punkte.push_back(point_over);
 						temp_neue_punkte.push_back(point_over);
 					}
@@ -148,8 +152,8 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 			if(inMat(point_under, IMG_WIDTH, IMG_HEIGHT)) {
 				//					cout << "cv::Point under in cv::Mat. " << point_under << endl;
 				if(abgefragte_punkte[point_under.x][point_under.y] == false) {
-					int color = (int)bin_sw.at<uchar>(point_under);
-					if(color == 255) {
+					//int color = (int)bin_sw.at<uchar>(point_under);
+					if(inRange(hsv.at<cv::Vec3b>(point_under), LOW_BLACK, HIGH_BLACK)) {
 						schwarze_punkte.push_back(point_under);
 						temp_neue_punkte.push_back(point_under);
 					}
@@ -183,17 +187,14 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	// 	sepatare_line(hsv, bin_sw);
 	// }
 
-	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+	inRange(hsv, LOW_BLACK, HIGH_BLACK, bin_sw);			// alles schwarze als weiß in bin_sw schreiben
 
 	// Grünpunkt wird oft auch als schwarz erkannt, aktuelle Matrix des Grünpunktes, bin_gr, von bin_sw subtrahieren.
 	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
 	bin_sw -= bin_gr;
 
-	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));	// alle kleinstflecken entfernen
+	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_ERODE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));	// alle kleinstflecken entfernen
 
-	if(bin_prim_ellipse.empty()) {			//Wenn diese Matritzen leer sind
-		init_line_ellipse();					//  Ellipsen initialisieren
-	}
 
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
 
@@ -221,10 +222,11 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 
 		cv::Moments m = cv::moments(prim_contours_line[i]);						// Moments von aktueller Kontur in m schreiben
 
-		if(m.m00 < 300) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
+		if(m.m00 < 800) {				// Konturen, die eine Fläche kleiner als 300px haben werden ignoriert und gelöscht
 			prim_contours_line.erase(prim_contours_line.begin() + i);			// Kontur i löschen
 			i--;							// counter i einen runter setzen, da sonst die nächste Kontur übersprungen wird
 		} else {
+			std::cout << "contour size: " << m.m00 << std::endl;
 			// Punkt der Mitte berechnen und an l_prim_line_points anhängen
 			cv::Point mitte;
 			mitte.x = m.m10/m.m00;
