@@ -76,10 +76,9 @@ int main() {
 
 	Logger camera_lg("camera");		// Logger für Dateiname des aktuellen Bilds, sowie andere Bildinformationen
 
-	Mat hsv_g, hsv_m;			// input Bild im hsv Format
-	Mat bin_sw_g, bin_sw_m;		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
-	Mat bin_gr_g, bin_gr_m;		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
-	Mat gauss, median;
+	Mat hsv;			// input Bild im hsv Format
+	Mat bin_sw;		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
+	Mat bin_gr;		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
 
 	VideoCapture cap;		// Video eingabe der Kamera '0'; 0, wenn nur eine Kamera angeschlossen ist
 
@@ -92,8 +91,6 @@ int main() {
 	namedWindow("Mask SW");
 	namedWindow("HSV");
 	namedWindow("Input");
-	namedWindow("Gauss");
-	namedWindow("Median");
 
 	vector<Point> m_line_points;		// lokaler vector mit allen Punkten der Linie
 	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
@@ -116,39 +113,8 @@ int main() {
 			tloop = getTickCount();			// Tickcount for whole loop
 
 			// Filter image and convert to hsv
-
-
-			double tgauss = cur_ms();
-			GaussianBlur(img_rgb, gauss, Size(5,5),2,2);		// Gaussian blur to normalize image
-
-			cvtColor(gauss, hsv_g, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
-
-			separate_gruen(hsv_g, bin_gr_g);  // grün auf dem Bild erkennen und in bin_gr als weiß schreiben, muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
-			line_calc(gauss, hsv_g, bin_sw_g, bin_gr_g);		// linienpunkte berechnen, in m_line_points schreiben
-
-			gruen_calc(gauss, hsv_g, bin_sw_g, bin_gr_g);		// grstate und grcenter berechnen
-			//get_gruen_data(m_grcenter, m_grstate);
-			//cout << "GRSTATE: " << m_grstate << endl;
-			cout << "Gauss took " << cur_ms()-tgauss << "ms / ";
-
-
-
-
-			double tmedian = cur_ms();
-			cv::medianBlur(img_rgb, median, 5);
-
-			cvtColor(median, hsv_m, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
-
-			separate_gruen(hsv_m, bin_gr_m);  // grün auf dem Bild erkennen und in bin_gr als weiß schreiben, muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
-			line_calc(median, hsv_m, bin_sw_m, bin_gr_m);		// linienpunkte berechnen, in m_line_points schreiben
-
-			gruen_calc(median, hsv_m, bin_sw_m, bin_gr_m);		// grstate und grcenter berechnen
-			//get_gruen_data(m_grcenter, m_grstate);
-			//cout << "GRSTATE: " << m_grstate << endl;
-			cout << "median took " << cur_ms() - tmedian << "ms" << endl;
-
-
-			/*cvtColor(img_rgb, hsv, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
+			GaussianBlur(img_rgb, img_rgb, Size(5,5),2,2);
+			cvtColor(img_rgb, hsv, COLOR_BGR2HSV);			// Convert to HSV and save in Mat hsv
 
 			separate_gruen(hsv, bin_gr);  // grün auf dem Bild erkennen und in bin_gr als weiß schreiben, muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
 			line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
@@ -156,14 +122,12 @@ int main() {
 			gruen_calc(img_rgb, hsv, bin_sw, bin_gr);		// grstate und grcenter berechnen
 			get_gruen_data(m_grcenter, m_grstate);
 			//cout << "GRSTATE: " << m_grstate << endl;
-			*/
+
 			// Alle Bilder anzeigen
 			imshow("Input", img_rgb);
-			// imshow("HSV", hsv);
-			// imshow("Mask SW", bin_sw);
-			// imshow("Mask Green", bin_gr);
-			imshow("Gauss", gauss);
-			imshow("Median", median);
+			imshow("HSV", hsv);
+			imshow("Mask SW", bin_sw);
+			imshow("Mask Green", bin_gr);
 
 
 			camera_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::info;
