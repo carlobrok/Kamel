@@ -193,7 +193,7 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
 	bin_sw -= bin_gr;
 
-	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_ERODE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));	// alle kleinstflecken entfernen
+	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));	// alle kleinstflecken entfernen
 
 
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren

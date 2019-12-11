@@ -194,6 +194,7 @@ struct double_green_point {
 	cv::Point p2;
 	float distance;
 	float angle;
+	float absolute_angle;
 };
 
 // Tauschen der Werte von double_green_point
@@ -205,7 +206,7 @@ void swap(double_green_point *xp, double_green_point *yp)
 }
 
 // bubble sort for struct double_green_point
-void sort_green_pairs(double_green_point arr[], int n)
+void sort_green_angle(double_green_point arr[], int n)
 {
     int i, j;
     for (i = 0; i < n-1; i++)
@@ -216,8 +217,21 @@ void sort_green_pairs(double_green_point arr[], int n)
             swap(&arr[j], &arr[j+1]);
 }
 
+void sort_green_dist(double_green_point arr[], int n)
+{
+    int i, j;
+    for (i = 0; i < n-1; i++)
+
+    // Last i elements are already in place
+    for (j = 0; j < n-i-1; j++)
+        if (arr[j].distance > arr[j+1].distance)
+            swap(&arr[j], &arr[j+1]);
+}
+
 // =====================================================
 
+
+cv::Scalar pairs_color[6] = {cv::Scalar(0, 153, 0), cv::Scalar(0, 122, 51), cv::Scalar(0, 92, 102), cv::Scalar(0, 61, 153), cv::Scalar(0, 31, 204), cv::Scalar(0,0,255)};
 
 
 void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat & bin_gr) {
@@ -289,15 +303,16 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 					std::cout << "m00: " << m1.m00 << " / " << m2.m00 << std::endl;
 
 					angle = line_angle(p1, p2);
-					std::cout << "Angle: " << angle << std::endl;
 
 					if(angle > 90) {
 					  angle -= 180;
 					}
 
-					angle = abs(angle);
+					point_pairs[pair_counter].absolute_angle = angle;
+					std::cout << "Absolute angle: " << angle << std::endl;
 
-					//std::cout << "Distance to angle 0: " << angle << "°" << std::endl;
+					angle = abs(angle);
+					std::cout << "Relative angle (angle to horizontal): " << angle << "°" << std::endl;
 
 					point_pairs[pair_counter].p1 = p1;
 					point_pairs[pair_counter].p2 = p2;
@@ -310,23 +325,61 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 		    }
 		  }
 
-			sort_green_pairs(point_pairs, pairs);
 
-			std::cout << "Difference between the angle of idx 0 and 1 is " << abs(point_pairs[0].angle - point_pairs[1].angle) << std::endl;
 
-			cv::line(img_rgb, point_pairs[1].p1, point_pairs[1].p2, cv::Scalar(0,0,200), 2);
-
-			if(point_pairs[0].distance > point_pairs[1].distance && abs(point_pairs[0].angle - point_pairs[1].angle) < 20) {
-				p1 = point_pairs[1].p1;
-				p2 = point_pairs[1].p2;
-				std::cout << "SWITCHED PAIRS" << std::endl;
-			} else if(point_pairs[0].distance > point_pairs[2].distance && abs(point_pairs[0].angle - point_pairs[2].angle) < 20 && contg.size() == 4) {
-				p1 = point_pairs[2].p1;
-				p2 = point_pairs[2].p2;
-				std::cout << "USED 3th PAIRS" << std::endl;
-			} else 	{
+			if(contg.size() == 3) {
+				sort_green_dist(point_pairs, pairs);
 				p1 = point_pairs[0].p1;
 				p2 = point_pairs[0].p2;
+			}
+
+			else if(contg.size() == 4) {
+				sort_green_angle(point_pairs, pairs);
+
+				std::cout << std::endl << "#0 to #1: " << abs(point_pairs[0].absolute_angle - point_pairs[1].absolute_angle) << std::endl;
+				std::cout << "#0 to #2: " << abs(point_pairs[0].absolute_angle - point_pairs[2].absolute_angle) << std::endl;
+				std::cout << "#1 to #2: " << abs(point_pairs[1].absolute_angle - point_pairs[2].absolute_angle) << std::endl;
+
+				for(int i = 0; i < pairs; i++) {
+					cv::line(img_rgb, point_pairs[i].p1, point_pairs[i].p2, pairs_color[i], 2);
+				}
+
+				if(abs(point_pairs[0].absolute_angle - point_pairs[1].absolute_angle) < 15) {
+					std::cout << "#0 and #1 are parallel" << std::endl;
+					if(point_pairs[0].distance > point_pairs[1].distance) {
+						p1 = point_pairs[1].p1;
+						p2 = point_pairs[1].p2;
+					} else {
+						p1 = point_pairs[0].p1;
+						p2 = point_pairs[0].p2;
+					}
+				}
+
+				else if(abs(point_pairs[0].absolute_angle - point_pairs[2].absolute_angle) < 15) {
+					std::cout << "#0 and #2 are parallel" << std::endl;
+					if(point_pairs[0].distance > point_pairs[2].distance) {
+						p1 = point_pairs[2].p1;
+						p2 = point_pairs[2].p2;
+					} else {
+						p1 = point_pairs[0].p1;
+						p2 = point_pairs[0].p2;
+					}
+				}
+
+				else if(abs(point_pairs[1].absolute_angle - point_pairs[2].absolute_angle) < 15) {
+					std::cout << "#1 and #2 are parallel" << std::endl;
+					if(point_pairs[1].distance > point_pairs[2].distance) {
+						p1 = point_pairs[2].p1;
+						p2 = point_pairs[2].p2;
+					} else {
+						p1 = point_pairs[1].p1;
+						p2 = point_pairs[1].p2;
+					}
+				}
+				
+				else {
+					std::cout << "Something went WRONG!!" << std::endl;
+				}
 			}
 
 		} else {
