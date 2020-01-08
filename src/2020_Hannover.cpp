@@ -17,13 +17,14 @@
 
 
 #define VIDEO_NAME video_name[vid_name_idx]
-#define VIDEOS_AMOUNT 6
+#define VIDEOS_AMOUNT 7
 
 using namespace std;
 using namespace cv;
 
 
 String video_name[VIDEOS_AMOUNT] = {
+  "20191212_line1.mp4",
 	"20191207_line1.mp4",
 	"20191207_line2.mp4",
 	"201905_line1.mp4",
@@ -91,7 +92,7 @@ int main() {
 	namedWindow("Mask SW");
 	namedWindow("HSV");
 	namedWindow("Input");
-	
+
 	vector<Point> m_line_points;		// lokaler vector mit allen Punkten der Linie
 	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
 	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
