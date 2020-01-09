@@ -1,6 +1,6 @@
 #include <mutex>
-#include "opencv2/opencv.hpp"
-#include "math.h"				// atan2
+#include <math.h>				// atan2
+#include <opencv2/opencv.hpp>
 
 #include "config.h"
 #include "line.h"
@@ -30,10 +30,28 @@ void init_line_ellipse(cv::Mat & img_rgb) {
 	cv::ellipse(bin_ellipse, cv::Point(img_rgb.cols/2, img_rgb.rows), cv::Size(img_rgb.cols/2-ELLIPSE_THICKNESS/2, img_rgb.cols/3), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
 }
 
+/*
+ * Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+ * rows: Höhe des Bildes in Zeilen
+ * cols: Breite des Bildes in Spalten
+ */
 float line_radiant(cv::Point & p, int rows, int cols) {
 	return atan2(p.y - rows, p.x - cols/2)  * 180 / CV_PI + 90;
 }
 
+/*
+ * Gibt das Bogenmaß zwischen dem mittleren Punkt der unteren Bildreihe und des übergebenen Linepoints zurück
+ * img: input image mit dem die Auswertung statt findet
+ */
+float line_radiant(cv::Point & p, cv::Mat & img) {
+	return atan2(p.y - img.rows, p.x - img.cols/2)  * 180 / CV_PI + 90;
+}
+
+/*
+ * Schreibt nur die schwarzen Flächen in bin_sw, welche direkten Kontakt zur Ausgangsfläche haben.
+ * Die Ausgangsfläche wird bestimmt durch den Punkt, der am nähesten zum Punkt P(480|320), bei einem Format von
+ * 640x480p, liegt und sich in der unteren Reihe befindet.
+ */
 void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	bool abgefragte_punkte[hsv.cols][hsv.rows];
 	for(int x = 0; x < hsv.cols; x++) {
@@ -156,8 +174,21 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
 	}
 }
 
-void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, std::vector<cv::Point> & line_points, bool do_separate_line) {
-	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);
+/*
+ * Hauptfunktion zum auswerten der linepoints
+ * Die ausgewerteten prim_line_points und sec_line_points werden zwischen gespeichert und können
+ * mit get_line_data abgerufen werden.
+ */
+void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, bool do_separate_line) {
+
+	// if(do_separate_line) {
+	// 	sepatare_line(hsv, bin_sw);
+	// }
+
+	inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(180, 255, THRESH_BLACK), bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+
+	// Grünpunkt wird oft auch als schwarz erkannt, aktuelle Matrix des Grünpunktes, bin_gr, von bin_sw subtrahieren.
+	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
 	bin_sw -= bin_gr;
 	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));
 

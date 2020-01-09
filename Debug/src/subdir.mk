@@ -6,7 +6,7 @@
 CPP_SRCS += \
 ../src/2020_Hannover.cpp \
 ../src/CameraCapture.cpp \
-../src/KamelI2C.cpp \
+../src/KamelDevices.cpp \
 ../src/Logger.cpp \
 ../src/VideoServer.cpp \
 ../src/gruen.cpp \
@@ -16,7 +16,7 @@ CPP_SRCS += \
 OBJS += \
 ./src/2020_Hannover.o \
 ./src/CameraCapture.o \
-./src/KamelI2C.o \
+./src/KamelDevices.o \
 ./src/Logger.o \
 ./src/VideoServer.o \
 ./src/gruen.o \
@@ -26,7 +26,7 @@ OBJS += \
 CPP_DEPS += \
 ./src/2020_Hannover.d \
 ./src/CameraCapture.d \
-./src/KamelI2C.d \
+./src/KamelDevices.d \
 ./src/Logger.d \
 ./src/VideoServer.d \
 ./src/gruen.d \

@@ -1,7 +1,7 @@
 #ifndef KAMELI2C_H
 #define KAMELI2C_H
 
-#include <cstdint>
+#include <stdint.h>       	// int8_t, uint8_t, uint16_t, ...
 
 // WHAT TO DO   (DO NOT USE!)
 #define MOTOR_DIR_PWM 0
@@ -48,12 +48,15 @@ int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
 int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
 int setMotorState(int &fd, uint8_t side, uint8_t state);
 
-bool get_bit(int8_t byte, uint8_t bit_number);
+bool get_bit(uint8_t byte, uint8_t bit_number);
 
 int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command);
 
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]);
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
 int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
+
+void get_imu_data(float (&imu_data)[3]);
+void m_imu(void);
 
 #endif

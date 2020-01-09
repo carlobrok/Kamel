@@ -1,5 +1,5 @@
+#include <opencv2/opencv.hpp>
 #include "util.h"
-#include "opencv2/opencv.hpp"
 
 // Returns true if the given point is between (0,0) and (cols,rows)
 bool inMat(cv::Point & p, int cols, int rows) {

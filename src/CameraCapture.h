@@ -12,7 +12,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
 class CameraCapture {
 public:

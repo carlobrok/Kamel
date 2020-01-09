@@ -6,8 +6,8 @@
 #include <thread>			// multithreading
 
 #include <boost/circular_buffer.hpp>			// speichern der letzten n werte
-#include "opencv2/opencv.hpp"				// opencv für bildauswertung
-#include "math.h"					// abs, cos, sin, ...
+#include <opencv2/opencv.hpp>				// opencv für bildauswertung
+#include <math.h>					// abs, cos, sin, ...
 
 #include "Logger.h"			// Logger class
 #include "config.h"			// defines
@@ -17,7 +17,7 @@
 
 #include "CameraCapture.h"		// thread zum kamera einlesen
 #include "VideoServer.h"			// thread für Videoausgabe über IP
-#include "KamelI2C.h"					// kommunikation mit Arduino und Servosteuerung
+#include "KamelDevices.h"					// kommunikation mit Arduino und Servosteuerung
 
 
 
@@ -273,10 +273,6 @@ void image_processing() {
 	srv.namedWindow("HSV");
 	srv.namedWindow("Input");
 
-	vector<Point> m_line_points;		// lokaler vector mit allen Punkten der Linie
-	Point m_grcenter(0,0);				// lokaler Point des Zentrums vom Grünen Punkt
-	int m_grstate = GRUEN_NICHT;			// Zustand des grünen Punktes
-
 	int64 tloop;
 
 	while(1) {
@@ -295,15 +291,11 @@ void image_processing() {
 
 		//		log_timing(tlast, "Green separation: ");
 
-		line_calc(img_rgb, hsv, bin_sw, bin_gr, m_line_points);		// linienpunkte berechnen, in m_line_points schreiben
-
-		set_line_data(m_line_points);		// m_line_points in global buffer schreiben
-
+		line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
 		//		log_timing(tlast, "Line calculation: ");
 
-		gruen_calc(img_rgb, hsv, bin_sw, bin_gr, m_grstate, m_grcenter);		// grstate und grcenter berechnen
+		gruen_calc(img_rgb, hsv, bin_sw, bin_gr);		// grstate und grcenter berechnen
 
-		set_gruen_data(m_grcenter, m_grstate);		// m_grcenter und m_grstate in global buffer schreiben
 
 		//		log_timing(tlast, "Green calc: ");
 
@@ -328,9 +320,11 @@ int main() {
 	init_clock();			// set start_clock to current ms
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
+	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
 	image_processing();						// start void image_processing
 
 	drive_t.detach();							// drive_t anhalten
+	imu_t.detach();							// imu_t anhalten
 	cout << "All threads closed" << endl;
 
 	return -1;						// fehler
