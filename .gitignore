@@ -94,7 +94,7 @@ local.properties
 .scala_dependencies
 .worksheet
 
-#  VIDEOS AND TEST IMAGES
+#  Project specific
 # ===============================
 
 *.jpg
