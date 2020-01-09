@@ -1,4 +1,4 @@
-#   C++ 
+#   C++
 #===================
 
 # Prerequisites
@@ -34,7 +34,7 @@
 *.out
 *.app
 
-
+Debug/KamelPi
 
 #   ECLIPSE
 #====================
@@ -94,11 +94,13 @@ local.properties
 .scala_dependencies
 .worksheet
 
-#  VIDEOS AND TEST IMAGES
+#  Project specific
 # ===============================
 
-.jpg
-.png
+*.jpg
+*.png
 
-.mp4
-.avi
+*.mp4
+*.avi
+
+*.log
