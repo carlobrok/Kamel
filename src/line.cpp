@@ -63,11 +63,10 @@ bool inRange(cv::Vec3b pixel_color, cv::Scalar low, cv::Scalar high) {
 	return low[0] <= pixel_color[0] && pixel_color[0] <= high[0] && low[1] <= pixel_color[1] && pixel_color[1] <= high[1] && low[2] <= pixel_color[2] && pixel_color[2] <= high[2];
 }
 
+
 /*
  * WICHTIG: Das Bild muss eine Auflösung haben, wie sie als IMG_WIDTH und IMG_HEIGHT in der config.h definiert ist!
  *
-
-/*
  * Schreibt nur die schwarzen Flächen in bin_sw, welche direkten Kontakt zur Ausgangsfläche haben.
  * Die Ausgangsfläche wird bestimmt durch den Punkt, der am nähesten zum Punkt P(480|320), bei einem Format von
  * 640x480p, liegt und sich in der unteren Reihe befindet.
@@ -214,18 +213,18 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3)));
 
 	if(bin_ellipse.empty()) {
-		init_line_ellipse(img_rgb);
+		init_line_ellipse();
 	}
 
 	bin_intersection.release();
 
 
-	cv::bitwise_and(bin_sw, bin_ellipse, bin_intersection);			
+	cv::bitwise_and(bin_sw, bin_ellipse, bin_intersection);
 
 
 	std::vector< std::vector<cv::Point> > contours_line; // vector, der alle Konturen aus bin_prim_intersection enthält
 
-	findContours(bin_prim_intersection, contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);	// alle Konturen in bin_prim_intersection finden und in contours_line schreiben
+	findContours(bin_intersection, contours_line, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);	// alle Konturen in bin_prim_intersection finden und in contours_line schreiben
 
 #ifdef VISUAL_DEBUG
 	drawContours(img_rgb, contours_line, -1, cv::Scalar(50, 180, 180), 1);		// alle Konturen aus contours_line auf img_rgb malen
