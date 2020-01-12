@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
-
+#include <cstdio>			// uint.._t
 
 // Parameter zur Erkennung der Linie
 
@@ -11,7 +11,7 @@
 #define ELLIPSE_BAR_HEIGHT 100   // Höhe der Balken links und rechts unter der halben Ellipse
 #define ELLIPSE_HEIGHT 75
 
-#define THRESH_BLACK 50
+uint8_t THRESH_BLACK;
 #define LOW_BLACK cv::Scalar(0, 0, 0)
 #define HIGH_BLACK cv::Scalar(180, 255, THRESH_BLACK)
 
