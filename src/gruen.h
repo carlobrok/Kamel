@@ -7,8 +7,8 @@
 
 // Parameter zur Erkennung des Grünpunktes
 
-cv::Scalar LOWER_GREEN;
-cv::Scalar UPPER_GREEN;
+extern cv::Scalar LOWER_GREEN;
+extern cv::Scalar UPPER_GREEN;
 
 #define GRUEN_NICHT 0
 #define GRUEN_BEIDE 3

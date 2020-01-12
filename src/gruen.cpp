@@ -7,6 +7,9 @@
 #include "config.h"
 
 
+cv::Scalar LOWER_GREEN;
+cv::Scalar UPPER_GREEN;
+
 std::mutex gruen_mutex;				// mutex for global green values
 
 cv::Point m_grcenter(0,0);

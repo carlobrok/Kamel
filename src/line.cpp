@@ -6,6 +6,9 @@
 #include "line.h"
 #include "util.h"
 
+
+uint8_t THRESH_BLACK;
+
 std::mutex line_mutex;
 
 std::vector<cv::Point> m_line_points;			// global line points holding vector
