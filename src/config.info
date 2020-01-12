@@ -3,10 +3,10 @@
 # key = value
 
 # Schwarz Threshold
-THRESH_BLACK = 80
+THRESH_BLACK = 100
 
-LOWER_GREEN = 50,60,15
-UPPER_GREEN = 90,255,115
+LOWER_GREEN = 50,35,15
+UPPER_GREEN = 90,255,200
 
 
 # Legt fest, ob der Roboter beim Programmstart das Endzone-Programm starten soll

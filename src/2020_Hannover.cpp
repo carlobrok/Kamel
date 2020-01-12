@@ -361,17 +361,21 @@ void image_processing() {
 
 // MAIN METHOD TO CALL THREADS
 
+extern uint8_t THRESH_BLACK;
+extern cv::Scalar LOWER_GREEN;
+extern cv::Scalar UPPER_GREEN;
+
+
 int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	std::ifstream ifs("config.info", std::ifstream::in);
-  ifs >> configdata;
-  ifs.close();
+	std::ifstream ifs("../src/config.info", std::ifstream::in);
+  	ifs >> configdata;
+  	ifs.close();
 
-	uint8_t THRESH_BLACK = configdata.getintvalue("THRESH_BLACK");
-	cv::Scalar LOWER_GREEN = configdata.getscalarvalue("LOWER_GREEN");
-	cv::Scalar UPPER_GREEN = configdata.getscalarvalue("UPPER_GREEN");
+	set_thresh_black(configdata.getintvalue("THRESH_BLACK"));
+	set_gruen_range(configdata.getscalarvalue("LOWER_GREEN"),configdata.getscalarvalue("UPPER_GREEN"));
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread

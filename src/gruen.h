@@ -7,8 +7,10 @@
 
 // Parameter zur Erkennung des Grünpunktes
 
-extern cv::Scalar LOWER_GREEN;
-extern cv::Scalar UPPER_GREEN;
+
+
+#define LOWER_GRUEN_DEFAULT cv::Scalar(50,60,15)
+#define UPPER_GRUEN_DEFAULT cv::Scalar(90,255,115)
 
 #define GRUEN_NICHT 0
 #define GRUEN_BEIDE 3
@@ -17,6 +19,8 @@ extern cv::Scalar UPPER_GREEN;
 
 #define NUM_ITERATIONS_BLACK_POINTS 30
 
+// setzen des Gruen-Bereichs
+void set_gruen_range(cv::Scalar lower, cv::Scalar upper);
 
 // Datenübergabe multithreading
 void set_gruen_data(cv::Point & grcenter, int & grstate);

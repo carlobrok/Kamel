@@ -11,11 +11,11 @@
 #define ELLIPSE_BAR_HEIGHT 100   // Höhe der Balken links und rechts unter der halben Ellipse
 #define ELLIPSE_HEIGHT 75
 
-extern uint8_t THRESH_BLACK;
+#define THRESH_BLACK_DEFAULT 50
 #define LOW_BLACK cv::Scalar(0, 0, 0)
-#define HIGH_BLACK cv::Scalar(180, 255, THRESH_BLACK)
+#define HIGH_BLACK cv::Scalar(180, 255, thresh_black)
 
-
+void set_thresh_black(uint8_t m_thresh_black);
 
 void init_line_ellipse();
 

@@ -155,9 +155,9 @@ namespace configuration
     }
 
     std::cout << "in line_strings after reading file" << std::endl;
-    for( auto & line: d.line_strings) {
-      std::cout << "line:" << line << std::endl;
-    }
+    //for( const auto & line: d.line_strings) {
+    //  std::cout << "line:" << line << std::endl;
+    //}
     std::cout << std::endl;
 
 
