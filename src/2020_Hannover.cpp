@@ -369,9 +369,9 @@ int main() {
   ifs >> configdata;
   ifs.close();
 
-	THRESH_BLACK = configdata.getintvalue("THRESH_BLACK");
-	LOWER_GREEN = configdata.getscalarvalue("LOWER_GREEN");
-	UPPER_GREEN = configdata.getscalarvalue("UPPER_GREEN");
+	extern uint8_t THRESH_BLACK = configdata.getintvalue("THRESH_BLACK");
+	extern cv::Scalar LOWER_GREEN = configdata.getscalarvalue("LOWER_GREEN");
+	extern cv::Scalar UPPER_GREEN = configdata.getscalarvalue("UPPER_GREEN");
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
