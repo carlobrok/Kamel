@@ -47,6 +47,7 @@ template <size_t N>
 struct last_values {
   std::chrono::high_resolution_clock::time_point last_time;
   uint8_t last_data[N];
+	uint8_t last_protocol = 255;
 };
 
 
@@ -55,17 +56,29 @@ struct last_values {
 	 - false: wenn die neuen Daten gleich den alten Daten sind
 */
 template <size_t N>
-bool send_req(uint8_t (&data)[N], last_values<N> &l_data) {
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - l_data.last_time).count() > I2C_MOTOR_REFRESH_TIME) {				// prüft ob das letzte Mal senden länger als 100ms her ist
-    std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));				// kopiert data in last_data.last_data
+bool send_req(uint8_t (&data)[N], last_values<N> &l_data, uint8_t protocol) {
+
+	if(l_data.last_protocol != protocol) {
+		std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));
 		l_data.last_time = std::chrono::high_resolution_clock::now();							// aktualisiert den time_point des letzten Sendens
+		l_data.last_protocol = protocol;							// aktualisiert das zuletzt verwendete Protokoll
+		return true;
+	}
+
+	else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - l_data.last_time).count() > I2C_MOTOR_REFRESH_TIME) {				// prüft ob das letzte Mal senden länger als 100ms her ist
+		std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));
+		l_data.last_time = std::chrono::high_resolution_clock::now();							// aktualisiert den time_point des letzten Sendens
+		l_data.last_protocol = protocol;							// aktualisiert das zuletzt verwendete Protokoll
 		return true;
   }
-  else if (!std::equal(std::begin(data), std::end(data), std::begin(l_data.last_data))) {			// prüft ob die Daten array gleich sind
+
+	else if (!std::equal(std::begin(data), std::end(data), std::begin(l_data.last_data))) {			// prüft ob die Daten array gleich sind
     std::copy(std::begin(data), std::end(data), std::begin(l_data.last_data));
 		l_data.last_time = std::chrono::high_resolution_clock::now();							// aktualisiert den time_point des letzten Sendens
+		l_data.last_protocol = protocol;							// aktualisiert das zuletzt verwendete Protokoll
 		return true;
   }
+
   return false;
 }
 
@@ -75,7 +88,7 @@ bool send_req(uint8_t (&data)[N], last_values<N> &l_data) {
 last_values<3> last_dirPwm;
 int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
 	uint8_t data[3] = {side, direction, pwm};
-	if(send_req(data, last_dirPwm))
+	if(send_req(data, last_dirPwm, MOTOR_DIR_PWM))
 		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM, 3, data);
 	else
 		return 0;
@@ -87,7 +100,7 @@ int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
 last_values<4> last_dirPwmBoth;
 int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right) {
 	uint8_t data[4] = {direction_left, pwm_left, direction_right, pwm_right};
-	if(send_req(data, last_dirPwmBoth))
+	if(send_req(data, last_dirPwmBoth, MOTOR_DIR_PWM_BOTH))
 		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM_BOTH, 4, data);
 	else
 		return 0;
@@ -99,7 +112,7 @@ int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_
 last_values<2> last_state;
 int setMotorState(int &fd, uint8_t side, uint8_t state) {
 	uint8_t data[2] = {side, state};
-	if(send_req(data, last_state))
+	if(send_req(data, last_state, MOTOR_STATE))
 		return i2c_smbus_write_block_data(fd, MOTOR_STATE, 2, data);
 	else
 		return 0;
