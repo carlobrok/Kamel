@@ -204,7 +204,7 @@ void m_drive() {
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 			}
 
-		} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
+		} /*else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
 			debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
 			if (last_line_points[1][0].x > 575) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
@@ -239,7 +239,7 @@ void m_drive() {
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
 				debug_lg << lvl::warn;
 			}
-		} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
+		}*/ else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
 			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 		}
