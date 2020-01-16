@@ -187,6 +187,8 @@ void m_imu(void) {
 
 	while(true) {
 
+		std::cout << "imu_thread running" << std::endl;
+
 		while(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
 			uint8_t inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
 
