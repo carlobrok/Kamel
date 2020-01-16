@@ -186,20 +186,20 @@ void m_imu(void) {
 	int in_idx = 0;																					// Index d. Variable
 
 	while(true) {
-		if(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
-			int inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
 
-	    if (inByte == ':') {              							// ":"  ->  Zeichen für Beginn der Datenreihe
-	      in_str = "";																	// Buffer zurücksetzen
-	      in_idx = 0;																		// Index zurücksetzen
-	    }
-			else if (inByte == '!') {       								// "!" ->  Zeichen für Ende der Datenreihe
+		while(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
+			uint8_t inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
+
+			std::cout << "char: " << (char)inByte << std::endl;
+
+	    if (inByte == '\n') {       								// "!" ->  Zeichen für Ende der Datenreihe
 	      t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 
 				if(in_idx == AMOUNT_IMU_DATA - 1)
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 
 	      in_idx = 0;																		// Index zurücksetzen
+				in_str = "";
 	    }
 			else if (isdigit(inByte) || inByte == '.' || inByte == '-') {				// Zeichen, welche sich im Float befinden
 	      in_str += (char)inByte;             					// add character to string
@@ -214,6 +214,7 @@ void m_imu(void) {
 				// index und buffer zurücksetzen
 	      in_idx = 0;
 	      in_str = "";
+				std::cout << "unknown char!" << std::endl;
 	    }
 		}
 		thread_delay(IMU_REFRESH_DELAY);																	// delay für andere threads
