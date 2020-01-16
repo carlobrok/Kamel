@@ -22,7 +22,7 @@
 #define IMU_REFRESH_DELAY 10
 #define AMOUNT_IMU_DATA 3
 #define YAW 2
-#define PITCH 1
-#define ROLL 0
+#define PITCH 0
+#define ROLL 1
 
 #endif
