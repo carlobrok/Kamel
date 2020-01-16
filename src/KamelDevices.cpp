@@ -184,17 +184,26 @@ void m_imu(void) {
 	float t_imu_data[AMOUNT_IMU_DATA] = {0,0,0};						// lokaler Buffer mit den aktuellen Werten als Float
 	std::string in_str ("");																// Buffer der zueletzt gelesenen Bytes
 	int in_idx = 0;																					// Index d. Variable
+	int in_char;
+	bool had_unknown_char = false;
 
 	while(true) {
 
 		std::cout << "imu_thread running" << std::endl;
 
 		while(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
-			int inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
+			in_char = serialGetchar(imu_fd);      				// READ INCOMING BYTE
 
-			std::cout << "char: " << (char)inByte << std::endl;
+			// Wenn ein unbekannter char empfangen wurde alle neuen chars bis zum Datensatzende ('\n') überspringen
+			if(had_unknown_char) {
+				if(in_char == '\n')
+					had_unknown_char = false;
 
-	    if (inByte == '\n') {       								// "!" ->  Zeichen für Ende der Datenreihe
+				continue;
+			}
+
+			if (in_char == '\n') {       								// "!" ->  Zeichen für Ende der Datenreihe
+
 	      t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 
 				if(in_idx == AMOUNT_IMU_DATA - 1)
@@ -203,29 +212,27 @@ void m_imu(void) {
 	      in_idx = 0;																		// Index zurücksetzen
 				in_str = "";
 	    }
-			else if (isdigit(inByte) || inByte == '.' || inByte == '-') {				// Zeichen, welche sich im Float befinden
-	      in_str += (char)inByte;             					// add character to string
+			else if (isdigit(in_char) || in_char == '.' || in_char == '-') {				// Zeichen, welche sich im Float befinden
+	      in_str += (char)in_char;             					// add character to string
 	    }
-			else if (inByte == ',') {      									// number is complete
-				try {
-					t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
-				}
-				catch (std::invalid_argument& e) {
-					std::cout << e.what();
-				}
-				std::cout << "Number:" << t_imu_data[in_idx - 1] << std:: endl;
-
+			else if (in_char == ',') {      									// number is complete
+				t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
 	      in_str = "";                        					// reset string
 	    }
-			else {                          								// unknown / error -> reset array and index -> return 0
-	      for (auto& data : t_imu_data) data = 0;				// t_imu_data resetten
+			else {                          								// unknown / error -> reset array and index -> wait for '\n'
 
+				for (auto& data : t_imu_data) data = 0;				// t_imu_data resetten
 				// index und buffer zurücksetzen
 	      in_idx = 0;
 	      in_str = "";
-				std::cout << "unknown char "<< inByte << std::endl;
+				std::cout << "Warning! Unknown char "<< in_char << std::endl;
+
+				had_unknown_char = true;				// flag auf true setzen, damit immer auf
+
 	    }
 		}
+
+		std::cout << "imu data: " << t_imu_data[0] << "|" << t_imu_data[1] << "|" << t_imu_data[2] << std::endl;
 		thread_delay(IMU_REFRESH_DELAY);																	// delay für andere threads
 	}
 }
