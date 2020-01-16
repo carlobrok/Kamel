@@ -242,6 +242,7 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 	cv::findContours(bin_gr, contg, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);							// alle Konturen extrahieren
 
 
+
 	// zu kleine Konturen löschen
 	for(unsigned int i = 0; i < contg.size(); i++) {
 		cv::Moments m = cv::moments(contg[i]);
@@ -253,7 +254,6 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 #ifdef VISUAL_DEBUG
 	cv::drawContours(img_rgb, contg, -1, cv::Scalar(50, 230, 50), 1);		// Alle übrigen Konturen ausgeben
 #endif
-
 
 
 	// 2 oder mehr grüne Punkte
@@ -376,7 +376,7 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
 						p2 = point_pairs[1].p2;
 					}
 				}
-				
+
 				else {
 					std::cout << "Something went WRONG!!" << std::endl;
 				}

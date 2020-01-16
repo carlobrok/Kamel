@@ -187,13 +187,48 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	// 	sepatare_line(hsv, bin_sw);
 	// }
 
-	inRange(hsv, LOW_BLACK, HIGH_BLACK, bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+	//inRange(hsv, LOW_BLACK, HIGH_BLACK, bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+
+
+	cv::Mat img_canny, gray;
+	cv::cvtColor(img_rgb, gray, cv::COLOR_BGR2GRAY);
+	cv::Canny(gray, img_canny, 50, 100, 3, true);
+	cv::imshow("canny", img_canny);
+
+	cv::morphologyEx(img_canny, bin_sw, cv::MORPH_DILATE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
+	bitwise_not ( bin_sw, bin_sw );
+
+	std::vector< std::vector<cv::Point> > contours;
+
+	cv::findContours(bin_sw, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+	drawContours(img_rgb, contours, -1, cv::Scalar(50, 180, 180), 1);
+
+	std::vector< std::vector<cv::Point> > contour_line;
+
+	cv::Mat mask(IMG_HEIGHT, IMG_WIDTH, CV_8U);
+	cv::Scalar mean;
+	for(size_t i = 0; i < contours.size(); i++) {
+		mask = cv::Scalar(0);
+		drawContours(mask, contours, i, cv::Scalar(255), cv::FILLED);
+		cv::imshow("mask cur",mask);
+		mean = cv::mean(img_rgb, mask);
+		std::cout << mean << "  avrg:" << (mean[0] + mean[1] + mean[3])/3 << std::endl;
+		if( (mean[0] + mean[1] + mean[3])/3 < THRESH_BLACK) {
+			contour_line.push_back(contours[i]);
+		}
+	}
+	bin_sw = cv::Scalar(0);
+	drawContours(bin_sw, contour_line, -1, cv::Scalar(255), cv::FILLED);
+	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_DILATE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(6,6)));
+	drawContours(img_rgb, contour_line, -1, cv::Scalar(255, 0, 255), 1);
+
 
 	// Grünpunkt wird oft auch als schwarz erkannt, aktuelle Matrix des Grünpunktes, bin_gr, von bin_sw subtrahieren.
 	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
 	bin_sw -= bin_gr;
 
-	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));	// alle kleinstflecken entfernen
+	//cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));	// alle kleinstflecken entfernen
 
 
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
@@ -242,4 +277,6 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 
 
 	set_line_data(l_prim_line_points);			// Die neuen prim_line_points und sec_line_points in die globalen Variablen schreiben
+
+
 }
