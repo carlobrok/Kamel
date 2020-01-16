@@ -208,6 +208,8 @@ void m_imu(void) {
 	    }
 			else if (inByte == ',') {      									// number is complete
 	      t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
+				std::cout << "Number:" << t_imu_data[in_idx - 1] << std:: endl;
+
 	      in_str = "";                        					// reset string
 	    }
 			else {                          								// unknown / error -> reset array and index -> return 0
