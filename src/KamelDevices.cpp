@@ -189,7 +189,6 @@ void m_imu(void) {
 
 	while(true) {
 
-		std::cout << "imu_thread running" << std::endl;
 
 		while(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
 			in_char = serialGetchar(imu_fd);      				// READ INCOMING BYTE
@@ -232,7 +231,7 @@ void m_imu(void) {
 	    }
 		}
 
-		std::cout << "imu data: " << t_imu_data[0] << "|" << t_imu_data[1] << "|" << t_imu_data[2] << std::endl;
+		//std::cout << "imu data: " << t_imu_data[0] << "|" << t_imu_data[1] << "|" << t_imu_data[2] << std::endl;
 		thread_delay(IMU_REFRESH_DELAY);																	// delay für andere threads
 	}
 }
