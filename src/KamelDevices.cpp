@@ -190,7 +190,7 @@ void m_imu(void) {
 		std::cout << "imu_thread running" << std::endl;
 
 		while(serialDataAvail(imu_fd) > 0) {									// sobald Daten verfügbar sind alle durchgehen
-			uint8_t inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
+			int inByte = serialGetchar(imu_fd);      				// READ INCOMING BYTE
 
 			std::cout << "char: " << (char)inByte << std::endl;
 
@@ -207,7 +207,12 @@ void m_imu(void) {
 	      in_str += (char)inByte;             					// add character to string
 	    }
 			else if (inByte == ',') {      									// number is complete
-	      t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
+				try {
+					t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
+				}
+				catch (std::invalid_argument& e) {
+					std::cout << e.what();
+				}
 				std::cout << "Number:" << t_imu_data[in_idx - 1] << std:: endl;
 
 	      in_str = "";                        					// reset string
@@ -218,7 +223,7 @@ void m_imu(void) {
 				// index und buffer zurücksetzen
 	      in_idx = 0;
 	      in_str = "";
-				std::cout << "unknown char!" << std::endl;
+				std::cout << "unknown char "<< inByte << std::endl;
 	    }
 		}
 		thread_delay(IMU_REFRESH_DELAY);																	// delay für andere threads
