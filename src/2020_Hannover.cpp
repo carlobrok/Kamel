@@ -93,8 +93,12 @@ void m_drive() {
 
 	// Init IMU variables
 
-	/*float imu_data[3];
-	array<boost::circular_buffer<float>, 3> last_imu_data;
+
+	bool rampe_hoch = false;
+	bool rampe_runter = false;
+
+	float m_imu_data[3];
+	/*array<boost::circular_buffer<float>, 3> last_imu_data;
 
 //	array<boost::circular_buffer<double>, 3> last_imu_time;
 	for (auto& cb : last_imu_data) {
@@ -116,7 +120,7 @@ void m_drive() {
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
 		get_line_data(m_line_points);					 		// line data updaten
-
+		get_imu_data(m_imu_data);									// imu data updaten
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
@@ -135,6 +139,31 @@ void m_drive() {
 		// cout << "drive routine; line_points: " << m_line_points << endl;
 
 		// main part: drive decisions	=================================
+
+		if (rampe_hoch) {
+			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
+
+			}
+
+		}
+		else if (rampe_runter) {
+			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
+
+			}
+		}
+
+		else {
+			if (m_imu_data[PITCH] > 12.0) {
+				rampe_hoch = true;
+				continue;
+			}
+			if (m_imu_data[PITCH] < -12.0) {
+				rampe_runter = true;
+				continue;
+			}
+		}
+
+		// ROBOTER IST WAAGERECHT
 
 		if (m_grstate == GRUEN_BEIDE) {
 
