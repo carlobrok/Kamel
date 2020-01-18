@@ -205,8 +205,13 @@ void m_imu(void) {
 
 	      t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 
-				if(in_idx == AMOUNT_IMU_DATA - 1)
+				if(in_idx == AMOUNT_IMU_DATA - 1) {
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
+					std::cout << " > New IMU data" << std::endl;
+				}
+				else {
+					std::cout << " > Received IMU data not complete!" << std::endl;
+				}
 
 	      in_idx = 0;																		// Index zurücksetzen
 				in_str = "";
