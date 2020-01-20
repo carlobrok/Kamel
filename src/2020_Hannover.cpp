@@ -93,8 +93,12 @@ void m_drive() {
 
 	// Init IMU variables
 
-	/*float imu_data[3];
-	array<boost::circular_buffer<float>, 3> last_imu_data;
+
+	bool rampe_hoch = false;
+	bool rampe_runter = false;
+
+	float m_imu_data[3];
+	/*array<boost::circular_buffer<float>, 3> last_imu_data;
 
 //	array<boost::circular_buffer<double>, 3> last_imu_time;
 	for (auto& cb : last_imu_data) {
@@ -116,7 +120,7 @@ void m_drive() {
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
 		get_line_data(m_line_points);					 		// line data updaten
-
+		get_imu_data(m_imu_data);									// imu data updaten
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
@@ -124,7 +128,9 @@ void m_drive() {
 		// update arduino sensor data
 		//cout << "Read data: " << getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data) << endl;
 
-		getDigitalSensorData(sensor_fd, digital_sensor_data);
+		//getDigitalSensorData(sensor_fd, digital_sensor_data);
+
+		cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << endl;
 
 		// push_front last values - recent value is item [0]
 		/*last_analog_data.push_front(analog_sensor_data[0]);
@@ -136,112 +142,186 @@ void m_drive() {
 
 		// main part: drive decisions	=================================
 
-		if (m_grstate == GRUEN_BEIDE) {
 
-			debug_lg << "green point BOTH" << lvl::info;
+		// Rampe hoch
+		if (rampe_hoch) {
+			// Sichergehen, ob der Robo noch auf der Rampe ist.
+			if (m_imu_data[PITCH] < 5.0) {
+				rampe_hoch = false;
+				continue;
+			}
 
-			while (m_grstate != GRUEN_NICHT) {		// Solange grstate nicht GRUEN_NICHT ist
-				if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
+			// Wenn der Roboter seitlich geneigt ist die wieder gerade ausrichten
+			if (m_imu_data[ROLL] < -2.0) {	// Fährt nach links - linke Seite unten
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 30);
+			}
+			else if (m_imu_data[ROLL] > 2.0) {	// Fährt nach rechts - rechte Seite unten
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 30, MOTOR_FORWARD, 180);
+			}
+
+			// wenn nur 1 linepoint vorhanden ist
+			else if(m_line_points.size() == 1) {
+				// Wenn der Roboter nicht seitlich geneigt ist, aber die Linie nicht mehr in der Mitte ist
+				if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 90);
+				} else if (m_line_points[0].x < 280) {								// linie auf der Rampe zu weit links
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 180);
+				}
+				// Ansonsten gerade fahren
+				else {
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
+				}
+			}
+			// Ansonsten gerade fahren
+			else {
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
+			}
+		}
+
+
+		// Rampe runter
+		else if (rampe_runter) {
+			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
+				rampe_runter = false;
+				continue;
+			}
+
+			if(m_line_points.size() == 1) {
+				// Wenn die Linie nicht mehr in der Mitte ist
+				if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 60, MOTOR_BACKWARD, 10);
+				} else if (m_line_points[0].x < 280) {								// linie auf der Rampe zu weit links
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 60);
+				} else {
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
+				}
+			} else {
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
+			}
+		}
+
+
+		// Roboter gerade
+		else {
+			if (m_imu_data[PITCH] > 12.0) {
+				rampe_hoch = true;
+				continue;				// Rest der while schleife skippen
+			}
+			if (m_imu_data[PITCH] < -12.0) {
+				rampe_runter = true;
+				continue;				// Rest der while schleife skippen
+			}
+
+
+			// ROBOTER IST WAAGERECHT
+
+			if (m_grstate == GRUEN_BEIDE) {
+
+				debug_lg << "green point BOTH" << lvl::info;
+
+				while (m_grstate != GRUEN_NICHT) {		// Solange grstate nicht GRUEN_NICHT ist
 					get_gruen_data(m_grcenter, m_grstate);											// gruen werte aktualisieren
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
-					thread_delay(500);																					// delay 500ms
+					if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
+						thread_delay(500);																					// delay 500ms
 
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);	// beide Motoren auf unterschiedliche Werte setzen
-					thread_delay(3000);																	// delay 3s
-					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);			// Motoren ausschalten
-					thread_delay(500);																	// delay 500ms
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);	// beide Motoren auf unterschiedliche Werte setzen
+						thread_delay(3000);																	// delay 3s
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);			// Motoren ausschalten
+						thread_delay(500);																	// delay 500ms
 
-					break;
-				} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
-				} else if (m_grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);			// rechts Kurve
-				} else {																	// m_grcenter im mittleren, oberen Bildbereich
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
-				}
-			}
-
-		} else if (m_grstate == GRUEN_LINKS && m_grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
-
-			debug_lg << "green point LEFT" << lvl::info;					// in debug.log loggen
-
-			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);				// beide Motoren vorwärts, pwm: 150
-			thread_delay(300);						// delay 300ms
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
-			thread_delay(500);						// delay 500ms
-
-		} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
-
-			debug_lg << "green point RIGHT" << lvl::info;			// in debug.log loggen
-
-			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);			// beide Motoren vorwärts, pwm: 150
-			thread_delay(300);					// delay 300ms
-			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
-			thread_delay(500);					// delay 500ms
-
-		} else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
-
-			debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
-			//			cout << "Different value -> check motor output for line" << endl;
-
-			if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
-				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
-			} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
-				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
-			} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
-				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
-			} else if (m_line_points[0].x < 140) {							// line_points[0] links
-				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
-			} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
-				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
-			} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
-				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
-			} else if (m_line_points[0].x > 340) {							// line_points[0] mitte rechts
-				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
-			} else if (m_line_points[0].x < 300) {						 // line_points[0] mitte links
-				setMotorDirPwmBoth(motor_fd, MOTOR_OFF, 0, MOTOR_FORWARD, 160);
-			} else {																					 // line_points[0] mitte
-				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
-			}
-
-		} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
-			debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
-
-			if (last_line_points[1][0].x > 575) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
-				debug_lg << " -  correction right" << lvl::warn;
-
-				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
-
-				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
-					thread_delay(5);
-					get_line_data(m_line_points);
+						break;
+					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
+					} else if (m_grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);			// rechts Kurve
+					} else {																	// m_grcenter im mittleren, oberen Bildbereich
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
+					}
 				}
 
-				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
-				thread_delay(500);
-				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+			} else if (m_grstate == GRUEN_LINKS && m_grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
 
-			} else if (last_line_points[1][0].x < 65) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
-				cout << " -   correction left" << lvl::warn;
+				debug_lg << "green point LEFT" << lvl::info;					// in debug.log loggen
 
-				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);				// beide Motoren vorwärts, pwm: 150
+				thread_delay(300);						// delay 300ms
+				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
+				thread_delay(500);						// delay 500ms
 
-				while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
-					thread_delay(5);
-					get_line_data(m_line_points);
+			} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
+
+				debug_lg << "green point RIGHT" << lvl::info;			// in debug.log loggen
+
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);			// beide Motoren vorwärts, pwm: 150
+				thread_delay(300);					// delay 300ms
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
+				thread_delay(500);					// delay 500ms
+
+			} else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
+
+				debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
+				//			cout << "Different value -> check motor output for line" << endl;
+
+				if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
+				} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
+				} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
+				} else if (m_line_points[0].x < 140) {							// line_points[0] links
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
+				} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
+				} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
+				} else if (m_line_points[0].x > 340) {							// line_points[0] mitte rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
+				} else if (m_line_points[0].x < 300) {						 // line_points[0] mitte links
+					setMotorDirPwmBoth(motor_fd, MOTOR_OFF, 0, MOTOR_FORWARD, 160);
+				} else {																					 // line_points[0] mitte
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 				}
 
-				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
-				thread_delay(500);
-				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+			} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
+				debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
-			} else {							// wenn der letzte linepoint mittig war (Lücke) weiter gerade fahren
-				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
-				debug_lg << lvl::warn;
+				if (last_line_points[1][0].x > 575) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
+					debug_lg << " -  correction right" << lvl::warn;
+
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
+
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
+						thread_delay(5);
+						get_line_data(m_line_points);
+					}
+
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+					thread_delay(500);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+
+				} else if (last_line_points[1][0].x < 65) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
+					cout << " -   correction left" << lvl::warn;
+
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
+
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
+						thread_delay(5);
+						get_line_data(m_line_points);
+					}
+
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 100);
+					thread_delay(500);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+
+				} else {							// wenn der letzte linepoint mittig war (Lücke) weiter gerade fahren
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
+					debug_lg << lvl::warn;
+				}
+			} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
+				//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 			}
-		} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
-			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
-			//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
 		}
 
 		thread_delay(7);			// delay, da sonst der i2c buffer überschrieben wird und der Motorarduino falsche werte bekommt
