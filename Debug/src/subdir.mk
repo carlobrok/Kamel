@@ -38,7 +38,7 @@ CPP_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/%.o: ../src/%.cpp ../src/%.c
+src/%.o: ../src/%.c*
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	g++ -std=c++14 -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"

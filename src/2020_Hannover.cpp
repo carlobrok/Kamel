@@ -444,6 +444,14 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
+  ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
+  ssd1306_clearDisplay();
+
+  ssd1306_setTextSize(3);
+  ssd1306_drawString("STARTUP");
+  ssd1306_display();
+  ssd1306_setTextSize(2);
+
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
 	image_processing();						// start void image_processing
