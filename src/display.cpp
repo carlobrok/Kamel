@@ -29,16 +29,13 @@ BSD license, check license.txt for more information
 All text above, and the splash screen below must be included in any redistribution
 *********************************************************************/
 
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
 
 #include "display.h"
 
 #include "oled_fonts.h"
 #include "KamelDevices.h"
-
-#define true 1
-#define false 0
 
 #define rotation 0
 
@@ -233,7 +230,7 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 
 	i2cd = kamelI2Copen(i2caddr);
 	if (i2cd < 0) {
-		fprintf(stderr, "ssd1306_i2c : Unable to initialise I2C:\n");
+		std::cout << "ssd1306_i2c : Unable to initialise I2C" << std::endl;
 		return;
 	}
 	// Init sequence
@@ -301,7 +298,7 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 	ssd1306_command(SSD1306_DISPLAYON);	// --turn on oled panel
 }
 
-void ssd1306_invertDisplay(unsigned int i)
+void ssd1306_invertDisplay(bool i)
 {
 	if (i) {
 		ssd1306_command(SSD1306_INVERTDISPLAY);
@@ -422,7 +419,7 @@ void ssd1306_stopscroll(void)
 // Dim the display
 // dim = true: display is dimmed
 // dim = false: display is normal
-void ssd1306_dim(unsigned int dim)
+void ssd1306_dim(bool dim)
 {
 	unsigned int contrast;
 

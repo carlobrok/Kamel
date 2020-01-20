@@ -12,7 +12,7 @@ CPP_SRCS += \
 ../src/gruen.cpp \
 ../src/line.cpp \
 ../src/util.cpp \
-../src/display.c
+../src/display.cpp
 
 OBJS += \
 ./src/2020_Hannover.o \
