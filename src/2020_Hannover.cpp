@@ -142,21 +142,66 @@ void m_drive() {
 
 		// main part: drive decisions	=================================
 
+
+		// Rampe hoch
 		if (rampe_hoch) {
-			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
+			// Sichergehen, ob der Robo noch auf der Rampe ist.
+			if (m_imu_data[PITCH] < 5.0) {
 				rampe_hoch = false;
 				continue;
 			}
-			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 200);
+
+			// Wenn der Roboter seitlich geneigt ist die wieder gerade ausrichten
+			if (m_imu_data[ROLL] < -2.0) {	// Fährt nach links - linke Seite unten
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 30);
+			}
+			else if (m_imu_data[ROLL] > 2.0) {	// Fährt nach rechts - rechte Seite unten
+				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 30, MOTOR_FORWARD, 180);
+			}
+
+			// wenn nur 1 linepoint vorhanden ist
+			else if(m_line_points.size() == 1) {
+				// Wenn der Roboter nicht seitlich geneigt ist, aber die Linie nicht mehr in der Mitte ist
+				if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 90);
+				} else if (m_line_points[0].x < 280) {								// linie auf der Rampe zu weit links
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 180);
+				}
+				// Ansonsten gerade fahren
+				else {
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
+				}
+			}
+			// Ansonsten gerade fahren
+			else {
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);
+			}
 		}
+
+
+		// Rampe runter
 		else if (rampe_runter) {
 			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
 				rampe_runter = false;
 				continue;
 			}
-			setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
+
+			if(m_line_points.size() == 1) {
+				// Wenn die Linie nicht mehr in der Mitte ist
+				if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 60, MOTOR_BACKWARD, 10);
+				} else if (m_line_points[0].x < 280) {								// linie auf der Rampe zu weit links
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 60);
+				} else {
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
+				}
+			} else {
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);
+			}
 		}
 
+
+		// Roboter gerade
 		else {
 			if (m_imu_data[PITCH] > 12.0) {
 				rampe_hoch = true;
@@ -175,8 +220,8 @@ void m_drive() {
 				debug_lg << "green point BOTH" << lvl::info;
 
 				while (m_grstate != GRUEN_NICHT) {		// Solange grstate nicht GRUEN_NICHT ist
+					get_gruen_data(m_grcenter, m_grstate);											// gruen werte aktualisieren
 					if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
-						get_gruen_data(m_grcenter, m_grstate);											// gruen werte aktualisieren
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
 						thread_delay(500);																					// delay 500ms
 
