@@ -32,10 +32,11 @@ All text above, and the splash screen below must be included in any redistributi
 #include <iostream>
 #include <string.h>
 
-#include "display.h"
-
-#include "oled_fonts.h"
 #include "KamelDevices.h"
+#include <linux/i2c-dev.h>		// i2c_smbus_...
+
+#include "display.h"
+#include "oled_fonts.h"
 
 #define rotation 0
 
@@ -45,7 +46,7 @@ int cursor_y = 0;
 int cursor_x = 0;
 
 // the memory buffer for the LCD. Displays Adafruit logo
-int buffer[SSD1306_LCDWIDTH * SSD1306_LCDHEIGHT / 8] = {
+unsigned int buffer[SSD1306_LCDWIDTH * SSD1306_LCDHEIGHT / 8] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -183,7 +184,16 @@ int buffer[SSD1306_LCDWIDTH * SSD1306_LCDHEIGHT / 8] = {
 int _vccstate;
 int i2cd;
 
-#define ssd1306_swap(a, b) { int t = a; a = b; b = t; }
+
+template<class T>
+void swap(T& a, T& b)
+{
+    T temp(a);
+    a = b;
+    b = temp;
+}
+
+
 
 // the most basic function, set a single pixel
 void ssd1306_drawPixel(int x, int y, unsigned int color)
@@ -194,7 +204,7 @@ void ssd1306_drawPixel(int x, int y, unsigned int color)
 	// check rotation, move pixel around if necessary
 	switch (rotation) {
 	case 1:
-		ssd1306_swap(x, y);
+		swap(x, y);
 		x = WIDTH - x - 1;
 		break;
 	case 2:
@@ -202,7 +212,7 @@ void ssd1306_drawPixel(int x, int y, unsigned int color)
 		y = HEIGHT - y - 1;
 		break;
 	case 3:
-		ssd1306_swap(x, y);
+		swap(x, y);
 		y = HEIGHT - y - 1;
 		break;
 	}
@@ -311,7 +321,7 @@ void ssd1306_command(unsigned int c)
 {
 	// I2C
 	unsigned int control = 0x00;	// Co = 0, D/C = 0
-	wiringPiI2CWriteReg8(i2cd, control, c);
+	i2c_smbus_write_byte_data(i2cd, control, c);
 }
 
 void ssd1306_display(void)
@@ -336,7 +346,7 @@ void ssd1306_display(void)
 	// I2C
 	int i;
 	for (i = 0; i < (SSD1306_LCDWIDTH * SSD1306_LCDHEIGHT / 8); i++) {
-		wiringPiI2CWriteReg8(i2cd, 0x40, buffer[i]);
+		i2c_smbus_write_byte_data(i2cd, 0x40, buffer[i]);
 		//This sends byte by byte.
 		//Better to send all buffer without 0x40 first
 		//Should be optimized
@@ -641,7 +651,7 @@ void ssd1306_drawFastHLine(int x, int y, int w, unsigned int color)
 	case 1:
 		// 90 degree rotation, swap x & y for rotation, then invert x
 		bSwap = true;
-		ssd1306_swap(x, y);
+		swap(x, y);
 		x = WIDTH - x - 1;
 		break;
 	case 2:
@@ -655,7 +665,7 @@ void ssd1306_drawFastHLine(int x, int y, int w, unsigned int color)
 		// 270 degree rotation, swap x & y for rotation, then invert y and
 		// adjust y for w (not to become h)
 		bSwap = true;
-		ssd1306_swap(x, y);
+		swap(x, y);
 		y = HEIGHT - y - 1;
 		y -= (w - 1);
 		break;
@@ -678,7 +688,7 @@ void ssd1306_drawFastVLine(int x, int y, int h, unsigned int color)
 		// 90 degree rotation, swap x & y for rotation, then invert x and
 		// adjust x for h (now to become w)
 		bSwap = true;
-		ssd1306_swap(x, y);
+		swap(x, y);
 		x = WIDTH - x - 1;
 		x -= (h - 1);
 		break;
@@ -692,7 +702,7 @@ void ssd1306_drawFastVLine(int x, int y, int h, unsigned int color)
 	case 3:
 		// 270 degree rotation, swap x & y for rotation, then invert y
 		bSwap = true;
-		ssd1306_swap(x, y);
+		swap(x, y);
 		y = HEIGHT - y - 1;
 		break;
 	}
@@ -722,7 +732,7 @@ void ssd1306_fillRect(int x, int y, int w, int h, int fillcolor)
 
 	switch (rotation) {
 	case 1:
-		swap_values(x, y);
+		swap(x, y);
 		x = WIDTH - x - 1;
 		break;
 	case 2:
@@ -730,7 +740,7 @@ void ssd1306_fillRect(int x, int y, int w, int h, int fillcolor)
 		y = HEIGHT - y - 1;
 		break;
 	case 3:
-		swap_values(x, y);
+		swap(x, y);
 		y = HEIGHT - y - 1;
 		break;
 	}
