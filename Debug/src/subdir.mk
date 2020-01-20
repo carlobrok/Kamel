@@ -11,7 +11,8 @@ CPP_SRCS += \
 ../src/VideoServer.cpp \
 ../src/gruen.cpp \
 ../src/line.cpp \
-../src/util.cpp
+../src/util.cpp \
+../src/display.c
 
 OBJS += \
 ./src/2020_Hannover.o \
@@ -21,7 +22,8 @@ OBJS += \
 ./src/VideoServer.o \
 ./src/gruen.o \
 ./src/line.o \
-./src/util.o
+./src/util.o \
+./src/display.o
 
 CPP_DEPS += \
 ./src/2020_Hannover.d \
@@ -31,7 +33,8 @@ CPP_DEPS += \
 ./src/VideoServer.d \
 ./src/gruen.d \
 ./src/line.d \
-./src/util.d
+./src/util.d \
+./src/display.o
 
 
 # Each subdirectory must supply rules for building sources it contributes
