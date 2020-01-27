@@ -44,13 +44,43 @@
 
 int kamelI2Copen(int devId);
 
+// === Servo ===========
+
+int pca9685_setup(int address);
+
+inline int get_register(uint8t pin) {
+	 return (pin >= 16 ? 0xFA : 0x6 + 4 * pin);
+}
+
+class Servo {
+public:
+  Servo(int pca9685_fd, uint8_t pin);
+
+  Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, float max_ms);
+
+  ~Servo();
+
+  void set_angle(int angle);
+
+  void off();
+
+private:
+  int m_fd;
+  int m_pin;
+  int m_max_angle;
+  float m_min_ms;
+  float m_max_ms;
+};
+
+// === Motoren ===========
+
 int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
 int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
 int setMotorState(int &fd, uint8_t side, uint8_t state);
 
-bool get_bit(uint8_t byte, uint8_t bit_number);
+// === Sensoren ===========
 
-int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command);
+bool get_bit(uint8_t byte, uint8_t bit_number);
 
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]);
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
