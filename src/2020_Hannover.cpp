@@ -1,4 +1,5 @@
 #include <iostream>		// cout
+#include <fstream>    // std::ifstream std::ofstream
 #include <cstdio>			// uint.._t
 
 #include <vector>
@@ -10,10 +11,11 @@
 #include <math.h>					// abs, cos, sin, ...
 
 #include "Logger.h"			// Logger class
-#include "config.h"			// defines
 #include "gruen.h"			// alles mit grünpunkt
 #include "line.h"				// alles mit linie
 #include "util.h"				// sonstige funktionen
+#include "config.h"			// defines
+#include "config_file.h"	// config datei
 
 #include "CameraCapture.h"		// thread zum kamera einlesen
 #include "VideoServer.h"			// thread für Videoausgabe über IP
@@ -26,6 +28,8 @@ using namespace cv;
 
 namespace lvl = spdlog::level;
 Logger debug_lg("debug");			// logger class for log file 'debug.log'
+
+configuration::data configdata;
 
 Mat img_rgb;				// input image
 
@@ -437,9 +441,21 @@ void image_processing() {
 
 // MAIN METHOD TO CALL THREADS
 
+extern uint8_t THRESH_BLACK;
+extern cv::Scalar LOWER_GREEN;
+extern cv::Scalar UPPER_GREEN;
+
+
 int main() {
 
 	init_clock();			// set start_clock to current ms
+
+	std::ifstream ifs("../src/config.info", std::ifstream::in);
+  	ifs >> configdata;
+  	ifs.close();
+
+	set_thresh_black(configdata.getintvalue("THRESH_BLACK"));
+	set_gruen_range(configdata.getscalarvalue("LOWER_GREEN"),configdata.getscalarvalue("UPPER_GREEN"));
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread

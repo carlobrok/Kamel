@@ -6,12 +6,19 @@
 #include "line.h"
 #include "util.h"
 
+
 std::mutex line_mutex;
 
 std::vector<cv::Point> m_line_points;			// global line points holding vector
 
 cv::Mat bin_ellipse;
 cv::Mat bin_intersection;
+
+uint8_t thresh_black = THRESH_BLACK_DEFAULT;
+
+void set_thresh_black(uint8_t m_thresh_black) {
+	thresh_black = m_thresh_black;
+}
 
 // set line_points buffer
 void set_line_data(std::vector<cv::Point> & line_points) {

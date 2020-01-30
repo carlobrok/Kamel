@@ -1,0 +1,16 @@
+# Config Datei für das Programm KamelPi
+# Immer angeben als
+# key = value
+
+# Schwarz Threshold
+THRESH_BLACK = 100
+
+LOWER_GREEN = 50,35,15
+UPPER_GREEN = 90,255,200
+
+
+# Legt fest, ob der Roboter beim Programmstart das Endzone-Programm starten soll
+START_ENDZONE = false
+
+# Wenn true, wird beim erstmaligen befahren der Endzone START_ENDZONE auf true gesetzt
+ENABLE_START_ENDZONE = true

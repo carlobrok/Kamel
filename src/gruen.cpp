@@ -12,6 +12,15 @@ std::mutex gruen_mutex;				// mutex for global green values
 cv::Point m_grcenter(0,0);
 int m_grstate = GRUEN_NICHT;
 
+cv::Scalar lower_gruen = LOWER_GRUEN_DEFAULT;
+cv::Scalar upper_gruen = UPPER_GRUEN_DEFAULT;
+
+void set_gruen_range(cv::Scalar lower, cv::Scalar upper) {
+	lower_gruen = lower;
+	upper_gruen = upper;
+}
+
+
 void set_gruen_data(cv::Point & grcenter, int & grstate) {
 	std::lock_guard<std::mutex> m_lock(gruen_mutex);				// lock gruen_mutex
 	m_grcenter = grcenter;																	// write to grcenter buffer
@@ -475,6 +484,6 @@ void gruen_calc(cv::Mat & img_rgb, cv::Mat & img_hsv, cv::Mat & bin_sw, cv::Mat 
  * Alle bereiche, wo grün vorhanden ist in bin_gr schreiben.
  */
 void separate_gruen(cv::Mat & hsv, cv::Mat & bin_gr) {
-	cv::inRange(hsv, LOWER_GREEN, UPPER_GREEN, bin_gr);
+	cv::inRange(hsv, lower_gruen, upper_gruen, bin_gr);
 	cv::morphologyEx(bin_gr, bin_gr, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
 }
