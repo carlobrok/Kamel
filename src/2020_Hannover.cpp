@@ -134,8 +134,6 @@ void m_drive() {
 
 		//getDigitalSensorData(sensor_fd, digital_sensor_data);
 
-		cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << endl;
-
 		// push_front last values - recent value is item [0]
 		/*last_analog_data.push_front(analog_sensor_data[0]);
 		for(int i = 0; i < 8; i++) {
