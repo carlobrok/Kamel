@@ -19,9 +19,8 @@
 #include "VideoServer.h"			// thread für Videoausgabe über IP
 #include "KamelDevices.h"					// kommunikation mit Arduino und Servosteuerung
 
-extern "C" {
-  #include "display.h"
-}
+#include "display.h"
+
 
 
 using namespace std;

@@ -26,6 +26,9 @@ All text above, and the splash screen must be included in any redistribution
 #ifndef SSD1306_I2C_H_
 #define SSD1306_I2C_H_
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #define BLACK 0
 #define WHITE 1
@@ -131,32 +134,36 @@ All text above, and the splash screen must be included in any redistribution
 #define SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL 0x29
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL 0x2A
 
-void ssd1306_begin(unsigned int switchvcc, unsigned int i2caddr); //switchvcc should be SSD1306_SWITCHCAPVCC
-void ssd1306_command(unsigned int c);
+extern void ssd1306_begin(unsigned int switchvcc, unsigned int i2caddr); //switchvcc should be SSD1306_SWITCHCAPVCC
+extern void ssd1306_command(unsigned int c);
 
-void ssd1306_clearDisplay(void);
-void ssd1306_invertDisplay(unsigned int i);
-void ssd1306_display();
+extern void ssd1306_clearDisplay(void);
+extern void ssd1306_invertDisplay(unsigned int i);
+extern void ssd1306_display();
 
-void ssd1306_startscrollright(unsigned int start, unsigned int stop);
-void ssd1306_startscrollleft(unsigned int start, unsigned int stop);
+extern void ssd1306_startscrollright(unsigned int start, unsigned int stop);
+extern void ssd1306_startscrollleft(unsigned int start, unsigned int stop);
 
-void ssd1306_startscrolldiagright(unsigned int start, unsigned int stop);
-void ssd1306_startscrolldiagleft(unsigned int start, unsigned int stop);
-void ssd1306_stopscroll(void);
+extern void ssd1306_startscrolldiagright(unsigned int start, unsigned int stop);
+extern void ssd1306_startscrolldiagleft(unsigned int start, unsigned int stop);
+extern void ssd1306_stopscroll(void);
 
-void ssd1306_dim(unsigned int dim);
+extern void ssd1306_dim(unsigned int dim);
 
-void ssd1306_drawPixel(int x, int y, unsigned int color);
+extern void ssd1306_drawPixel(int x, int y, unsigned int color);
 
-void ssd1306_drawFastVLine(int x, int y, int h, unsigned int color);
-void ssd1306_drawFastHLine(int x, int y, int w, unsigned int color);
+extern void ssd1306_drawFastVLine(int x, int y, int h, unsigned int color);
+extern void ssd1306_drawFastHLine(int x, int y, int w, unsigned int color);
 
-void ssd1306_fillRect(int x, int y, int w, int h, int fillcolor);
+extern void ssd1306_fillRect(int x, int y, int w, int h, int fillcolor);
 
-void ssd1306_setTextSize(int s);
-void ssd1306_drawString(char *str);
-void ssd1306_drawChar(int x, int y, unsigned char c, int color, int size);
+extern void ssd1306_setTextSize(int s);
+extern void ssd1306_drawString(char *str);
+extern void ssd1306_drawChar(int x, int y, unsigned char c, int color, int size);
 
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif				/* _SSD1306_I2C_H_ */
