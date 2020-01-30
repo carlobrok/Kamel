@@ -150,16 +150,16 @@ void m_drive() {
 		// Rampe hoch
 		if (rampe_hoch) {
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
-			if (m_imu_data[PITCH] < 5.0) {
+			if (m_imu_data[PITCH] > -5.0) {
 				rampe_hoch = false;
 				continue;
 			}
 
 			// Wenn der Roboter seitlich geneigt ist die wieder gerade ausrichten
-			if (m_imu_data[ROLL] < -2.0) {	// Fährt nach links - linke Seite unten
+			if (m_imu_data[ROLL] < -4.0) {	// Fährt nach links - linke Seite unten
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 30);
 			}
-			else if (m_imu_data[ROLL] > 2.0) {	// Fährt nach rechts - rechte Seite unten
+			else if (m_imu_data[ROLL] > 4.0) {	// Fährt nach rechts - rechte Seite unten
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 30, MOTOR_FORWARD, 180);
 			}
 
@@ -185,7 +185,7 @@ void m_drive() {
 
 		// Rampe runter
 		else if (rampe_runter) {
-			if (m_imu_data[PITCH] > -5.0 && m_imu_data[PITCH] < 5.0) {
+			if (m_imu_data[PITCH] < 5.0) {
 				rampe_runter = false;
 				continue;
 			}
@@ -207,11 +207,11 @@ void m_drive() {
 
 		// Roboter gerade
 		else {
-			if (m_imu_data[PITCH] > 12.0) {
+			if (m_imu_data[PITCH] < -12.0) {
 				rampe_hoch = true;
 				continue;				// Rest der while schleife skippen
 			}
-			if (m_imu_data[PITCH] < -12.0) {
+			if (m_imu_data[PITCH] > 12.0) {
 				rampe_runter = true;
 				continue;				// Rest der while schleife skippen
 			}
