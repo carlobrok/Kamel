@@ -208,7 +208,7 @@ void m_imu(void) {
 				if(in_idx == AMOUNT_IMU_DATA - 1) {
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 					std::cout << " > New IMU data" << std::endl;
-					cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << endl;
+					std::cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << std::endl;
 				}
 				else {
 					std::cout << " > Received IMU data not complete!" << std::endl;
