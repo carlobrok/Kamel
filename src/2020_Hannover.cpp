@@ -205,11 +205,11 @@ void m_drive() {
 
 		// Roboter gerade
 		else {
-			if (m_imu_data[PITCH] < -12.0) {
+			if (m_imu_data[PITCH] > 10.0) {
 				rampe_hoch = true;
 				continue;				// Rest der while schleife skippen
 			}
-			if (m_imu_data[PITCH] > 12.0) {
+			if (m_imu_data[PITCH] < -10.0) {
 				rampe_runter = true;
 				continue;				// Rest der while schleife skippen
 			}
