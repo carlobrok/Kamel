@@ -10,8 +10,8 @@ std::mutex line_mutex;
 
 std::vector<cv::Point> m_prim_line_points;			// global line points holding vector
 
-cv::Mat bin_prim_ellipse;								// Maske mit primärer Ellipse
-cv::Mat bin_prim_intersection;					// Überschneidungsmatrix von bin_sw und bin_prim_ellipse
+cv::Mat bin_ellipse;								// Maske mit primärer Ellipse
+cv::Mat bin_prim_intersection;					// Überschneidungsmatrix von bin_sw und bin_ellipse
 
 
 // set line_points buffer
@@ -30,16 +30,16 @@ void get_line_data(std::vector<cv::Point> & prim_line_points) {
 // ! Nur 1 mal aufrufen !
 void init_line_ellipse() {
 	// Beide masken komplett schwarz malen, alle Werte im Bild auf cv::Scalar(0)
-	bin_prim_ellipse = cv::Mat(IMG_HEIGHT, IMG_WIDTH, CV_8U, cv::Scalar(0));
+	bin_ellipse = cv::Mat(IMG_HEIGHT, IMG_WIDTH, CV_8U, cv::Scalar(0));
 
 	// Weiße Halbellipsen auf Masken zeichnen
-	cv::ellipse(bin_prim_ellipse, cv::Point(IMG_WIDTH/2, IMG_HEIGHT - ELLIPSE_BAR_HEIGHT), cv::Size(IMG_WIDTH/2 - ELLIPSE_THICKNESS/2, ELLIPSE_HEIGHT), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
+	cv::ellipse(bin_ellipse, cv::Point(IMG_WIDTH/2, IMG_HEIGHT - ELLIPSE_BAR_HEIGHT), cv::Size(IMG_WIDTH/2 - ELLIPSE_THICKNESS/2, ELLIPSE_HEIGHT), 0, 180, 360, cv::Scalar(255), ELLIPSE_THICKNESS);
 
-	// Balken links und rechts zeichnen für bin_prim_ellipse
+	// Balken links und rechts zeichnen für bin_ellipse
 	cv::Rect left_rect(0 , IMG_HEIGHT - ELLIPSE_BAR_HEIGHT, ELLIPSE_THICKNESS, ELLIPSE_BAR_HEIGHT);		// neues rechteck für links
 	cv::Rect right_rect(IMG_WIDTH - ELLIPSE_THICKNESS, IMG_HEIGHT - ELLIPSE_BAR_HEIGHT, ELLIPSE_THICKNESS, ELLIPSE_BAR_HEIGHT);		// neues rechteck für rechts
-	cv::rectangle(bin_prim_ellipse, left_rect, cv::Scalar(255), cv::FILLED);			// Rechteck links weiß auf bin_prim_ellipse zeichnen
-	cv::rectangle(bin_prim_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_prim_ellipse zeichnen
+	cv::rectangle(bin_ellipse, left_rect, cv::Scalar(255), cv::FILLED);			// Rechteck links weiß auf bin_ellipse zeichnen
+	cv::rectangle(bin_ellipse, right_rect, cv::Scalar(255), cv::FILLED);		// Rechteck rechts weiß auf bin_ellipse zeichnen
 }
 
 bool inRange(cv::Vec3b pixel_color, cv::Scalar low, cv::Scalar high) {
@@ -181,16 +181,28 @@ void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw) {
  * Die ausgewerteten prim_line_points und sec_line_points werden zwischen gespeichert und können
  * mit get_line_data abgerufen werden.
  */
+
+int64 t_inrange_normal_start;
+int64 t_inrange_normal_stop;
+int64 t_inrange_custom_start;
+int64 t_inrange_custom_stop;
+
 void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, bool do_separate_line) {
 
 	// if(do_separate_line) {
 	// 	sepatare_line(hsv, bin_sw);
 	// }
 
-	//inRange(hsv, LOW_BLACK, HIGH_BLACK, bin_sw);			// alles schwarze als weiß in bin_sw schreiben
 
 
-	cv::Mat img_canny, gray;
+
+	t_inrange_normal_start = cv::getTickCount();
+	inRange(hsv, LOW_BLACK, HIGH_BLACK, bin_sw);			// alles schwarze als weiß in bin_sw schreiben
+
+
+
+	// Anfang edge detection
+	/*cv::Mat img_canny, gray;
 	cv::cvtColor(img_rgb, gray, cv::COLOR_BGR2GRAY);
 	cv::Canny(gray, img_canny, 50, 100, 3, true);
 	cv::imshow("canny", img_canny);
@@ -222,7 +234,9 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	drawContours(bin_sw, contour_line, -1, cv::Scalar(255), cv::FILLED);
 	cv::morphologyEx(bin_sw, bin_sw, cv::MORPH_DILATE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(6,6)));
 	drawContours(img_rgb, contour_line, -1, cv::Scalar(255, 0, 255), 1);
+	*/
 
+	// ende edge detection
 
 	// Grünpunkt wird oft auch als schwarz erkannt, aktuelle Matrix des Grünpunktes, bin_gr, von bin_sw subtrahieren.
 	// Somit ist alles, was auf bin_gr weiß ist auf bin_sw schwarz
@@ -234,12 +248,34 @@ void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin
 	bin_prim_intersection.release();		// Überschneidungsmatrix leeren
 
 	//std::cout << bin_sw.type() << " " << bin_sw.cols << " " << bin_sw.rows << std::endl;
-	//std::cout << bin_prim_ellipse.type() << " " << bin_prim_ellipse.cols << " " << bin_prim_ellipse.rows << std::endl;
+	//std::cout << bin_ellipse.type() << " " << bin_ellipse.cols << " " << bin_ellipse.rows << std::endl;
 
 
-	// Maske bin_prim_ellipse / bin_sec_ellipse auf bin_sw anwenden
+	// Maske bin_ellipse / bin_sec_ellipse auf bin_sw anwenden
 	// Output: bin_prim_intersection / bin_sec_intersection
-	cv::bitwise_and(bin_sw, bin_prim_ellipse, bin_prim_intersection);			// !!!!!!!!!!!!!ERROR
+	cv::bitwise_and(bin_sw, bin_ellipse, bin_prim_intersection);			// !!!!!!!!!!!!!ERROR
+
+	t_inrange_normal_stop = cv::getTickCount();
+
+	Mat out(IMG_HEIGHT, IMG_WIDTH, CV_8U, cv::Scalar(0));
+
+	t_inrange_custom_start = cv::getTickCount();
+
+	for(int y = 0; y < IMG_HEIGHT; y++) {
+		for(int x = 0; x < IMG_WIDTH; x++) {
+			if(bin_ellipse.at<uchar>(y,x) == 255) {
+				if(inRange(hsv.at<cv::Vec3b>(y,x), LOW_BLACK, HIGH_BLACK)) {
+					out.at<uchar>(y,x) = 255;
+				}
+			}
+		}
+	}
+
+	t_inrange_custom_stop = cv::getTickCount();
+
+	std::cout << "Normal black separation took: " << (t_inrange_normal_stop - t_inrange_normal_start) / cv::getTickFrequency() * 1000.0 << " ms" << std::endl;
+	std::cout << "Custom black separation took: " << (t_inrange_custom_stop - t_inrange_custom_start) / cv::getTickFrequency() * 1000.0 << " ms" << std::endl;
+
 
 
 	std::vector< std::vector<cv::Point> > prim_contours_line; // vector, der alle Konturen aus bin_prim_intersection enthält
