@@ -148,7 +148,7 @@ void m_drive() {
 		// Rampe hoch
 		if (rampe_hoch) {
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
-			if (m_imu_data[PITCH] > -5.0) {
+			if (m_imu_data[PITCH] < 5.0) {
 				rampe_hoch = false;
 				continue;
 			}
@@ -183,7 +183,7 @@ void m_drive() {
 
 		// Rampe runter
 		else if (rampe_runter) {
-			if (m_imu_data[PITCH] < 5.0) {
+			if (m_imu_data[PITCH] > -5.0) {
 				rampe_runter = false;
 				continue;
 			}
