@@ -448,12 +448,12 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	std::ifstream ifs("../src/config.info", std::ifstream::in);
-  	ifs >> configdata;
-  	ifs.close();
+	std::ifstream ifs("../src/config.info", std::ifstream::in);			// Config datei einlesen
+  ifs >> configdata;			// Config laden
+  ifs.close();						// Datei wieder schließen
 
-	set_thresh_black(configdata.getintvalue("THRESH_BLACK"));
-	set_gruen_range(configdata.getscalarvalue("LOWER_GREEN"),configdata.getscalarvalue("UPPER_GREEN"));
+	set_thresh_black(configdata.getintvalue("THRESH_BLACK"));				// Schwarz threshold setzen
+	set_gruen_range(configdata.getscalarvalue("LOWER_GREEN"),configdata.getscalarvalue("UPPER_GREEN"));		// Gruen Threshold setzen
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
