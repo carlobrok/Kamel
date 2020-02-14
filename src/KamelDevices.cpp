@@ -1,9 +1,12 @@
 #include <sys/ioctl.h>				// ioctl
 #include <fcntl.h>						// fcntl, O_RDWR
+#include <cmath>						// fabs(), fmod()
 #include <cstdint>						// int8_t, uint8_t, uint16_t, ...
 #include <cerrno>							// errno
 #include <cstring>						// strerror
 #include <string>							// string
+#include <array>
+#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 #include <cctype>							// isdigit
 #include <mutex>							// mutex
 #include <linux/i2c-dev.h>		// i2c_smbus_...
@@ -164,6 +167,7 @@ int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]) {
 
 std::mutex imu_mutex;
 float m_imu_data[3] = {0,0,0};
+std::array<boost::circular_buffer<float>, 3> last_imu_data;
 
 void get_imu_data(float (&imu_data)[3]) {
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
@@ -179,6 +183,16 @@ void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp 
 	}
 }
 
+float get_abs_derivate() {
+	float der = 0;
+
+	for(uint8_t i = 0; i < 100 - 1; i++) {
+		der += fabs(fmod(last_imu_data[YAW][i+1] - last_imu_data[YAW][i] + 180 + 720, 360)) - 180;		// die absolute Änderung des letzten Schrittes errechnen
+	}
+
+	return der;
+}
+
 void m_imu(void) {
 	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);			// Serielle Schnittstelle öffnen, imu_fd ist der file descriptor
 	float t_imu_data[AMOUNT_IMU_DATA] = {0,0,0};						// lokaler Buffer mit den aktuellen Werten als Float
@@ -186,6 +200,10 @@ void m_imu(void) {
 	int in_idx = 0;																					// Index d. Variable
 	int in_char;
 	bool had_unknown_char = false;
+
+	for (auto& cb : last_imu_data) {
+		cb.resize(100);
+	}
 
 	while(true) {
 

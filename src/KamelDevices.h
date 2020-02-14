@@ -57,6 +57,7 @@ int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
 int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
 
 void get_imu_data(float (&imu_data)[3]);
+float get_abs_derivate();
 void m_imu(void);
 
 #endif

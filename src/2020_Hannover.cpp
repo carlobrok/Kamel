@@ -102,15 +102,6 @@ void m_drive() {
 	bool rampe_runter = false;
 
 	float m_imu_data[3];
-	/*array<boost::circular_buffer<float>, 3> last_imu_data;
-
-//	array<boost::circular_buffer<double>, 3> last_imu_time;
-	for (auto& cb : last_imu_data) {
-		cb.resize(100);
-	}*/
-//	for (auto& cb : last_imu_time) {
-//		cb.resize(100);
-//	}
 
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
 
