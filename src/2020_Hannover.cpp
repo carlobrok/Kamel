@@ -27,16 +27,17 @@ using namespace std;
 using namespace cv;
 
 namespace lvl = spdlog::level;
+
 Logger debug_lg("debug");			// logger class for log file 'debug.log'
+Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
 
 configuration::data configdata;
 
-Mat img_rgb;				// input image
 
 
 void m_drive() {
 
-	Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
+
 	Logger sensor_lg("sensors");					// logger class for log file 'sensors.log'
 
 	debug_lg << "init i2c devices" << lvl::debug;
@@ -101,7 +102,7 @@ void m_drive() {
 	bool rampe_hoch = false;
 	bool rampe_runter = false;
 
-	float m_imu_data[3];
+	float imu_data[3];
 
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
 
@@ -115,7 +116,7 @@ void m_drive() {
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
 		get_line_data(m_line_points);					 		// line data updaten
-		get_imu_data(m_imu_data);									// imu data updaten
+		get_imu_data(imu_data);									// imu data updaten
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
@@ -139,16 +140,16 @@ void m_drive() {
 		// Rampe hoch
 		if (rampe_hoch) {
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
-			if (m_imu_data[PITCH] < 5.0) {
+			if (imu_data[PITCH] < 5.0) {
 				rampe_hoch = false;
 				continue;
 			}
 
 			// Wenn der Roboter seitlich geneigt ist die wieder gerade ausrichten
-			if (m_imu_data[ROLL] < -4.0) {	// Fährt nach links - linke Seite unten
+			if (imu_data[ROLL] < -4.0) {	// Fährt nach links - linke Seite unten
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 180, MOTOR_FORWARD, 30);
 			}
-			else if (m_imu_data[ROLL] > 4.0) {	// Fährt nach rechts - rechte Seite unten
+			else if (imu_data[ROLL] > 4.0) {	// Fährt nach rechts - rechte Seite unten
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 30, MOTOR_FORWARD, 180);
 			}
 
@@ -174,7 +175,7 @@ void m_drive() {
 
 		// Rampe runter
 		else if (rampe_runter) {
-			if (m_imu_data[PITCH] > -5.0) {
+			if (imu_data[PITCH] > -5.0) {
 				rampe_runter = false;
 				continue;
 			}
@@ -196,11 +197,11 @@ void m_drive() {
 
 		// Roboter gerade
 		else {
-			if (m_imu_data[PITCH] > 10.0) {
+			if (imu_data[PITCH] > 10.0) {
 				rampe_hoch = true;
 				continue;				// Rest der while schleife skippen
 			}
-			if (m_imu_data[PITCH] < -10.0) {
+			if (imu_data[PITCH] < -10.0) {
 				rampe_runter = true;
 				continue;				// Rest der while schleife skippen
 			}
@@ -256,6 +257,16 @@ void m_drive() {
 				debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
 				//			cout << "Different value -> check motor output for line" << endl;
 
+				// Der Roboter hat sich 5 Sekunden weniger als 5°/Sekunde bewegt, steht aber nicht mittig auf der Linie:
+				// Für 0,5 Sekunden mit vollem Tempo zurück
+				if(get_last_movement_seconds() > 5.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
+					thread_delay(500);
+					setMotorState(motor_fd, MOTOR_OFF);
+					thread_delay(7);		// Delay für i2c bus
+				}
+
+				// der Linie folgen
 				if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
 				} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
@@ -284,7 +295,7 @@ void m_drive() {
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
 
-					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > img_rgb.cols / 2 + 100)) {
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > IMG_WIDTH / 2 + 100)) {
 						thread_delay(5);
 						get_line_data(m_line_points);
 					}
@@ -298,7 +309,7 @@ void m_drive() {
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
 
-					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < img_rgb.cols / 2 - 100)) {
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < IMG_WIDTH / 2 - 100)) {
 						thread_delay(5);
 						get_line_data(m_line_points);
 					}
@@ -328,6 +339,7 @@ void image_processing() {
 
 	Logger camera_lg("camera");		// Logger für Dateiname des aktuellen Bilds, sowie andere Bildinformationen
 
+	Mat img_rgb;	// input image
 	Mat hsv;			// input Bild im hsv Format
 	Mat bin_sw;		// binäres bild schwarz / weiß erkennung; schwarze linie auf bild weiß, alles andere schwarz
 	Mat bin_gr;		// binäres bild grünerkennung; grüner punkt weiß, alles andere schwarz
@@ -428,12 +440,7 @@ void image_processing() {
 
 
 
-// MAIN METHOD TO CALL THREADS
-
-extern uint8_t THRESH_BLACK;
-extern cv::Scalar LOWER_GREEN;
-extern cv::Scalar UPPER_GREEN;
-
+// MAIN FUNCTION TO CALL THREADS
 
 int main() {
 

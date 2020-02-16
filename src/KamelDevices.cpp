@@ -11,6 +11,8 @@
 #include <mutex>							// mutex
 #include <linux/i2c-dev.h>		// i2c_smbus_...
 #include <wiringSerial.h>
+#include <chrono>							// timing
+
 
 #include "KamelDevices.h"
 #include "config.h"
@@ -169,6 +171,21 @@ std::mutex imu_mutex;
 float m_imu_data[3] = {0,0,0};
 std::array<boost::circular_buffer<float>, 3> last_imu_data;
 
+//float last_abs_movement = 0.0;
+std::chrono::time_point<std::chrono::system_clock> last_movement_change = std::chrono::system_clock::now();
+
+void reset_last_movement_change() {
+	last_movement_change = std::chrono::system_clock::now();
+}
+
+// Gibt die Sekunden zurück, wie lange sich der Roboter weniger als 5°/Sekunde gedreht hat
+double get_last_movement_seconds() {
+	std::chrono::duration<double> diff = std::chrono::system_clock::now() - last_movement_change;
+  return diff.count();
+}
+
+
+
 void get_imu_data(float (&imu_data)[3]) {
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
@@ -180,17 +197,17 @@ void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp 
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		m_imu_data[i] = imu_data[i];
+		last_imu_data[i].push_back(imu_data[i]);
 	}
 }
 
-float get_abs_derivate() {
-	float der = 0;
-
-	for(uint8_t i = 0; i < 100 - 1; i++) {
-		der += fabs(fmod(last_imu_data[YAW][i+1] - last_imu_data[YAW][i] + 180 + 720, 360)) - 180;		// die absolute Änderung des letzten Schrittes errechnen
+float get_abs_movement() {
+	float abs_der = 0.0;
+	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	for(uint16_t i = 0; i < last_imu_data[YAW].size() - 1; i++) {
+    abs_der += fabs(fmod(last_imu_data[YAW][i+1] - last_imu_data[YAW][i] + 180 + 720, 360) - 180 );		// die absolute Änderung des letzten Schrittes errechnen
 	}
-
-	return der;
+	return abs_der;
 }
 
 void m_imu(void) {
@@ -227,6 +244,11 @@ void m_imu(void) {
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 					std::cout << " > New IMU data" << std::endl;
 					std::cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << std::endl;
+
+					// Wenn der Roboter sich in der letzten Sekunde insgesamt mehr als 5° gedreht hat last_movement_change auf den aktuellen Zeitpunkt setzen
+					if(get_abs_movement() > 5) {
+						reset_last_movement_change();
+					}
 				}
 				else {
 					std::cout << " > Received IMU data not complete!" << std::endl;

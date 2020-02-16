@@ -19,8 +19,8 @@
 
 // IMU defines
 #define IMU_BAUD 115200
-#define IMU_REFRESH_DELAY 10
-#define AMOUNT_IMU_DATA 3
+#define IMU_REFRESH_DELAY 10      // 100Hz of the DMP
+#define AMOUNT_IMU_DATA 3         // Yaw,Pitch,Roll
 #define YAW 0
 #define PITCH 1
 #define ROLL 2
