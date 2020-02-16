@@ -33,6 +33,49 @@ Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
 
 configuration::data configdata;
 
+void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
+	float target_angle = imu_data[YAW] - angle;
+	float correction;
+	bool correct_angle = false;
+
+	while(!correct_angle) {
+		get_imu_data(imu_data);
+		correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
+
+		if(correction > 20) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+		}
+		else if(correction < -20) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+		}
+		else if(correction > 5) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+		}
+		else if(correction < -5) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+		}
+		else if(correction > 1) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+		}
+		else if(correction < -1) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+		}
+		else if(correction <= 1 && correction >= -1) {
+			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+			thread_delay(100);
+			get_imu_data(imu_data);
+			correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
+
+			// Hysterese für Messwertschwankungen
+			if(correction < 1.4 && correction > -1.4) {
+				correct_angle = true;
+			}
+		}
+	}
+}
+
+
+
 
 
 void m_drive() {
@@ -219,10 +262,8 @@ void m_drive() {
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
 						thread_delay(500);																					// delay 500ms
 
-						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);	// beide Motoren auf unterschiedliche Werte setzen
-						thread_delay(3000);																	// delay 3s
-						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);			// Motoren ausschalten
-						thread_delay(500);																	// delay 500ms
+						turn_angle(motor_fd, imu_data, 180);
+						thread_delay(250);
 
 						break;
 					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
@@ -262,7 +303,7 @@ void m_drive() {
 				if(get_last_movement_seconds() > 5.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
 					thread_delay(500);
-					setMotorState(motor_fd, MOTOR_OFF);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 					thread_delay(7);		// Delay für i2c bus
 				}
 
