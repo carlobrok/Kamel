@@ -252,6 +252,12 @@ void m_drive() {
 
 			// ROBOTER IST WAAGERECHT
 
+			// Flasche 
+			/*if(analog_sensor_data[0] < NOCH ZU SETZEN)
+				// Flasche fahren
+			*/
+
+
 			if (m_grstate == GRUEN_BEIDE) {
 
 				debug_lg << "green point BOTH" << lvl::info;
@@ -262,8 +268,8 @@ void m_drive() {
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
 						thread_delay(500);																					// delay 500ms
 
-						turn_angle(motor_fd, imu_data, 180);
-						thread_delay(250);
+						turn_angle(motor_fd, imu_data, 180);			// 180° Drehen
+						thread_delay(250);												// Warten für aktuelles Bild / damit der Kamerathread hinterher kommt
 
 						break;
 					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
@@ -304,14 +310,41 @@ void m_drive() {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
 					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					reset_last_movement_change();				// resetten, da sonst der Roboter eventuell dauerhaft rückwärts fährt, wenn er sich dabei nicht dreht
 					thread_delay(7);		// Delay für i2c bus
 				}
 
 				// der Linie folgen
 				if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
+					// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
+					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+					// Oder alle linepoints noch zu weit rechts sind.
+					bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);		// Drehung einleiten
+					while(!done) {
+						delay(20);
+						get_line_data(m_line_points);							// Daten updaten
+						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+							if(linepoint.x < 400) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+						}
+					}
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);		// Motoren ausschalten
+
 				} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
+					// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
+					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+					// Oder alle linepoints noch zu weit links sind.
+					bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);		// Drehung einleiten
+					while(!done) {
+						delay(20);
+						get_line_data(m_line_points);							// Daten updaten
+						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+							if(linepoint.x > 240) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+						}
+					}
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);		// Motoren ausschalten
+
 				} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
 				} else if (m_line_points[0].x < 140) {							// line_points[0] links
