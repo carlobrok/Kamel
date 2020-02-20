@@ -508,7 +508,7 @@ void image_processing() {
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();			// VideoServer updaten
 
-		camera_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::debug;
+		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << std::endl;
 
 	}
 }
