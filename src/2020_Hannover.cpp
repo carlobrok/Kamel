@@ -320,31 +320,33 @@ void m_drive() {
 					// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
 					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 					// Oder alle linepoints noch zu weit rechts sind.
-					bool done = false;
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);		// Drehung einleiten
-					while(!done) {
+					//bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 160);		// Drehung einleiten
+					thread_delay(500);
+					/*while(!done) {
 						std::cout << "linie ganz rechts" << std::endl;
 						thread_delay(5);
 						get_line_data(m_line_points);							// Daten updaten
 						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
 							if(linepoint.x < 500) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
 						}
-					}
+					}*/
 
 				} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
 					// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
 					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 					// Oder alle linepoints noch zu weit links sind.
-					bool done = false;
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);		// Drehung einleiten
-					while(!done) {
+					//bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 160);		// Drehung einleiten
+					thread_delay(500);
+					/*while(!done) {
 						std::cout << "linie ganz links" << std::endl;
 						thread_delay(5);
 						get_line_data(m_line_points);							// Daten updaten
 						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
 							if(linepoint.x > 140) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
 						}
-					}
+					}*/
 
 				} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
