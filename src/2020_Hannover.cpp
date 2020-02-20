@@ -175,7 +175,7 @@ void m_drive() {
 			last_digital_data[i].push_front(digital_sensor_data[i]);
 		}*/
 
-		// cout << "drive routine; line_points: " << m_line_points << endl;
+		cout << "drive routine; line_points: " << m_line_points << endl;
 
 		// main part: drive decisions	=================================
 
