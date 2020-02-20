@@ -252,7 +252,7 @@ void m_drive() {
 
 			// ROBOTER IST WAAGERECHT
 
-			// Flasche 
+			// Flasche
 			/*if(analog_sensor_data[0] < NOCH ZU SETZEN)
 				// Flasche fahren
 			*/
@@ -322,7 +322,7 @@ void m_drive() {
 					bool done = false;
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);		// Drehung einleiten
 					while(!done) {
-						delay(20);
+						thread_delay(20);
 						get_line_data(m_line_points);							// Daten updaten
 						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
 							if(linepoint.x < 400) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
@@ -337,7 +337,7 @@ void m_drive() {
 					bool done = false;
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);		// Drehung einleiten
 					while(!done) {
-						delay(20);
+						thread_delay(20);
 						get_line_data(m_line_points);							// Daten updaten
 						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
 							if(linepoint.x > 240) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
