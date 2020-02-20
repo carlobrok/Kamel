@@ -56,6 +56,9 @@ int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sen
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
 int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
 
+void reset_last_movement_change();
+double get_last_movement_seconds();
+
 void get_imu_data(float (&imu_data)[3]);
 float get_abs_movement();
 void m_imu(void);
