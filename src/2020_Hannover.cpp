@@ -487,7 +487,7 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	std::ifstream ifs("../src/config.info", std::ifstream::in);			// Config datei einlesen
+	std::ifstream ifs("~/projects/KamelPi/src/config.info", std::ifstream::in);			// Config datei einlesen
   ifs >> configdata;			// Config laden
   ifs.close();						// Datei wieder schließen
 
