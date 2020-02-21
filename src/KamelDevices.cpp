@@ -238,9 +238,8 @@ void m_imu(void) {
 
 			if (in_char == '\n') {       								// "!" ->  Zeichen für Ende der Datenreihe
 
-	      t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
-
 				if(in_idx == AMOUNT_IMU_DATA - 1) {
+					t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
 					std::cout << " > New IMU data" << std::endl;
 					std::cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << std::endl;
@@ -261,8 +260,10 @@ void m_imu(void) {
 	      in_str += (char)in_char;             					// add character to string
 	    }
 			else if (in_char == ',') {      									// number is complete
-				t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
-	      in_str = "";                        					// reset string
+				if(in_str != "") {
+					t_imu_data[in_idx++] = std::stof(in_str);    	// write number from String into the array, increment i
+	      	in_str = "";
+				}                  					// reset string
 	    }
 			else {                          								// unknown / error -> reset array and index -> wait for '\n'
 
