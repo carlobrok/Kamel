@@ -175,7 +175,7 @@ void m_drive() {
 			last_digital_data[i].push_front(digital_sensor_data[i]);
 		}*/
 
-		// cout << "drive routine; line_points: " << m_line_points << endl;
+		cout << "drive routine; line_points: " << m_line_points << endl;
 
 		// main part: drive decisions	=================================
 
@@ -252,6 +252,12 @@ void m_drive() {
 
 			// ROBOTER IST WAAGERECHT
 
+			// Flasche
+			/*if(analog_sensor_data[0] < NOCH ZU SETZEN)
+				// Flasche fahren
+			*/
+
+
 			if (m_grstate == GRUEN_BEIDE) {
 
 				debug_lg << "green point BOTH" << lvl::info;
@@ -259,12 +265,6 @@ void m_drive() {
 				while (m_grstate != GRUEN_NICHT) {		// Solange grstate nicht GRUEN_NICHT ist
 					get_gruen_data(m_grcenter, m_grstate);											// gruen werte aktualisieren
 					if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
-						thread_delay(500);																					// delay 500ms
-
-						turn_angle(motor_fd, imu_data, 180);
-						thread_delay(250);
-
 						break;
 					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
@@ -274,6 +274,13 @@ void m_drive() {
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
 					}
 				}
+
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
+				thread_delay(500);																					// delay 500ms
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);		// beide Motoren vorwärts, pwm: 180
+				thread_delay(500);
+				turn_angle(motor_fd, imu_data, 180);			// 180° Drehen
+				thread_delay(250);												// Warten für aktuelles Bild / damit der Kamerathread hinterher kommt
 
 			} else if (m_grstate == GRUEN_LINKS && m_grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
 
@@ -304,14 +311,43 @@ void m_drive() {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
 					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					reset_last_movement_change();				// resetten, da sonst der Roboter eventuell dauerhaft rückwärts fährt, wenn er sich dabei nicht dreht
 					thread_delay(7);		// Delay für i2c bus
 				}
 
 				// der Linie folgen
 				if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 190, MOTOR_BACKWARD, 160);
+					// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
+					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+					// Oder alle linepoints noch zu weit rechts sind.
+					//bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 160);		// Drehung einleiten
+					thread_delay(500);
+					/*while(!done) {
+						std::cout << "linie ganz rechts" << std::endl;
+						thread_delay(5);
+						get_line_data(m_line_points);							// Daten updaten
+						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+							if(linepoint.x < 500) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+						}
+					}*/
+
 				} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 190);
+					// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
+					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+					// Oder alle linepoints noch zu weit links sind.
+					//bool done = false;
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 160);		// Drehung einleiten
+					thread_delay(500);
+					/*while(!done) {
+						std::cout << "linie ganz links" << std::endl;
+						thread_delay(5);
+						get_line_data(m_line_points);							// Daten updaten
+						for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+							if(linepoint.x > 140) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+						}
+					}*/
+
 				} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
 				} else if (m_line_points[0].x < 140) {							// line_points[0] links
@@ -474,7 +510,7 @@ void image_processing() {
 		srv.imshow("Mask Green", bin_gr);
 		srv.update();			// VideoServer updaten
 
-		camera_lg << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << lvl::debug;
+		std::cout << "Processing took: " << (getTickCount() - tloop) / getTickFrequency() * 1000.0 << " ms; FPS: " <<  cv::getTickFrequency() / (cv::getTickCount() - tloop) << std::endl;
 
 	}
 }
