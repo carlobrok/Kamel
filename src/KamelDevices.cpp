@@ -245,6 +245,7 @@ void m_imu(void) {
 					std::cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << std::endl;
 
 					// Wenn der Roboter sich in der letzten Sekunde insgesamt mehr als 5° gedreht hat last_movement_change auf den aktuellen Zeitpunkt setzen
+					std::cout << "abs_movement: " << get_abs_movement() << std::endl;
 					if(get_abs_movement() > 5) {
 						reset_last_movement_change();
 					}
