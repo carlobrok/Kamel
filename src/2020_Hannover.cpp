@@ -46,23 +46,23 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 
 		std::cout << "correction: " << correction << std::endl;
 
-		if(correction > 20) {
+		if(correction > 30) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 220, MOTOR_BACKWARD, 220);
 		}
-		else if(correction < -20) {
+		else if(correction < -30) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 220, MOTOR_FORWARD, 220);
 		}
-		else if(correction > 5) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 150);
-		}
-		else if(correction < -5) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 150, MOTOR_FORWARD, 150);
-		}
-		else if(correction > 1) {
+		else if(correction > 15) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 100);
 		}
-		else if(correction < -1) {
+		else if(correction < -15) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+		}
+		else if(correction > 1) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_BACKWARD, 90);
+		}
+		else if(correction < -1) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 90, MOTOR_FORWARD, 90);
 		}
 		else if(correction <= 1 && correction >= -1) {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
@@ -71,7 +71,7 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 			correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
 
 			// Hysterese für Messwertschwankungen
-			if(correction < 1.4 && correction > -1.4) {
+			if(correction < 1.75 && correction > -1.75) {
 				correct_angle = true;
 			}
 		}
@@ -225,7 +225,7 @@ void m_drive() {
 		else if (rampe_runter) {
 			if (imu_data[PITCH] > -5.0) {
 
-				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 130);
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 110);
 				thread_delay(1500);
 				int64 tbegin = getTickCount();
 
@@ -238,14 +238,14 @@ void m_drive() {
 						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 						// Oder alle linepoints noch zu weit rechts sind.
 						bool done = false;
-						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 120);		// Drehung einleiten
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 140);		// Drehung einleiten
 
 						do {
 							std::cout << "linie ganz rechts" << std::endl;
 							thread_delay(5);
 							get_line_data(m_line_points);							// Daten updaten
 							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
-								if(linepoint.x < 500) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+								if(linepoint.x < 480) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
 							}
 						} while(!done);
 
@@ -254,14 +254,14 @@ void m_drive() {
 						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 						// Oder alle linepoints noch zu weit links sind.
 						bool done = false;
-						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 100);		// Drehung einleiten
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 140, MOTOR_FORWARD, 100);		// Drehung einleiten
 
 						do {
 							std::cout << "linie ganz links" << std::endl;
 							thread_delay(5);
 							get_line_data(m_line_points);							// Daten updaten
 							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
-								if(linepoint.x > 140) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+								if(linepoint.x > 120) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
 							}
 						} while(!done);
 
@@ -270,6 +270,7 @@ void m_drive() {
 					} else if (m_line_points[0].x < 140) {							// line_points[0] links
 						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
 					} else if ((getTickCount() - tbegin) / getTickFrequency() * 1000.0 > 2000) {
+						reset_last_movement_change();
 						break;
 					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
