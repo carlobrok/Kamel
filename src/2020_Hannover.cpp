@@ -272,11 +272,11 @@ void m_drive() {
 					if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
 						break;
 					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
-						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 110);			// links Kurve
 					} else if (m_grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
-						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);			// rechts Kurve
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 110, MOTOR_FORWARD, 0);			// rechts Kurve
 					} else {																	// m_grcenter im mittleren, oberen Bildbereich
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);								// langsam vorwärts
 					}
 				}
 
