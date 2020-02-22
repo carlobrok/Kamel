@@ -312,9 +312,9 @@ void m_drive() {
 
 				// Der Roboter hat sich 5 Sekunden weniger als 5°/Sekunde bewegt, steht aber nicht mittig auf der Linie:
 				// Für 0,5 Sekunden mit vollem Tempo zurück
-				if(get_last_movement_seconds() > 5.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
+				if(get_last_movement_seconds() > 4.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
-					thread_delay(500);
+					thread_delay(400);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 					reset_last_movement_change();				// resetten, da sonst der Roboter eventuell dauerhaft rückwärts fährt, wenn er sich dabei nicht dreht
 					thread_delay(7);		// Delay für i2c bus
