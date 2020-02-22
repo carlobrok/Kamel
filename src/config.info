@@ -3,7 +3,7 @@
 # key = value
 
 # Schwarz Threshold
-THRESH_BLACK = 100
+THRESH_BLACK = 60
 
 LOWER_GREEN = 50,35,15
 UPPER_GREEN = 90,255,200

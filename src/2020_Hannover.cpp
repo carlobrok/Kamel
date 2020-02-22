@@ -126,7 +126,7 @@ void m_drive() {
 
 	// init digital sensor variables
 
-	bool digital_sensor_data[8];
+	bool digital_sensor_data[8] = {0,0,0,0,0,0,0,0};
 	array<boost::circular_buffer<bool>, 8> last_digital_data;
 //	array<boost::circular_buffer<double>, 8> last_digital_time;
 	for (auto& cb : last_digital_data) {
@@ -139,7 +139,7 @@ void m_drive() {
 
 	// init analog sensor variables
 
-	uint16_t analog_sensor_data[1];
+	uint16_t analog_sensor_data[1] = {0};
 	boost::circular_buffer<uint16_t> last_analog_data(100);
 //	boost::circular_buffer<double> last_analog_time(100);
 
@@ -150,7 +150,7 @@ void m_drive() {
 	bool rampe_hoch = false;
 	bool rampe_runter = false;
 
-	float imu_data[3];
+	float imu_data[3] = {0,0,0};
 
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
 
@@ -528,7 +528,7 @@ int main() {
 
 	init_clock();			// set start_clock to current ms
 
-	std::ifstream ifs("../src/config.info", std::ifstream::in);			// Config datei einlesen
+	std::ifstream ifs("/home/pi/projects/KamelPi/src/config.info", std::ifstream::in);			// Config datei einlesen
   ifs >> configdata;			// Config laden
   ifs.close();						// Datei wieder schließen
 
