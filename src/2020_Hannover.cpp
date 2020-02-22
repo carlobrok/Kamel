@@ -271,6 +271,12 @@ void m_drive() {
 						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
 					} else if ((getTickCount() - tbegin) / getTickFrequency() * 1000.0 > 2000) {
 						break;
+					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
+					} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
+					} else {																					 // line_points[0] mitte
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 					}
 				}
 				rampe_runter = false;
