@@ -34,31 +34,35 @@ Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
 configuration::data configdata;
 
 void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
-	float target_angle = imu_data[YAW] - angle;
+	float target_angle = imu_data[YAW] + angle;
 	float correction;
 	bool correct_angle = false;
+
+	std::cout << "Turn angle; current / target:" << imu_data[YAW] << "/" << target_angle << std::endl;
 
 	while(!correct_angle) {
 		get_imu_data(imu_data);
 		correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
 
+		std::cout << "correction: " << correction << std::endl;
+
 		if(correction > 20) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 220, MOTOR_BACKWARD, 220);
 		}
 		else if(correction < -20) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 220, MOTOR_FORWARD, 220);
 		}
 		else if(correction > 5) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 150);
 		}
 		else if(correction < -5) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 150, MOTOR_FORWARD, 150);
 		}
 		else if(correction > 1) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 100);
 		}
 		else if(correction < -1) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
 		}
 		else if(correction <= 1 && correction >= -1) {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
@@ -71,6 +75,7 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 				correct_angle = true;
 			}
 		}
+
 	}
 }
 
