@@ -237,7 +237,7 @@ void m_drive() {
 						// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
 						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 						// Oder alle linepoints noch zu weit rechts sind.
-						//bool done = false;
+						bool done = false;
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 120);		// Drehung einleiten
 
 						do {
@@ -253,7 +253,7 @@ void m_drive() {
 						// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
 						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 						// Oder alle linepoints noch zu weit links sind.
-						//bool done = false;
+						bool done = false;
 						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 100);		// Drehung einleiten
 
 						do {
