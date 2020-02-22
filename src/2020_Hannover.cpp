@@ -224,6 +224,63 @@ void m_drive() {
 		// Rampe runter
 		else if (rampe_runter) {
 			if (imu_data[PITCH] > -5.0) {
+
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
+				thread_delay(1000);
+				int64 tbegin = getTickCount();
+
+				while((getTickCount() - tbegin) / getTickFrequency() * 1000.0 < 3000) {
+					get_line_data(m_line_points);					 		// line data updaten
+
+					// der Linie folgen
+					if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
+						// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
+						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+						// Oder alle linepoints noch zu weit rechts sind.
+						//bool done = false;
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 120);		// Drehung einleiten
+
+						do {
+							std::cout << "linie ganz rechts" << std::endl;
+							thread_delay(5);
+							get_line_data(m_line_points);							// Daten updaten
+							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+								if(linepoint.x < 500) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+							}
+						} while(!done);
+
+					} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
+						// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
+						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+						// Oder alle linepoints noch zu weit links sind.
+						//bool done = false;
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 100);		// Drehung einleiten
+
+						do {
+							std::cout << "linie ganz links" << std::endl;
+							thread_delay(5);
+							get_line_data(m_line_points);							// Daten updaten
+							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+								if(linepoint.x > 140) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+							}
+						} while(!done);
+
+					} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
+					} else if (m_line_points[0].x < 140) {							// line_points[0] links
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
+					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
+					} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
+					} else if (m_line_points[0].x > 340) {							// line_points[0] mitte rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
+					} else if (m_line_points[0].x < 300) {						 // line_points[0] mitte links
+						setMotorDirPwmBoth(motor_fd, MOTOR_OFF, 0, MOTOR_FORWARD, 160);
+					} else {																					 // line_points[0] mitte
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
+					}
+				}
 				rampe_runter = false;
 				continue;
 			}
