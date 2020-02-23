@@ -134,7 +134,7 @@ void m_drive() {
 
 	// init analog sensor variables
 
-	uint16_t analog_sensor_data[1] = {1023};
+	uint16_t analog_sensor_data[1] = {0};
 	boost::circular_buffer<uint16_t> last_analog_data(100);
 //	boost::circular_buffer<double> last_analog_time(100);
 
