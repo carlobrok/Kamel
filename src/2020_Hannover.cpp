@@ -33,6 +33,10 @@ Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
 
 configuration::data configdata;
 
+int flasche_fahren = 200;			// Wert, ab dem der Roboter nah genug dran ist und die Flasche umfährt
+bool flasche_links = true;			// Auf true, wenn der Roboter an der Flasche links vorbei soll
+
+
 void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 	float target_angle = imu_data[YAW] + angle;
 	float correction;
@@ -126,7 +130,7 @@ void m_drive() {
 
 	// init digital sensor variables
 
-	bool digital_sensor_data[8] = {0,0,0,0,0,0,0,0};
+	bool digital_sensor_data[8] = {1,1,1,1,1,1,1,1};
 	array<boost::circular_buffer<bool>, 8> last_digital_data;
 //	array<boost::circular_buffer<double>, 8> last_digital_time;
 	for (auto& cb : last_digital_data) {
@@ -166,9 +170,12 @@ void m_drive() {
 		get_line_data(m_line_points);					 		// line data updaten
 		get_imu_data(imu_data);									// imu data updaten
 
-		getAnalogSensorData(sensor_fd, analog_sensor_data);
+		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
 		std::cout << "A0: " << analog_sensor_data << std::endl;
-
+		for(int i = 0; i  < 8; i++) {
+			std::cout << "D" << i << ": " << digital_sensor_data[i] << "  ";
+		}
+		std::cout << std::endl;
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
 
@@ -188,7 +195,8 @@ void m_drive() {
 		// main part: drive decisions	=================================
 
 
-		// Rampe hoch
+// =========== RAMPE HOCH  ==================
+
 		if (rampe_hoch) {
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
 			if (imu_data[PITCH] < 5.0) {
@@ -224,15 +232,16 @@ void m_drive() {
 		}
 
 
-		// Rampe runter
+// ========== RAMPE RUNTER ======================
+
 		else if (rampe_runter) {
 			if (imu_data[PITCH] > -5.0) {
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 110);
 				thread_delay(1500);
-				int64 tbegin = getTickCount();
+				int64 tbegin = cur_ms();
 
-				while((getTickCount() - tbegin) / getTickFrequency() * 1000.0 < 3000) {
+				while((cur_ms() - tbegin) < 3000) {
 					get_line_data(m_line_points);					 		// line data updaten
 
 					// der Linie folgen
@@ -272,7 +281,7 @@ void m_drive() {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
 					} else if (m_line_points[0].x < 140) {							// line_points[0] links
 						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
-					} else if ((getTickCount() - tbegin) / getTickFrequency() * 1000.0 > 2000) {
+					} else if ((cur_ms() - tbegin) > 2000) {
 						reset_last_movement_change();
 						break;
 					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
@@ -314,13 +323,86 @@ void m_drive() {
 			}
 
 
-			// ROBOTER IST WAAGERECHT
+// ==========================   ROBOTER IST WAAGERECHT =================================00
 
-			// Flasche
-			/*if(analog_sensor_data[0] < NOCH ZU SETZEN)
-				// Flasche fahren
-			*/
+// ========= FLASCHE ====================
 
+			// Flasche mittig vor dem Roboter
+			if(analog_sensor_data >= flasche_fahren && digital_sensor_data[IR_VORNE_L] == 1 && digital_sensor_data[IR_VORNE_R] == 1) {
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+
+				int64 tbegin = cur_ms();
+				bool flasche = true;
+
+				while(cur_ms() - tbegin < 300) {
+					thread_delay(5);
+					getAnalogSensorData(sensor_fd, analog_sensor_data);
+					if(analog_sensor_data < flasche_fahren - 20){
+						flasche = false;
+						break;
+					}
+				}
+
+				if(flasche) {
+					std::cout << " > FLASCHE FAHREN" << std::endl;
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
+
+					while(analog_sensor_data > 110) {
+						thread_delay(5);
+						getAnalogSensorData(sensor_fd, analog_sensor_data);
+					}
+
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+
+					thread_delay(300);
+
+					if(flasche_links) {
+						turn_angle(motor_fd, imu_data, -45);
+					}
+					else {
+						turn_angle(motor_fd, imu_data, 45);
+					}
+
+					// TODO: nach IR sensoren an der Seite fahren
+
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+					thread_delay(1800);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(200);
+
+					if(flasche_links) {
+						turn_angle(motor_fd, imu_data, 45);
+					}
+					else {
+						turn_angle(motor_fd, imu_data, -45);
+					}
+
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+					thread_delay(1200);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(200);
+
+					if(flasche_links) {
+						turn_angle(motor_fd, imu_data, 55);
+					}
+					else {
+						turn_angle(motor_fd, imu_data, -55);
+					}
+
+				}
+				continue;
+			}
+
+			// Objekt, das sehr breit ist direkt vor dem Roboter, oder die Flasche nicht mittig
+			else if(analog_sensor_data >= flasche_fahren && (digital_sensor_data[IR_VORNE_L] == 0 || digital_sensor_data[IR_VORNE_R] == 0)) {
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+				thread_delay(750);
+				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+				continue;
+			}
+
+
+//  =========== GRUEN ========================
 
 			if (m_grstate == GRUEN_BEIDE) {
 
@@ -366,7 +448,11 @@ void m_drive() {
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
 				thread_delay(500);					// delay 500ms
 
-			} else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
+			}
+
+// ======== LINIE ================
+
+			else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
 
 				debug_lg << "single Line point: " << m_line_points[0] << lvl::info;
 				//			cout << "Different value -> check motor output for line" << endl;
@@ -595,6 +681,9 @@ int main() {
 
 	set_thresh_black(configdata.getintvalue("THRESH_BLACK"));				// Schwarz threshold setzen
 	set_gruen_range(configdata.getscalarvalue("LOWER_GREEN"),configdata.getscalarvalue("UPPER_GREEN"));		// Gruen Threshold setzen
+
+	flasche_fahren = configdata.getintvalue("FLASCHE_FAHREN");
+	flasche_links = configdata.getboolvalue("FLASCHE_LINKS");
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread

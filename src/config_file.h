@@ -11,7 +11,7 @@
 namespace configuration
 {
 
-  //---------------------------------------------------------------------------
+  /*---------------------------------------------------------------------------
   // The configuration::data is a simple map string (key, value) pairs.
   // The file is stored as a simple listing of those pairs, one per line.
   // The key is separated from the value by an equal sign '='.
@@ -25,7 +25,7 @@ namespace configuration
   //
   // Notice that the configuration file format does not permit values to span
   // more than one line, commentary at the end of a line, or [section]s.
-  //
+  */
 
   struct data: std::map <std::string, std::pair<std::string, unsigned int>> {
 

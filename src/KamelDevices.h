@@ -52,7 +52,7 @@ bool get_bit(uint8_t byte, uint8_t bit_number);
 
 int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command);
 
-int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]);
+int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t &analog_sensor_data);
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
 int getAnalogSensorData(int &fd, uint16_t &analog_sensor_data);
 

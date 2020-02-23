@@ -8,6 +8,8 @@ THRESH_BLACK = 60
 LOWER_GREEN = 50,35,15
 UPPER_GREEN = 90,255,200
 
+FLASCHE_FAHREN = 200
+FLASCHE_LINKS = true
 
 # Legt fest, ob der Roboter beim Programmstart das Endzone-Programm starten soll
 START_ENDZONE = false

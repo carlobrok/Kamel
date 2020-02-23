@@ -134,7 +134,7 @@ int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command) 
  * Sequence of digital sensors is:
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
-int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]) {
+int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t &analog_sensor_data) {
 	uint8_t in_data[3];
 	int ret = i2c_smbus_read_i2c_block_data(fd, ALL_SENSOR_VALUES, 3, in_data);
 
@@ -142,7 +142,7 @@ int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sen
 		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
 	}
 
-	analog_sensor_data[0] = in_data[1] | (in_data[2] << 8);
+	analog_sensor_data = in_data[1] | (in_data[2] << 8);
 	return ret;
 }
 
