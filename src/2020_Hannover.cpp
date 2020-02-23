@@ -171,6 +171,7 @@ void m_drive() {
 		get_imu_data(imu_data);									// imu data updaten
 
 		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
+		thread_delay(2);
 		std::cout << "A0: " << analog_sensor_data << std::endl;
 		for(int i = 0; i  < 8; i++) {
 			std::cout << "D" << i << ": " << digital_sensor_data[i] << "  ";
