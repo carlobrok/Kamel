@@ -134,7 +134,7 @@ void m_drive() {
 
 	// init analog sensor variables
 
-	uint16_t analog_sensor_data[1] = {0};
+	uint16_t analog_sensor_data[1] = {1023};
 	boost::circular_buffer<uint16_t> last_analog_data(100);
 //	boost::circular_buffer<double> last_analog_time(100);
 
@@ -160,6 +160,9 @@ void m_drive() {
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
 		get_line_data(m_line_points);					 		// line data updaten
 		get_imu_data(imu_data);									// imu data updaten
+
+		getAnalogSensorData(analog_sensor_data);
+		std::cout << "A0: " << analog_sensor_data[0] << std::endl;
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
