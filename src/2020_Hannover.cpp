@@ -1,6 +1,6 @@
 #include <iostream>		// cout
 #include <fstream>    // std::ifstream std::ofstream
-#include <cstdio>			// uint.._t
+#include <stdint.h>       	// int8_t, uint8_t, uint16_t, ...
 
 #include <vector>
 #include <array>			// letzte sensorwerte
@@ -167,7 +167,7 @@ void m_drive() {
 		get_imu_data(imu_data);									// imu data updaten
 
 		getAnalogSensorData(analog_sensor_data);
-		std::cout << "A0: " << analog_sensor_data[0] << std::endl;
+		std::cout << "A0: " << analog_sensor_data << std::endl;
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
