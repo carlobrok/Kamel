@@ -241,10 +241,11 @@ void m_imu(void) {
 				if(in_idx == AMOUNT_IMU_DATA - 1) {
 					t_imu_data[in_idx] = std::stof(in_str); 			// write number from String into the array
 					set_imu_data(t_imu_data);										// ARRAY COMPLETE -> SAVE DATA TO GLOBAL ARRAY
-					std::cout << " > New IMU data" << std::endl;
+					//std::cout << " > New IMU data" << std::endl;
 					std::cout << "IMU data: [" << m_imu_data[PITCH] << " | " << m_imu_data[ROLL] << " | " << m_imu_data[YAW] << "]" << std::endl;
 
 					// Wenn der Roboter sich in der letzten Sekunde insgesamt mehr als 5° gedreht hat last_movement_change auf den aktuellen Zeitpunkt setzen
+					std::cout << "abs_movement: " << get_abs_movement() << std::endl;
 					if(get_abs_movement() > 5) {
 						reset_last_movement_change();
 					}

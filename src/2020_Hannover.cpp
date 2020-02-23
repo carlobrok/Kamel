@@ -34,31 +34,35 @@ Logger behavior_lg("behavior");				// logger class for log file 'behavior.log'
 configuration::data configdata;
 
 void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
-	float target_angle = imu_data[YAW] - angle;
+	float target_angle = imu_data[YAW] + angle;
 	float correction;
 	bool correct_angle = false;
+
+	std::cout << "Turn angle; current / target:" << imu_data[YAW] << "/" << target_angle << std::endl;
 
 	while(!correct_angle) {
 		get_imu_data(imu_data);
 		correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
 
-		if(correction > 20) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+		std::cout << "correction: " << correction << std::endl;
+
+		if(correction > 30) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 220, MOTOR_BACKWARD, 220);
 		}
-		else if(correction < -20) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 200, MOTOR_FORWARD, 200);
+		else if(correction < -30) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 220, MOTOR_FORWARD, 220);
 		}
-		else if(correction > 5) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
+		else if(correction > 15) {
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 100);
 		}
-		else if(correction < -5) {
+		else if(correction < -15) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 100, MOTOR_FORWARD, 100);
 		}
 		else if(correction > 1) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_BACKWARD, 90);
 		}
 		else if(correction < -1) {
-			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 70, MOTOR_FORWARD, 70);
+			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 90, MOTOR_FORWARD, 90);
 		}
 		else if(correction <= 1 && correction >= -1) {
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
@@ -67,10 +71,11 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 			correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
 
 			// Hysterese für Messwertschwankungen
-			if(correction < 1.4 && correction > -1.4) {
+			if(correction < 1.75 && correction > -1.75) {
 				correct_angle = true;
 			}
 		}
+
 	}
 }
 
@@ -222,6 +227,62 @@ void m_drive() {
 		// Rampe runter
 		else if (rampe_runter) {
 			if (imu_data[PITCH] > -5.0) {
+
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 110);
+				thread_delay(1500);
+				int64 tbegin = getTickCount();
+
+				while((getTickCount() - tbegin) / getTickFrequency() * 1000.0 < 3000) {
+					get_line_data(m_line_points);					 		// line data updaten
+
+					// der Linie folgen
+					if (m_line_points[0].x > 575) {										// line_points[0] rechts außen
+						// Wenn sich einmal ein einziger Linepoint weit außen rechts befindet, soll sich der Roboter
+						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+						// Oder alle linepoints noch zu weit rechts sind.
+						bool done = false;
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 140);		// Drehung einleiten
+
+						do {
+							std::cout << "linie ganz rechts" << std::endl;
+							thread_delay(5);
+							get_line_data(m_line_points);							// Daten updaten
+							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+								if(linepoint.x < 480) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+							}
+						} while(!done);
+
+					} else if (m_line_points[0].x < 65) {								// line_points[0] links außen
+						// Wenn sich einmal ein einziger Linepoint weit außen links befindet, soll sich der Roboter
+						// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
+						// Oder alle linepoints noch zu weit links sind.
+						bool done = false;
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 140, MOTOR_FORWARD, 100);		// Drehung einleiten
+
+						do {
+							std::cout << "linie ganz links" << std::endl;
+							thread_delay(5);
+							get_line_data(m_line_points);							// Daten updaten
+							for(auto &linepoint : m_line_points) {		// Überspringt die Schleife, wenn m_line_points leer
+								if(linepoint.x > 120) done = true;			// wenn einer der line_points weit genug in der Mitte, oder rechts im Bild ist abbrechen
+							}
+						} while(!done);
+
+					} else if (m_line_points[0].x > 500) {							// line_points[0] rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
+					} else if (m_line_points[0].x < 140) {							// line_points[0] links
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
+					} else if ((getTickCount() - tbegin) / getTickFrequency() * 1000.0 > 2000) {
+						reset_last_movement_change();
+						break;
+					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 10);
+					} else if (m_line_points[0].x < 240) {							// line_points[0] halb links
+						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 160);
+					} else {																					 // line_points[0] mitte
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
+					}
+				}
 				rampe_runter = false;
 				continue;
 			}
@@ -270,16 +331,18 @@ void m_drive() {
 					if (m_grcenter.y > 350) {						// nah am grünpunkt; m_grcenter ist im unteren bildbereich
 						break;
 					} else if (m_grcenter.x < 310) {						// m_grcenter im linken Bildbereich
-						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 90);			// links Kurve
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 110);			// links Kurve
 					} else if (m_grcenter.x > 330) {						// m_grcenter im rechten Bildbereich
-						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 90, MOTOR_FORWARD, 0);			// rechts Kurve
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 110, MOTOR_FORWARD, 0);			// rechts Kurve
 					} else {																	// m_grcenter im mittleren, oberen Bildbereich
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 60);								// langsam vorwärts
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);								// langsam vorwärts
 					}
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
 				thread_delay(500);																					// delay 500ms
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 180);		// beide Motoren vorwärts, pwm: 180
+				thread_delay(7);
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);		// beide Motoren vorwärts, pwm: 180
 				thread_delay(500);
 				turn_angle(motor_fd, imu_data, 180);			// 180° Drehen
@@ -310,9 +373,9 @@ void m_drive() {
 
 				// Der Roboter hat sich 5 Sekunden weniger als 5°/Sekunde bewegt, steht aber nicht mittig auf der Linie:
 				// Für 0,5 Sekunden mit vollem Tempo zurück
-				if(get_last_movement_seconds() > 5.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
+				if(get_last_movement_seconds() > 4.0 && (m_line_points[0].x < 300 || m_line_points[0].x > 340)) {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 255, MOTOR_BACKWARD, 255);
-					thread_delay(500);
+					thread_delay(400);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 					reset_last_movement_change();				// resetten, da sonst der Roboter eventuell dauerhaft rückwärts fährt, wenn er sich dabei nicht dreht
 					thread_delay(7);		// Delay für i2c bus
