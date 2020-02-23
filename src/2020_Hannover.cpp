@@ -118,14 +118,12 @@ void m_drive() {
 
 	// init line variables
 	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
-	get_line_data(m_line_points);
 	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
 
 
 	// init green variables
 	Point m_grcenter;				// temporäre kopie für den drive thread
 	int m_grstate;				// temporäre kopie für den drive thread
-	get_gruen_data(m_grcenter, m_grstate);
 	boost::circular_buffer<Point> last_grcenter(50);		// circular_buffer initialisieren
 
 	// init digital sensor variables
@@ -157,6 +155,8 @@ void m_drive() {
 	float imu_data[3] = {0,0,0};
 
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
+
+	thread_delay(1500);
 
 	while(1) {
 
