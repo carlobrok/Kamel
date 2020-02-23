@@ -54,7 +54,7 @@ int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command);
 
 int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t (&analog_sensor_data)[1]);
 int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
-int getAnalogSensorData(int &fd, uint16_t (&analog_sensor_data)[1]);
+int getAnalogSensorData(int &fd, uint16_t &analog_sensor_data);
 
 void reset_last_movement_change();
 double get_last_movement_seconds();
