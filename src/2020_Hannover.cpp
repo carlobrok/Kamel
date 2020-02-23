@@ -166,7 +166,7 @@ void m_drive() {
 		get_line_data(m_line_points);					 		// line data updaten
 		get_imu_data(imu_data);									// imu data updaten
 
-		getAnalogSensorData(analog_sensor_data);
+		getAnalogSensorData(sensor_fd, analog_sensor_data);
 		std::cout << "A0: " << analog_sensor_data << std::endl;
 
 		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
