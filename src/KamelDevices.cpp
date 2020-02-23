@@ -139,7 +139,7 @@ int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t &analog_sens
 	int ret = i2c_smbus_read_i2c_block_data(fd, ALL_SENSOR_VALUES, 3, in_data);
 
 	for(int i = 0; i < 8; i++) {
-		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
+		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
 
 	analog_sensor_data = in_data[1] | (in_data[2] << 8);
@@ -151,7 +151,7 @@ int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]) {
 	int ret = i2c_smbus_read_i2c_block_data(fd, DIGITAL_SENSOR_VALUES, 1, in_data);
 
 	for(int i = 0; i < 8; i++) {
-		digital_sensor_data[i] = get_bit(in_data[0], 7-i);
+		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
 	return ret;
 }
