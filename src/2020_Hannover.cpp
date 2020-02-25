@@ -156,6 +156,7 @@ void m_drive() {
 
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
 
+	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 	thread_delay(1500);
 
 	while(1) {
