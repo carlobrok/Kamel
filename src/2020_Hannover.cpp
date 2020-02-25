@@ -352,44 +352,89 @@ void m_drive() {
 						thread_delay(5);
 						getAnalogSensorData(sensor_fd, analog_sensor_data);
 					}
-
+					// Bremsen
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+					thread_delay(10);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(400);
 
-					thread_delay(300);
+					// Flasche links
 
 					if(flasche_links) {
+						// Links drehen
 						turn_angle(motor_fd, imu_data, -45);
-					}
-					else {
+
+						// Vor bis hinten rechts an Flasche
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+						while(digital_sensor_data[IR_RECHTS_H] == 1) {
+							getDigitalSensorData(sensor_fd, digital_sensor_data);
+							thread_delay(5);
+						}
+						// Bremsen
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+						thread_delay(10);
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+						thread_delay(400);
+
+
+						// Rechts drehen
 						turn_angle(motor_fd, imu_data, 45);
-					}
 
-					// TODO: nach IR sensoren an der Seite fahren
-
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-					thread_delay(1800);
-					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-					thread_delay(200);
-
-					if(flasche_links) {
-						turn_angle(motor_fd, imu_data, 45);
-					}
-					else {
-						turn_angle(motor_fd, imu_data, -45);
-					}
-
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-					thread_delay(1200);
-					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-					thread_delay(200);
-
-					if(flasche_links) {
+						// Vor bis hinten rechts an Flasche
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
+						while(digital_sensor_data[IR_RECHTS_H] == 1) {
+							getDigitalSensorData(sensor_fd, digital_sensor_data);
+							thread_delay(5);
+						}
+						// Bremsen
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+						thread_delay(10);
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+						thread_delay(400);
+						// Rechts drehen
 						turn_angle(motor_fd, imu_data, 55);
 					}
+
+					// Flasche rechts
+
 					else {
+
+						// rechts drehen
+						turn_angle(motor_fd, imu_data, 45);
+
+						// vor bis hinten links neben der Flasche
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+						while(digital_sensor_data[IR_LINKS_H] == 1) {
+							getDigitalSensorData(sensor_fd, digital_sensor_data);
+							thread_delay(5);
+						}
+						// Bremsen
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+						thread_delay(10);
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+						thread_delay(400);
+
+
+						// links drehen
+
+						turn_angle(motor_fd, imu_data, -45);
+
+						// vor bis hinten links neben der Flasche
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+						while(digital_sensor_data[IR_LINKS_H] == 1) {
+							getDigitalSensorData(sensor_fd, digital_sensor_data);
+							thread_delay(5);
+						}
+						// Bremsen
+						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+						thread_delay(10);
+						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+						thread_delay(400);
+
+						// links drehen
 						turn_angle(motor_fd, imu_data, -55);
 					}
-
+					thread_delay(7);
 				}
 				continue;
 			}
@@ -399,6 +444,7 @@ void m_drive() {
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 				thread_delay(750);
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+				thread_delay(7);
 				continue;
 			}
 
