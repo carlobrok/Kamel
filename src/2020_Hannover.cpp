@@ -367,10 +367,10 @@ void m_drive() {
 
 						// Vor bis hinten rechts an Flasche
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-						while(digital_sensor_data[IR_RECHTS_H] == 1) {
+						do {
 							getDigitalSensorData(sensor_fd, digital_sensor_data);
 							thread_delay(5);
-						}
+						} while(digital_sensor_data[IR_RECHTS_H] == 1);
 						// Bremsen
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 						thread_delay(10);
@@ -383,10 +383,10 @@ void m_drive() {
 
 						// Vor bis hinten rechts an Flasche
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 100);
-						while(digital_sensor_data[IR_RECHTS_H] == 1) {
+						do {
 							getDigitalSensorData(sensor_fd, digital_sensor_data);
 							thread_delay(5);
-						}
+						} while(digital_sensor_data[IR_RECHTS_H] == 1);
 						// Bremsen
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 						thread_delay(10);
@@ -405,10 +405,10 @@ void m_drive() {
 
 						// vor bis hinten links neben der Flasche
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						while(digital_sensor_data[IR_LINKS_H] == 1) {
+						do {
 							getDigitalSensorData(sensor_fd, digital_sensor_data);
 							thread_delay(5);
-						}
+						} while(digital_sensor_data[IR_LINKS_H] == 1);
 						// Bremsen
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 						thread_delay(10);
@@ -422,10 +422,10 @@ void m_drive() {
 
 						// vor bis hinten links neben der Flasche
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						while(digital_sensor_data[IR_LINKS_H] == 1) {
+						do {
 							getDigitalSensorData(sensor_fd, digital_sensor_data);
 							thread_delay(5);
-						}
+						} while(digital_sensor_data[IR_LINKS_H] == 1);
 						// Bremsen
 						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 						thread_delay(10);
