@@ -364,81 +364,47 @@ void m_drive() {
 					if(flasche_links) {
 						// Links drehen
 						turn_angle(motor_fd, imu_data, -45);
-
-						// Vor bis hinten rechts an Flasche
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						thread_delay(10);
-						do {
-							getDigitalSensorData(sensor_fd, digital_sensor_data);
-							thread_delay(10);
-						} while(digital_sensor_data[IR_RECHTS_H] == 1);
-						// Bremsen
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
-						thread_delay(10);
-						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-						thread_delay(400);
-
-
-						// Rechts drehen
-						turn_angle(motor_fd, imu_data, 45);
-
-						// Vor bis hinten rechts an Flasche
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						thread_delay(10);
-						do {
-							getDigitalSensorData(sensor_fd, digital_sensor_data);
-							thread_delay(10);
-						} while(digital_sensor_data[IR_RECHTS_H] == 1);
-						// Bremsen
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
-						thread_delay(10);
-						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-						thread_delay(400);
-						// Rechts drehen
-						turn_angle(motor_fd, imu_data, 55);
-					}
-
-					// Flasche rechts
-
-					else {
-
+					} else {
 						// rechts drehen
 						turn_angle(motor_fd, imu_data, 45);
+					}
 
-						// vor bis hinten links neben der Flasche
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						thread_delay(10);
-						do {
-							getDigitalSensorData(sensor_fd, digital_sensor_data);
-							thread_delay(10);
-						} while(digital_sensor_data[IR_LINKS_H] == 1);
-						// Bremsen
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
-						thread_delay(10);
-						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-						thread_delay(400);
+					// Vor bis hinten rechts an Flasche
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 
+					thread_delay(1500);
+					// Bremsen
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+					thread_delay(10);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(600);
 
+					if(flasche_links) {
+						// Rechts drehen
+						turn_angle(motor_fd, imu_data, 45);
+					} else {
 						// links drehen
-
 						turn_angle(motor_fd, imu_data, -45);
+					}
 
-						// vor bis hinten links neben der Flasche
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-						thread_delay(10);
-						do {
-							getDigitalSensorData(sensor_fd, digital_sensor_data);
-							thread_delay(10);
-						} while(digital_sensor_data[IR_LINKS_H] == 1);
-						// Bremsen
-						setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
-						thread_delay(10);
-						setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-						thread_delay(400);
+					// Vor bis hinten rechts an Flasche
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
+					thread_delay(1500);
 
+					// Bremsen
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+					thread_delay(10);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					thread_delay(600);
+
+					if(flasche_links) {
+						// Rechts drehen
+						turn_angle(motor_fd, imu_data, 55);
+					} else {
 						// links drehen
 						turn_angle(motor_fd, imu_data, -55);
 					}
+
 					thread_delay(7);
 				}
 				continue;
@@ -525,7 +491,7 @@ void m_drive() {
 					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 					// Oder alle linepoints noch zu weit rechts sind.
 					//bool done = false;
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 160);		// Drehung einleiten
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_BACKWARD, 140);		// Drehung einleiten
 					thread_delay(500);
 					/*while(!done) {
 						std::cout << "linie ganz rechts" << std::endl;
@@ -541,7 +507,7 @@ void m_drive() {
 					// So lange in diese Richtung drehen, wie entweder kein Linepoint vorhanden ist,
 					// Oder alle linepoints noch zu weit links sind.
 					//bool done = false;
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 160);		// Drehung einleiten
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 140, MOTOR_FORWARD, 140);		// Drehung einleiten
 					thread_delay(500);
 					/*while(!done) {
 						std::cout << "linie ganz links" << std::endl;
