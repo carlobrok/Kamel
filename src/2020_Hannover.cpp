@@ -457,6 +457,13 @@ void m_drive() {
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
 				thread_delay(500);						// delay 500ms
 
+				for(cv::Point & linepoint : m_line_points) {
+					if(linepoint.x > 450) {
+						thread_delay(300);
+						break;
+					}
+				}
+
 			} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
 
 				debug_lg << "green point RIGHT" << lvl::info;			// in debug.log loggen
@@ -465,6 +472,13 @@ void m_drive() {
 				thread_delay(300);					// delay 300ms
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
 				thread_delay(500);					// delay 500ms
+
+				for(cv::Point & linepoint : m_line_points) {
+					if(linepoint.x < 190) {
+						thread_delay(300);
+						break;
+					}
+				}
 
 			}
 
