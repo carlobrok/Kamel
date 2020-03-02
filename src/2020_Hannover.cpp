@@ -623,7 +623,7 @@ void image_processing() {
 //#ifdef PLOT_HSV_HISTOGRAM
 
 		// Histogramm der HSV Matrix ausgeben (wenn PLOT_HSV_HISTOGRAM definiert ist)
-
+/*
 		vector<Mat> bgr_planes;
 		split( hsv, bgr_planes );
 		int histSize = 256;
@@ -653,7 +653,7 @@ void image_processing() {
 							Scalar( 0, 0, 255), 2, 8, 0  );
 		}
 
-
+*/
 //#endif
 
 
@@ -673,7 +673,7 @@ void image_processing() {
 
 		// Alle Bilder an VideoServer übergeben
 
-		srv.imshow("H-S Histogram", histImage );
+		//srv.imshow("H-S Histogram", histImage );
 		srv.imshow("Input", img_rgb);
 		srv.imshow("HSV", hsv);
 		srv.imshow("Mask SW", bin_sw);
