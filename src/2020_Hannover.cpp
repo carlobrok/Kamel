@@ -343,6 +343,10 @@ void image_processing() {
 	CameraCapture cam(0);		// Video eingabe der Kamera '0'; 0, wenn nur eine Kamera angeschlossen ist
 	VideoServer srv;				// Klasse für den VideoServer
 
+	int servo_fd = pca9685_setup(0x40);
+  Servo cameraservo(servo_fd, 0);
+  cameraservo.set_angle (90)
+
 	cam.set(cv::CAP_PROP_FPS, 30);			// Kamera Framerate auf 30 fps
 	cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);			// Bildauflösung auf 640 x 480px
 	cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
