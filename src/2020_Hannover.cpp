@@ -588,15 +588,15 @@ void m_drive() {
 					float movement = get_movement();
 					cout << "Last movement: " << get_movement() << endl;
 
-					if(movement > 30) {
+					if(movement > 15) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_FORWARD, 0);
-						thread_delay(300);
-					} else if(movement < -30) {
+						thread_delay(400);
+					} else if(movement < -15) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 140);
-						thread_delay(300);
+						thread_delay(400);
 					}
-					
-					setMotorState(motor_fd, MOTOR_OFF, MOTOR_FORWARD_NORMAL);
+
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
 
 				} else {							// wenn der letzte linepoint mittig war (Lücke) weiter gerade fahren
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
