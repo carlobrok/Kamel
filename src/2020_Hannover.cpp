@@ -555,7 +555,7 @@ void m_drive() {
 			} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
 				//debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
-				if (last_line_points[1][0].x > 500) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
+				if (last_line_points[1][0].x > 560) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
 					debug_lg << " -  correction right" << lvl::warn;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
@@ -569,7 +569,7 @@ void m_drive() {
 					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
-				} else if (last_line_points[1][0].x < 140) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
+				} else if (last_line_points[1][0].x < 80) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
 					cout << " -   correction left" << lvl::warn;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
@@ -588,10 +588,10 @@ void m_drive() {
 					float movement = get_movement();
 					cout << "Last movement: " << get_movement() << endl;
 
-					if(movement > 15) {
+					if(movement > 10) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_FORWARD, 0);
 						thread_delay(400);
-					} else if(movement < -15) {
+					} else if(movement < -10) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 140);
 						thread_delay(400);
 					}

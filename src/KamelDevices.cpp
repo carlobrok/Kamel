@@ -204,7 +204,7 @@ void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp 
 float get_abs_movement() {
 	float abs_der = 0.0;
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
-	for(uint16_t i = 0; i < last_imu_data[YAW].size() - 1; i++) {
+	for(uint16_t i = 100; i < last_imu_data[YAW].size() - 1; i++) {
     abs_der += fabs(fmod(last_imu_data[YAW][i+1] - last_imu_data[YAW][i] + 180 + 720, 360) - 180 );		// die absolute Änderung des letzten Schrittes errechnen
 	}
 	return abs_der;
@@ -228,7 +228,7 @@ void m_imu(void) {
 	bool had_unknown_char = false;
 
 	for (auto& cb : last_imu_data) {
-		cb.resize(100);
+		cb.resize(200);
 	}
 
 	while(true) {
