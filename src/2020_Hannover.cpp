@@ -457,9 +457,10 @@ void m_drive() {
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
 				thread_delay(500);						// delay 500ms
 
+				get_line_data(m_line_points);
 				for(cv::Point & linepoint : m_line_points) {
-					if(linepoint.x > 450) {
-						thread_delay(300);
+					if(linepoint.x < 320) {
+						thread_delay(500);
 						break;
 					}
 				}
@@ -473,13 +474,13 @@ void m_drive() {
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
 				thread_delay(500);					// delay 500ms
 
+				get_line_data(m_line_points);
 				for(cv::Point & linepoint : m_line_points) {
-					if(linepoint.x < 190) {
-						thread_delay(300);
+					if(linepoint.x > 320) {
+						thread_delay(500);
 						break;
 					}
 				}
-
 			}
 
 // ======== LINIE ================
