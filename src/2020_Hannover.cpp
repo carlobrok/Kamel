@@ -372,7 +372,7 @@ void m_drive() {
 					// Vor bis hinten rechts an Flasche
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 
-					thread_delay(1500);
+					thread_delay(2000);
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 					thread_delay(10);
@@ -389,7 +389,7 @@ void m_drive() {
 
 					// Vor bis hinten rechts an Flasche
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-					thread_delay(2000);
+					thread_delay(2200);
 
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
@@ -455,15 +455,15 @@ void m_drive() {
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);				// beide Motoren vorwärts, pwm: 150
 				thread_delay(300);						// delay 300ms
 				setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 190, MOTOR_FORWARD, 150);		// linkskurve, links schneller
-				thread_delay(500);						// delay 500ms
-
+				thread_delay(900);						// delay 500ms
+				/*
 				get_line_data(m_line_points);
 				for(cv::Point & linepoint : m_line_points) {
 					if(linepoint.x < 320) {
 						thread_delay(500);
 						break;
 					}
-				}
+				}*/
 
 			} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
 
@@ -472,15 +472,15 @@ void m_drive() {
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);			// beide Motoren vorwärts, pwm: 150
 				thread_delay(300);					// delay 300ms
 				setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 150, MOTOR_BACKWARD, 190);		// rechtskurve, rechts schneller
-				thread_delay(500);					// delay 500ms
-
+				thread_delay(900);					// delay 500ms
+				/*
 				get_line_data(m_line_points);
 				for(cv::Point & linepoint : m_line_points) {
 					if(linepoint.x > 320) {
 						thread_delay(500);
 						break;
 					}
-				}
+				}*/
 			}
 
 // ======== LINIE ================
