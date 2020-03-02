@@ -389,7 +389,7 @@ void m_drive() {
 
 					// Vor bis hinten rechts an Flasche
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-					thread_delay(1500);
+					thread_delay(2000);
 
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
@@ -405,7 +405,7 @@ void m_drive() {
 						turn_angle(motor_fd, imu_data, -55);
 					}
 
-					thread_delay(7);
+					thread_delay(50);
 				}
 				continue;
 			}
