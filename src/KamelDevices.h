@@ -61,6 +61,8 @@ double get_last_movement_seconds();
 
 void get_imu_data(float (&imu_data)[3]);
 float get_abs_movement();
+float get_movement();
+
 void m_imu(void);
 
 #endif

@@ -118,8 +118,7 @@ void m_drive() {
 
 	// init line variables
 	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
-	boost::circular_buffer<vector<Point>> last_line_points(50);		// circular_buffer last_line_points initialisieren
-
+	boost::circular_buffer<vector<Point>> last_line_points(10);		// circular_buffer last_line_points initialisieren
 
 	// init green variables
 	Point m_grcenter;				// temporäre kopie für den drive thread
@@ -168,7 +167,10 @@ void m_drive() {
 		// update values
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
+
 		get_line_data(m_line_points);					 		// line data updaten
+		last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
+
 		get_imu_data(imu_data);									// imu data updaten
 
 		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
@@ -178,7 +180,7 @@ void m_drive() {
 			std::cout << "D" << i << ": " << digital_sensor_data[i] << "  ";
 		}
 		std::cout << std::endl;
-		//last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
+
 		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
 
 		// update arduino sensor data
@@ -551,9 +553,9 @@ void m_drive() {
 				}
 
 			} else if(m_line_points.size() == 0 && last_line_points[1].size() == 1) {						// linie verloren, vorher nur 1 linepoint
-				debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
+				//debug_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
-				if (last_line_points[1][0].x > 575) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
+				if (last_line_points[1][0].x > 500) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
 					debug_lg << " -  correction right" << lvl::warn;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
@@ -567,7 +569,7 @@ void m_drive() {
 					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
-				} else if (last_line_points[1][0].x < 65) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
+				} else if (last_line_points[1][0].x < 140) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
 					cout << " -   correction left" << lvl::warn;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
@@ -581,9 +583,23 @@ void m_drive() {
 					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
+				} else if (last_line_points[1][0].x >= 140 && last_line_points[1][0].x <= 500) {
+
+					float movement = get_movement();
+					cout << "Last movement: " << get_movement() << endl;
+
+					if(movement > 30) {
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_FORWARD, 0);
+						thread_delay(300);
+					} else if(movement < -30) {
+						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 140);
+						thread_delay(300);
+					}
+					
+					setMotorState(motor_fd, MOTOR_OFF, MOTOR_FORWARD_NORMAL);
+
 				} else {							// wenn der letzte linepoint mittig war (Lücke) weiter gerade fahren
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
-					debug_lg << lvl::warn;
 				}
 			} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo

@@ -210,6 +210,15 @@ float get_abs_movement() {
 	return abs_der;
 }
 
+float get_movement() {
+	float der = 0.0;
+	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
+	for(uint16_t i = 0; i < last_imu_data[YAW].size() - 1; i++) {
+    der += fmod(last_imu_data[YAW][i+1] - last_imu_data[YAW][i] + 180 + 720, 360) - 180;		// die absolute Änderung des letzten Schrittes errechnen
+	}
+	return der;
+}
+
 void m_imu(void) {
 	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);			// Serielle Schnittstelle öffnen, imu_fd ist der file descriptor
 	float t_imu_data[AMOUNT_IMU_DATA] = {0,0,0};						// lokaler Buffer mit den aktuellen Werten als Float
