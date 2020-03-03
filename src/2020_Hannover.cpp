@@ -411,10 +411,10 @@ void m_drive() {
 
 					if(flasche_links) {
 						// Links drehen
-						turn_angle(motor_fd, imu_data, -45);
+						turn_angle(motor_fd, imu_data, -50);
 					} else {
 						// rechts drehen
-						turn_angle(motor_fd, imu_data, 45);
+						turn_angle(motor_fd, imu_data, 50);
 					}
 
 					// Vor bis hinten rechts an Flasche
@@ -437,7 +437,7 @@ void m_drive() {
 
 					// Vor bis hinten rechts an Flasche
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
-					thread_delay(2000);
+					thread_delay(1900);
 
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
