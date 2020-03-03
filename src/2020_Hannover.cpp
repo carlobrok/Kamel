@@ -393,7 +393,19 @@ void m_drive() {
 					}
 				}
 
+
 				if(flasche) {
+
+					turn_angle(motor_fd, imu_data, -2);
+					getAnalogSensorData(sensor_fd, analog_sensor_data);
+					if(analog_sensor_data < flasche_fahren) {
+						turn_angle(motor_fd, imu_data, 4);
+						getAnalogSensorData(sensor_fd, analog_sensor_data);
+						if(analog_sensor_data < flasche_fahren) {
+							continue;
+						}
+					}
+
 					std::cout << " > FLASCHE FAHREN" << std::endl;
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
 
