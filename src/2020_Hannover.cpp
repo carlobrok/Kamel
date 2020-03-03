@@ -345,7 +345,7 @@ void m_drive() {
 // ========= FLASCHE ====================
 
 			// Flasche mittig vor dem Roboter
-			if(analog_sensor_data >= flasche_fahren && digital_sensor_data[IR_VORNE_L] == 1 && digital_sensor_data[IR_VORNE_R] == 1) {
+			if(analog_sensor_data >= flasche_fahren/* && digital_sensor_data[IR_VORNE_L] == 1 && digital_sensor_data[IR_VORNE_R] == 1*/) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
 				int64 tbegin = cur_ms();
@@ -426,6 +426,9 @@ void m_drive() {
 				continue;
 			}
 
+			/*
+			// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
+
 			// Objekt, das sehr breit ist direkt vor dem Roboter, oder die Flasche nicht mittig
 			else if(analog_sensor_data >= flasche_fahren && (digital_sensor_data[IR_VORNE_L] == 0 || digital_sensor_data[IR_VORNE_R] == 0)) {
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
@@ -434,6 +437,8 @@ void m_drive() {
 				thread_delay(7);
 				continue;
 			}
+
+			*/
 
 
 //  =========== GRUEN ========================
