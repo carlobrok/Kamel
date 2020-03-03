@@ -443,9 +443,9 @@ void m_drive() {
 				}
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 180);		// beide Motoren vorwärts, pwm: 180
-				thread_delay(500);																					// delay 500ms
+				thread_delay(400);																					// delay 500ms
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 180);		// beide Motoren vorwärts, pwm: 180
-				thread_delay(7);
+				thread_delay(10);
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);		// beide Motoren vorwärts, pwm: 180
 				thread_delay(500);
 				turn_angle(motor_fd, imu_data, 180);			// 180° Drehen
@@ -590,10 +590,10 @@ void m_drive() {
 
 					if(movement > 10) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_FORWARD, 0);
-						thread_delay(400);
+						thread_delay(500);
 					} else if(movement < -10) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 0, MOTOR_FORWARD, 140);
-						thread_delay(400);
+						thread_delay(500);
 					}
 
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);
