@@ -396,10 +396,10 @@ void m_drive() {
 
 				if(flasche) {
 
-					turn_angle(motor_fd, imu_data, -2);
+					turn_angle(motor_fd, imu_data, -5);
 					getAnalogSensorData(sensor_fd, analog_sensor_data);
 					if(analog_sensor_data < flasche_fahren) {
-						turn_angle(motor_fd, imu_data, 4);
+						turn_angle(motor_fd, imu_data, 10);
 						getAnalogSensorData(sensor_fd, analog_sensor_data);
 						if(analog_sensor_data < flasche_fahren) {
 							continue;
