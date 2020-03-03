@@ -420,7 +420,7 @@ void m_drive() {
 					// Vor bis hinten rechts an Flasche
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 
-					thread_delay(1800);
+					thread_delay(2000);
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
 					thread_delay(10);
