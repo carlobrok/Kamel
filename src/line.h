@@ -2,6 +2,7 @@
 #define LINE_H
 
 #include <vector>
+#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 #include <opencv2/opencv.hpp>
 #include <cstdio>			// uint.._t
 
@@ -22,6 +23,7 @@ void init_line_ellipse();
 void sepatare_line(cv::Mat & hsv, cv::Mat & bin_sw);
 
 void set_line_data(std::vector<cv::Point> & line_points);
+void get_line_data(std::vector<cv::Point> & line_points, boost::circular_buffer<std::vector<cv::Point>> & last_line_points);
 void get_line_data(std::vector<cv::Point> & line_points);
 
 void line_calc(cv::Mat & img_rgb, cv::Mat & hsv, cv::Mat & bin_sw, cv::Mat & bin_gr, bool do_separate_line = false);

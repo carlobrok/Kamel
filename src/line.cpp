@@ -1,5 +1,6 @@
 #include <mutex>
 #include <math.h>				// atan2
+#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 #include <opencv2/opencv.hpp>
 
 #include "config.h"
@@ -10,6 +11,7 @@
 std::mutex line_mutex;
 
 std::vector<cv::Point> m_line_points;			// global line points holding vector
+boost::circular_buffer<std::vector<cv::Point>> m_last_line_points(30);		// circular_buffer last_line_points initialisieren
 
 cv::Mat bin_ellipse;
 cv::Mat bin_intersection;
@@ -24,6 +26,14 @@ void set_thresh_black(uint8_t m_thresh_black) {
 void set_line_data(std::vector<cv::Point> & line_points) {
 	std::lock_guard<std::mutex> m_lock(line_mutex);
 	m_line_points = line_points;
+	m_last_line_points.push_front(line_points);
+}
+
+// get current line_points and last line_points
+void get_line_data(std::vector<cv::Point> & line_points, boost::circular_buffer<std::vector<cv::Point>> & last_line_points) {
+	std::lock_guard<std::mutex> m_lock(line_mutex);
+	line_points = m_line_points;
+	last_line_points = m_last_line_points;
 }
 
 // get line_points buffer

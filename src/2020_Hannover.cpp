@@ -131,12 +131,12 @@ void m_drive() {
 
 	// init line variables
 	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
-	boost::circular_buffer<vector<Point>> last_line_points(10);		// circular_buffer last_line_points initialisieren
+	boost::circular_buffer<vector<Point>> last_line_points(30);		// circular_buffer last_line_points initialisieren
 
 	// init green variables
 	Point m_grcenter;				// temporäre kopie für den drive thread
 	int m_grstate;				// temporäre kopie für den drive thread
-	boost::circular_buffer<Point> last_grcenter(50);		// circular_buffer initialisieren
+	//boost::circular_buffer<Point> last_grcenter(30);		// circular_buffer initialisieren
 
 	// init digital sensor variables
 
@@ -183,8 +183,7 @@ void m_drive() {
 
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
 
-		get_line_data(m_line_points);					 		// line data updaten
-		last_line_points.push_front(m_line_points);	// push_front recent values - recent value is item [0]
+		get_line_data(m_line_points, last_line_points);					 		// line data updaten
 
 		get_imu_data(imu_data);									// imu data updaten
 
@@ -219,6 +218,38 @@ void m_drive() {
 		if (rampe_hoch) {
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
 			if (imu_data[PITCH] < 5.0) {
+
+
+				int max_l = 320;
+				int max_r = 320;
+
+				for(auto & lps : last_line_points) {
+					for(auto & point : lps) {
+						if(point.x > max_r) {
+							max_r = point.x;
+						}
+						if(point.x < max_l) {
+							max_l = point.x;
+						}
+					}
+				}
+
+				if((320 - max_r) > (max_l - 320) && max_r > 560) {
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
+
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > IMG_WIDTH / 2 + 100)) {
+						thread_delay(5);
+						get_line_data(m_line_points);
+					}
+				} else if((320 - max_r) < (max_l - 320) && max_l < 80) {
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
+
+					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < IMG_WIDTH / 2 - 100)) {
+						thread_delay(5);
+						get_line_data(m_line_points);
+					}
+				}
+
 				rampe_hoch = false;
 				continue;
 			}
