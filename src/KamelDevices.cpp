@@ -75,7 +75,7 @@ int pca9685_setup(int address) {
 	int prescale = (int)(25000000.0f / (4096 * freq) - 0.5f);
 
 	// Get settings and calc bytes for the different states.
-	int settings = i2c_smbus_read_byte_data(fd, PCA9685_MODE1) & 0x7F;	// Set restart bit to 0
+	settings = i2c_smbus_read_byte_data(fd, PCA9685_MODE1) & 0x7F;	// Set restart bit to 0
 	int sleep	= settings | 0x10;									// Set sleep bit to 1
 	int wake 	= settings & 0xEF;									// Set sleep bit to 0
 	int restart = wake | 0x80;										// Set restart bit to 1
