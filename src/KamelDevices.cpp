@@ -80,7 +80,7 @@ int pca9685_setup(int address) {
 	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, wake);
 
 	// Now wait a millisecond until oscillator finished stabilizing and restart PWM.
-	delay(1);
+	thread_delay(1);
 	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, restart);
 
   return fd;
@@ -105,6 +105,7 @@ Servo::Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, floa
 
 Servo::~Servo() {
   off();
+	thread_delay(1);
 }
 
 void Servo::set_angle(int angle) {

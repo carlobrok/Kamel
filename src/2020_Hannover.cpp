@@ -59,6 +59,19 @@ void m_drive() {
 	debug_lg << "init sensor / camera variables" << lvl::debug;
 
 
+	int servo_fd = pca9685_setup(0x40);
+	if(servo_fd == -1) {
+		debug_lg << "error opening servo controller" << lvl::off;
+		cout << "error opening servo controller" << endl;
+		return;
+	}
+
+  Servo cameraservo(servo_fd, 0);
+  cameraservo.set_angle(70);
+
+	Servo kaefigservo(servo_fd, 1, 180, 0.7, 2.2);
+	kaefigservo.set_angle(180);
+
 	// init line variables
 	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
 	get_line_data(m_line_points);
@@ -343,9 +356,6 @@ void image_processing() {
 	CameraCapture cam(0);		// Video eingabe der Kamera '0'; 0, wenn nur eine Kamera angeschlossen ist
 	VideoServer srv;				// Klasse für den VideoServer
 
-	int servo_fd = pca9685_setup(0x40);
-  Servo cameraservo(servo_fd, 0);
-  cameraservo.set_angle (90)
 
 	cam.set(cv::CAP_PROP_FPS, 30);			// Kamera Framerate auf 30 fps
 	cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);			// Bildauflösung auf 640 x 480px
