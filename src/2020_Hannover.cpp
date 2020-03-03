@@ -35,7 +35,7 @@ configuration::data configdata;
 
 int flasche_fahren = 200;			// Wert, ab dem der Roboter nah genug dran ist und die Flasche umfährt
 bool flasche_links = true;			// Auf true, wenn der Roboter an der Flasche links vorbei soll
-
+int kamera_winkel = 65;
 
 void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 	float target_angle = imu_data[YAW] + angle;
@@ -124,7 +124,7 @@ void m_drive() {
 	}
 
   Servo cameraservo(servo_fd, 0);
-  cameraservo.set_angle(70);
+  cameraservo.set_angle(kamera_winkel);
 
 	Servo kaefigservo(servo_fd, 1, 180, 0.7, 2.2);
 	kaefigservo.set_angle(180);
@@ -755,6 +755,7 @@ int main() {
 
 	flasche_fahren = configdata.getintvalue("FLASCHE_FAHREN");
 	flasche_links = configdata.getboolvalue("FLASCHE_LINKS");
+	kamera_winkel = configdata.getintvalue("KAMERA_WINKEL");
 
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
 	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
