@@ -40,6 +40,103 @@ int kamelI2Copen(int devId) {
 	return fd;
 }
 
+// ==================== Servos =====================
+
+/* Setup and get_register function from https://github.com/Reinbert/pca9685 library
+ * modified for specific usage.
+ * Does not setup the wiringPi node, only works with the "advanced"
+ * functions of the library
+ *
+ */
+
+
+#define PCA9685_MODE1 0x0
+
+int pca9685_setup(int address) {
+  int fd = kamelI2Copen(address);
+  if (fd < 0) return fd;
+
+  // Setup the chip. Enable auto-increment of registers.
+	int settings = i2c_smbus_read_byte_data(fd, PCA9685_MODE1) & 0x7F;
+	int autoInc = settings | 0x20;
+
+	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, autoInc);
+
+
+	// Set the frequency
+
+	// Min freq = 40, max freq = 1000
+	int freq = 50;
+
+	// To set pwm frequency we have to set the prescale register. The formula is:
+	// prescale = round(osc_clock / (4096 * frequency))) - 1 where osc_clock = 25 MHz
+	// Further info here: http://www.nxp.com/documents/data_sheet/PCA9685.pdf Page 24
+	int prescale = (int)(25000000.0f / (4096 * freq) - 0.5f);
+
+	// Get settings and calc bytes for the different states.
+	int settings = i2c_smbus_read_byte_data(fd, PCA9685_MODE1) & 0x7F;	// Set restart bit to 0
+	int sleep	= settings | 0x10;									// Set sleep bit to 1
+	int wake 	= settings & 0xEF;									// Set sleep bit to 0
+	int restart = wake | 0x80;										// Set restart bit to 1
+
+	// Go to sleep, set prescale and wake up again.
+	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, sleep);
+	i2c_smbus_write_byte_data(fd, PCA9685_PRESCALE, prescale);
+	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, wake);
+
+	// Now wait a millisecond until oscillator finished stabilizing and restart PWM.
+	thread_delay(1);
+	i2c_smbus_write_byte_data(fd, PCA9685_MODE1, restart);
+
+  return fd;
+}
+
+
+Servo::Servo(int pca9685_fd, uint8_t pin) {
+  m_fd = pca9685_fd;
+  m_pin = pin;
+	m_max_angle = 180;
+  m_min_ms = 1;
+  m_max_ms = 2;
+}
+
+Servo::Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, float max_ms) {
+  m_fd = pca9685_fd;
+  m_pin = pin;
+  m_max_angle = max_angle;
+  m_min_ms = min_ms;
+  m_max_ms = max_ms;
+}
+
+Servo::~Servo() {
+  off();
+	thread_delay(1);
+}
+
+void Servo::set_angle(int angle) {
+  int off = (int)(4096 * ((angle*1.0 / m_max_angle) * ((m_max_ms - m_min_ms) / 20.0) + (m_min_ms / 20.0)) + 0.5f);
+
+  //pca9685PWMWrite(m_fd, m_pin, 0, off);
+
+	// Write to on and off registers and mask the 12 lowest bits of data to overwrite full-on and off
+	i2c_smbus_write_word_data(fd, get_register(m_pin), 0 & 0x0FFF);
+	i2c_smbus_write_word_data(fd, get_register(m_pin) + 2, off & 0x0FFF);
+}
+
+void Servo::off() {
+  //pca9685FullOff(m_fd, m_pin, 1);
+
+	int reg = get_register(m_pin) + 3;		// LEDX_OFF_H
+	int state = i2c_smbus_read_byte_data(fd, reg);
+
+	// Set bit 4 to 1 or 0 accordingly
+	state |= 0x10;
+
+	i2c_smbus_write_byte_data(fd, reg, state);
+}
+
+
+
 
 // ================== Motoren ==================
 
@@ -120,11 +217,6 @@ int setMotorState(int &fd, uint8_t side, uint8_t state) {
 
 bool get_bit(uint8_t byte, uint8_t bit_index) {
 	return (byte & (1 << (bit_index - 1))) != 0;
-}
-
-
-int readBytes(int &fd, uint8_t *in_data, uint16_t data_length, uint8_t command) {
-	return i2c_smbus_read_i2c_block_data(fd, command, data_length, in_data);
 }
 
 
