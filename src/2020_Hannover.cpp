@@ -169,7 +169,9 @@ void m_drive() {
 	debug_lg << "successfully initialized sensor / camera variables" << lvl::debug;
 
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-	thread_delay(1500);
+	thread_delay(2000);
+
+	kaefigservo.off();
 
 	while(1) {
 
