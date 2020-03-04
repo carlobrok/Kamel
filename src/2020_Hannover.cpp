@@ -235,14 +235,14 @@ void m_drive() {
 				}
 
 				if((320 - max_r) > (max_l - 320) && max_r > 560) {
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 120, MOTOR_BACKWARD, 160);
 
 					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > IMG_WIDTH / 2 + 100)) {
 						thread_delay(5);
 						get_line_data(m_line_points);
 					}
 				} else if((320 - max_r) < (max_l - 320) && max_l < 80) {
-					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 120);
 
 					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < IMG_WIDTH / 2 - 100)) {
 						thread_delay(5);
