@@ -251,9 +251,7 @@ void m_drive() {
 				}
 
 				else {
-					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 100);
-					thread_delay(500);
-					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+					turn_angle(motor_fd, imu_data, 80);
 				}
 
 				rampe_hoch = false;
