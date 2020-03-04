@@ -251,8 +251,8 @@ void m_drive() {
 				}
 
 				else {
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
-					thread_delay(400);
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 100, MOTOR_BACKWARD, 100);
+					thread_delay(500);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 				}
 
