@@ -348,7 +348,11 @@ void m_drive() {
 
 			if(m_line_points.size() == 1) {
 				// Wenn die Linie nicht mehr in der Mitte ist
-				if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
+				if (m_line_points[0].x > 520) {										// linie auf der Rampe zu weit rechts
+					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 60, MOTOR_BACKWARD, 40);
+				} else if (m_line_points[0].x < 120) {								// linie auf der Rampe zu weit links
+					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 40, MOTOR_FORWARD, 60);
+				} else if (m_line_points[0].x > 360) {										// linie auf der Rampe zu weit rechts
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 60, MOTOR_BACKWARD, 10);
 				} else if (m_line_points[0].x < 280) {								// linie auf der Rampe zu weit links
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 10, MOTOR_FORWARD, 60);
@@ -378,7 +382,7 @@ void m_drive() {
 // ========= FLASCHE ====================
 
 			// Flasche mittig vor dem Roboter
-			if(analog_sensor_data >= flasche_fahren/* && digital_sensor_data[IR_VORNE_L] == 1 && digital_sensor_data[IR_VORNE_R] == 1*/) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
+			if(analog_sensor_data >= flasche_fahren && (digital_sensor_data[IR_VORNE_L] == 0 || digital_sensor_data[IR_VORNE_R] == 0)) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
 				int64 tbegin = cur_ms();
@@ -396,16 +400,6 @@ void m_drive() {
 
 				if(flasche) {
 
-					turn_angle(motor_fd, imu_data, -5);
-					getAnalogSensorData(sensor_fd, analog_sensor_data);
-					if(analog_sensor_data < flasche_fahren) {
-						turn_angle(motor_fd, imu_data, 10);
-						getAnalogSensorData(sensor_fd, analog_sensor_data);
-						if(analog_sensor_data < flasche_fahren) {
-							continue;
-						}
-					}
-
 					std::cout << " > FLASCHE FAHREN" << std::endl;
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
 
@@ -414,7 +408,7 @@ void m_drive() {
 						getAnalogSensorData(sensor_fd, analog_sensor_data);
 					}
 					// Bremsen
-					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
 					thread_delay(10);
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 					thread_delay(400);
@@ -664,6 +658,12 @@ void m_drive() {
 				} else {							// wenn der letzte linepoint mittig war (Lücke) weiter gerade fahren
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);			// vorwärts mit festgelegtem Standardtempo
 				}
+
+			} else if(m_line_points.size() == 0 && last_line_points[1].size() > 1) {						// linie verloren, vorher mehr als 1 line_point
+
+				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 120);				// vorwärts mit festgelegtem Standardtempo
+				thread_delay(600);
+
 			} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
 				//debug_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
