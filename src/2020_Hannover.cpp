@@ -234,20 +234,26 @@ void m_drive() {
 					}
 				}
 
-				if((320 - max_r) > (max_l - 320) && max_r > 560) {
+				if((320 - max_r) > (max_l - 320) && max_r > 500) {
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 120, MOTOR_BACKWARD, 160);
 
 					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x > IMG_WIDTH / 2 + 100)) {
 						thread_delay(5);
 						get_line_data(m_line_points);
 					}
-				} else if((320 - max_r) < (max_l - 320) && max_l < 80) {
+				} else if((320 - max_r) < (max_l - 320) && max_l < 140) {
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 160, MOTOR_FORWARD, 120);
 
 					while(m_line_points.size() == 0 || (m_line_points.size() == 1 && m_line_points[0].x < IMG_WIDTH / 2 - 100)) {
 						thread_delay(5);
 						get_line_data(m_line_points);
 					}
+				}
+
+				else {
+					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 90);
+					thread_delay(400);
+					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 				}
 
 				rampe_hoch = false;
