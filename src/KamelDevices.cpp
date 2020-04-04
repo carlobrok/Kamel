@@ -11,8 +11,12 @@
 #include <chrono>							// timing
 #include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 
-#include <linux/i2c-dev.h>              // i2c_smbus_...
-#include <i2c/smbus.h>
+extern "C" {
+    #include <linux/i2c.h>
+    #include <linux/i2c-dev.h>
+    #include <i2c/smbus.h>
+}
+
 #include <wiringSerial.h>
 
 #include "range.hpp"
@@ -308,7 +312,7 @@ int get_analog_sensordata(int sensor) {
 	return analog_sensor_data;
 }
 
-bool digital_sensor_had_value(int sensor, int last_ms, bool value, unsigned int count) {
+bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
 	auto t_begin = get_cur_time();
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	unsigned int counter = 0;

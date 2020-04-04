@@ -92,7 +92,7 @@ int get_digital_sensordata(int sensor);
 int get_analog_sensordata(int sensor);
 
 
-bool digital_sensor_had_value(int sensor, int last_ms, bool value, int count = 1);
+bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count = 1);
 
 
 // === IMU ================
