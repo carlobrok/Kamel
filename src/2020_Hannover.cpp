@@ -789,7 +789,11 @@ void image_processing() {
 
 int main() {
 
-  init_sensoren(0x09);
+	if(init_sensoren(0x09) == -1) {
+		debug_lg << "error opening sensor_arduino" << lvl::off;
+		cout << "error opening sensor_arduino" << endl;
+		return -1;
+	}
 
 	std::ifstream ifs("/home/pi/projects/KamelPi/src/config.info", std::ifstream::in);			// Config datei einlesen
   ifs >> configdata;			// Config laden

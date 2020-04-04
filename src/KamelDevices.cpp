@@ -236,17 +236,11 @@ boost::circular_buffer<uint16_t> last_analog_data(100);
 int init_sensoren(int address) {
 	sensor_fd = kamelI2Copen(address);
 
-	if(sensor_fd == -1) {
-		debug_lg << "error opening sensor_arduino" << lvl::off;
-		cout << "error opening sensor_arduino" << endl;
-		return -1;
-	}
-
 	for (auto& cb : last_digital_data) {
 		cb.resize(100);
 	}
 
-	return 0;
+	return (sensor_fd == -1 ? -1 : 0);
 }
 
 
