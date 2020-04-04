@@ -6,12 +6,14 @@
 #include <cstring>						// strerror
 #include <string>							// string
 #include <array>
-#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
 #include <cctype>							// isdigit
 #include <mutex>							// mutex
-#include <linux/i2c-dev.h>		// i2c_smbus_...
-#include <wiringSerial.h>
 #include <chrono>							// timing
+#include <boost/circular_buffer.hpp>			// speichern der letzten n werte
+
+#include <linux/i2c-dev.h>              // i2c_smbus_...
+#include <i2c/smbus.h>
+#include <wiringSerial.h>
 
 #include "range.hpp"
 #include "KamelDevices.h"
