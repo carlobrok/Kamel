@@ -13,10 +13,12 @@
 #include <wiringSerial.h>
 #include <chrono>							// timing
 
-
+#include "range.hpp"
 #include "KamelDevices.h"
 #include "config.h"
 #include "util.h"							// thread_delay
+
+
 
 // returns a file descriptor of the opened I2C device
 
@@ -216,6 +218,37 @@ int setMotorState(int &fd, uint8_t side, uint8_t state) {
 
 // ================== Sensoren ==================
 
+std::mutex digital_sensor_mutex;
+std::mutex analog_sensor_mutex;
+int sensor_fd;
+
+bool digital_sensor_data[8] = {1,1,1,1,1,1,1,1};
+std::array<boost::circular_buffer<bool>, 9> last_digital_data;
+boost::circular_buffer<std::chrono::steady_clock::time_point> last_digital_time(100);
+
+uint16_t analog_sensor_data = 0;
+boost::circular_buffer<uint16_t> last_analog_data(100);
+//	boost::circular_buffer<double> last_analog_time(100);
+
+
+int init_sensoren(int address) {
+	sensor_fd = kamelI2Copen(address);
+
+	if(sensor_fd == -1) {
+		debug_lg << "error opening sensor_arduino" << lvl::off;
+		cout << "error opening sensor_arduino" << endl;
+		return -1;
+	}
+
+	for (auto& cb : last_digital_data) {
+		cb.resize(100);
+	}
+
+	return 0;
+}
+
+
+
 bool get_bit(uint8_t byte, uint8_t bit_index) {
 	return (byte & (1 << (bit_index - 1))) != 0;
 }
@@ -227,35 +260,75 @@ bool get_bit(uint8_t byte, uint8_t bit_index) {
  * Sequence of digital sensors is:
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
-int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t &analog_sensor_data) {
+int update_sensordata() {
 	uint8_t in_data[3];
-	int ret = i2c_smbus_read_i2c_block_data(fd, ALL_SENSOR_VALUES, 3, in_data);
+	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, ALL_SENSOR_VALUES, 3, in_data);
 
+	std::lock_guard<std::mutex> m_dlock(digital_sensor_mutex);
+	std::lock_guard<std::mutex> m_alock(analog_sensor_mutex);
+
+	last_digital_time.push_front(get_cur_time());
 	for(int i = 0; i < 8; i++) {
+		last_digital_data[i].push_front(digital_sensor_data[i]);
 		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
-
+	last_analog_data.push_front(analog_sensor_data);
 	analog_sensor_data = in_data[1] | (in_data[2] << 8);
 	return ret;
 }
 
-int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]) {
+int update_digital_sensordata() {
 	uint8_t in_data[1];
-	int ret = i2c_smbus_read_i2c_block_data(fd, DIGITAL_SENSOR_VALUES, 1, in_data);
+	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, DIGITAL_SENSOR_VALUES, 1, in_data);
 
+	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
+
+	last_digital_time.push_front(get_cur_time());
 	for(int i = 0; i < 8; i++) {
+		last_digital_data[i].push_front(digital_sensor_data[i]);
 		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
 	return ret;
 }
 
-int getAnalogSensorData(int &fd, uint16_t &analog_sensor_data) {
+int update_analog_sensordata() {
 	uint8_t in_data[2];
-	int ret = i2c_smbus_read_i2c_block_data(fd, ANALOG_SENSOR_VALUES, 2, in_data);
+	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, ANALOG_SENSOR_VALUES, 2, in_data);
 
+	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
+	last_analog_data.push_front(analog_sensor_data);
 	analog_sensor_data = in_data[0] | (in_data[1] << 8);
 	return ret;
 }
+
+
+int get_digital_sensordata(int sensor) {
+	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
+	return digital_sensor_data[sensor];
+}
+
+int get_analog_sensordata(int sensor) {
+	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
+	return analog_sensor_data;
+}
+
+bool digital_sensor_had_value(int sensor, int last_ms, bool value, unsigned int count) {
+	auto t_begin = get_cur_time();
+	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
+	unsigned int counter = 0;
+
+	for(unsigned i : util::lang::indices(last_digital_data)) {
+		if(get_ms_diff(last_digital_time[i], t_begin) <= last_ms) {
+			if(last_digital_data[sensor][i] == value)
+				count++;
+		} else {
+			break;
+		}
+	}
+
+	return counter >= count;
+}
+
 
 
 // ================== IMU ===================

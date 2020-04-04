@@ -68,7 +68,7 @@ public:
 
 	Logger& operator<<(const spdlog::level::level_enum& lvl) {
 		if(!_buffer.empty()) {
-			_buffer = std::to_string(cur_ms()) + " " + _buffer;
+			_buffer = std::to_string(get_time_since_epoch()) + " " + _buffer;
 			_logger->log(lvl, _buffer);
 			_logger->flush();
 			_buffer.clear();

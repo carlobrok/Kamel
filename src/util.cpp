@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <chrono>
 #include "util.h"
 
 // Returns true if the given point is between (0,0) and (cols,rows)
@@ -17,14 +18,14 @@ bool inMat(cv::Point & p, cv::Mat & img) {
 		return false;
 }
 
-int64_t start_clock;
-
-// resets start_clock to current tickcount
-void init_clock(void) {
-	start_clock = cv::getTickCount();
+int get_ms_since(std::chrono::steady_clock::time_point t_prev) {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(get_cur_time() - t_prev).count();
 }
 
-// returns passed time in ms since init_clock()
-double_t cur_ms(void) {
-	return (cv::getTickCount() - start_clock) / cv::getTickFrequency() * 1000.0;
+int get_ms_diff(std::chrono::steady_clock::time_point t_start, std::chrono::steady_clock::time_point t_stop) {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(t_start - t_stop).count();
+}
+
+long get_time_since_epoch() {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }

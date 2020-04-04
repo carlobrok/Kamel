@@ -140,12 +140,8 @@ void m_drive() {
 
 	// init digital sensor variables
 
-	bool digital_sensor_data[8] = {1,1,1,1,1,1,1,1};
-	array<boost::circular_buffer<bool>, 8> last_digital_data;
-//	array<boost::circular_buffer<double>, 8> last_digital_time;
-	for (auto& cb : last_digital_data) {
-		cb.resize(100);
-	}
+
+
 //	for (auto& cb : last_digital_time) {
 //		cb.resize(100);
 //	}
@@ -153,9 +149,7 @@ void m_drive() {
 
 	// init analog sensor variables
 
-	uint16_t analog_sensor_data = 0;
-	boost::circular_buffer<uint16_t> last_analog_data(100);
-//	boost::circular_buffer<double> last_analog_time(100);
+
 
 
 	// Init IMU variables
@@ -175,7 +169,6 @@ void m_drive() {
 
 	while(1) {
 
-		//setMotorDirPwmBoth(sensor_fd, MOTOR_FORWARD, 160, MOTOR_OFF, 0);
 
 		// sensor value updating ======================
 
@@ -187,26 +180,15 @@ void m_drive() {
 
 		get_imu_data(imu_data);									// imu data updaten
 
-		getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data);
-		thread_delay(2);
-		std::cout << "A0: " << analog_sensor_data << std::endl;
+		update_sensordata();
+		//thread_delay(2);
+		std::cout << "A0: " << get_analog_sensordata(IR_MITTE) << std::endl;
 		for(int i = 0; i  < 8; i++) {
-			std::cout << "D" << i << ": " << digital_sensor_data[i] << "  ";
+			std::cout << "D" << i << ": " << get_digital_sensordata(i) << "  ";
 		}
 		std::cout << std::endl;
 
-		//last_grcenter.push_front(m_grcenter);		// push_front recent values - recent value is item [0]
 
-		// update arduino sensor data
-		//cout << "Read data: " << getSensorData(sensor_fd, digital_sensor_data, analog_sensor_data) << endl;
-
-		//getDigitalSensorData(sensor_fd, digital_sensor_data);
-
-		// push_front last values - recent value is item [0]
-		/*last_analog_data.push_front(analog_sensor_data[0]);
-		for(int i = 0; i < 8; i++) {
-			last_digital_data[i].push_front(digital_sensor_data[i]);
-		}*/
 
 		cout << "drive routine; line_points: " << m_line_points << endl;
 
@@ -293,9 +275,9 @@ void m_drive() {
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 110);
 				thread_delay(1500);
-				int64 tbegin = cur_ms();
+				auto tbegin = get_cur_time();
 
-				while((cur_ms() - tbegin) < 3000) {
+				while(get_ms_since(tbegin) < 3000) {
 					get_line_data(m_line_points);					 		// line data updaten
 
 					// der Linie folgen
@@ -335,7 +317,7 @@ void m_drive() {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 80);
 					} else if (m_line_points[0].x < 140) {							// line_points[0] links
 						setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 80, MOTOR_FORWARD, 160);
-					} else if ((cur_ms() - tbegin) > 2000) {
+					} else if (get_ms_since(tbegin) > 2000) {
 						reset_last_movement_change();
 						break;
 					} else if (m_line_points[0].x > 400) {							// line_points[0] halb rechts
@@ -381,21 +363,37 @@ void m_drive() {
 			}
 
 
-// ==========================   ROBOTER IST WAAGERECHT =================================00
+// ==========================   ROBOTER IST WAAGERECHT =================================
+
+// ======== Endzone erkennen ============
+
+			if (get_digital_sensordata(IR_VORNE_L) == 0 && digital_sensor_had_value(IR_VORNE_R, 750, 0, 3)) {
+				std::cout << std::endl << "KANTE ERKANNT" << std::endl;
+			}
+			else if (get_digital_sensordata(IR_VORNE_R) == 0 && digital_sensor_had_value(IR_VORNE_L, 750, 0, 3)) {
+				std::cout << std::endl << "KANTE ERKANNT" << std::endl;
+			}
+
+
+
+
+
 
 // ========= FLASCHE ====================
 
+
 			// Flasche mittig vor dem Roboter
-			if(analog_sensor_data >= flasche_fahren && (digital_sensor_data[IR_VORNE_L] == 0 || digital_sensor_data[IR_VORNE_R] == 0)) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
+			if(get_analog_sensordata(IR_MITTE) >= flasche_fahren && (get_digital_sensordata(IR_VORNE_L) == 0 || get_digital_sensordata(IR_VORNE_R) == 0)) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
-				int64 tbegin = cur_ms();
+				auto tbegin = get_cur_time();
 				bool flasche = true;
 
-				while(cur_ms() - tbegin < 300) {
+				while(get_ms_since(tbegin) < 300) {
 					thread_delay(5);
-					getAnalogSensorData(sensor_fd, analog_sensor_data);
-					if(analog_sensor_data < flasche_fahren - 20){
+					update_analog_sensordata();
+
+					if(get_analog_sensordata(IR_MITTE) < flasche_fahren - 20){
 						flasche = false;
 						break;
 					}
@@ -407,9 +405,9 @@ void m_drive() {
 					std::cout << " > FLASCHE FAHREN" << std::endl;
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
 
-					while(analog_sensor_data > 110) {
+					while(get_analog_sensordata(IR_MITTE) > 110) {
 						thread_delay(5);
-						getAnalogSensorData(sensor_fd, analog_sensor_data);
+						update_analog_sensordata();
 					}
 					// Bremsen
 					setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 90);
@@ -791,7 +789,7 @@ void image_processing() {
 
 int main() {
 
-	init_clock();			// set start_clock to current ms
+  init_sensoren(0x09);
 
 	std::ifstream ifs("/home/pi/projects/KamelPi/src/config.info", std::ifstream::in);			// Config datei einlesen
   ifs >> configdata;			// Config laden

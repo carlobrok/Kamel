@@ -40,6 +40,7 @@
 #define T_HINTEN_L 6
 #define T_HINTEN_R 7
 
+#define IR_MITTE 0
 
 
 int kamelI2Copen(int devId);
@@ -80,11 +81,21 @@ int setMotorState(int &fd, uint8_t side, uint8_t state);
 
 // === Sensoren ===========
 
+int init_sensoren(int address);
 bool get_bit(uint8_t byte, uint8_t bit_number);
 
-int getSensorData(int &fd, bool (&digital_sensor_data)[8], uint16_t &analog_sensor_data);
-int getDigitalSensorData(int &fd, bool (&digital_sensor_data)[8]);
-int getAnalogSensorData(int &fd, uint16_t &analog_sensor_data);
+int update_sensordata();
+int update_digital_sensordata();
+int update_analog_sensordata();
+
+int get_digital_sensordata(int sensor);
+int get_analog_sensordata(int sensor);
+
+
+bool digital_sensor_had_value(int sensor, int last_ms, bool value, int count = 1);
+
+
+// === IMU ================
 
 void reset_last_movement_change();
 double get_last_movement_seconds();

@@ -21,7 +21,12 @@ inline void thread_delay_micros(int64_t us) {
 	std::this_thread::sleep_for(std::chrono::microseconds(us));
 }
 
-void init_clock(void);
-double_t cur_ms(void);
+inline std::chrono::steady_clock::time_point get_cur_time() {
+	return std::chrono::steady_clock::now();
+}
+
+int get_ms_since(std::chrono::steady_clock::time_point t_prev);
+int get_ms_diff(std::chrono::steady_clock::time_point t_start, std::chrono::steady_clock::time_point t_stop);
+long get_time_since_epoch();
 
 #endif
