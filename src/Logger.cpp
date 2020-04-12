@@ -10,7 +10,7 @@ Logger::Logger(std::string log_name) {
 		fs::create_directory(cur_path);
 	}
 
-	_logger = spdlog::basic_logger_mt<spdlog::async_factory>(log_name, "logs/" + log_name + ".log");
+	_logger = spdlog::basic_logger_mt<spdlog::async_factory>(log_name, "logs/" + log_name + ".log", true);
 	_logger->set_pattern("[%^%l%$] %T %v");
 }
 
@@ -28,4 +28,8 @@ void Logger::log_buffer(spdlog::level::level_enum lvl) {
 		_logger->flush();
 		_buffer.clear();
 	}
+}
+
+void Logger::set_level(spdlog::level::level_enum lvl) {
+	_logger->set_level(lvl);
 }

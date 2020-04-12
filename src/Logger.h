@@ -20,6 +20,8 @@ public:
 	void log(std::string msg, spdlog::level::level_enum lvl);
 	void log_buffer(spdlog::level::level_enum lvl);
 
+	void set_level(spdlog::level::level_enum lvl);
+
 	/*
 		'<<' nutzen um in den buffer zu schreiben.
 		Als letztes Element spdlog::level::level_enum hinzufügen, um den buffer in die Datei zu schreiben.
