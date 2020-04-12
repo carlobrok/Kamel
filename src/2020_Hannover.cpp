@@ -694,15 +694,17 @@ void image_processing() {
 
 
 	cam.set(cv::CAP_PROP_FPS, 30);			// Kamera Framerate auf 30 fps
-	cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);			// Bildauflösung auf 640 x 480px
-	cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+
+	// Does not work with raspbian buster on the Raspberry 4B
+	//cam.set(cv::CAP_PROP_FRAME_WIDTH, 640);			// Bildauflösung auf 640 x 480px
+	//cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
 
 	//Füge Fenster zum VideoServer hinzu
 	srv.namedWindow("Mask Green");
 	srv.namedWindow("Mask SW");
 	srv.namedWindow("HSV");
 	srv.namedWindow("Input");
-	srv.namedWindow("H-S Histogram");
+	//srv.namedWindow("H-S Histogram");
 
 
 
