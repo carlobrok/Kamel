@@ -1,7 +1,3 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 -include ../makefile.init
 
 RM := rm -rf
@@ -44,7 +40,7 @@ all: KamelPi
 KamelPi: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "KamelPi" $(OBJS) $(USER_OBJS) -L /usr/local/lib/ $(LIBS)
+	g++ -o "../KamelPi" $(OBJS) $(USER_OBJS) -L /usr/local/lib/ $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

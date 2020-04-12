@@ -34,8 +34,6 @@
 *.out
 *.app
 
-Debug/KamelPi
-
 #   ECLIPSE
 #====================
 .metadata
@@ -96,6 +94,8 @@ local.properties
 
 #  Project specific
 # ===============================
+
+KamelPi
 
 *.jpg
 *.png
