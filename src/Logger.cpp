@@ -11,11 +11,10 @@ Logger::Logger(std::string log_name) {
 	}
 
 	_logger = spdlog::basic_logger_mt<spdlog::async_factory>(log_name, "logs/" + log_name + ".log", true);
-	_logger->set_pattern("[%^%l%$] %T %v");
+	_logger->set_pattern("[%T] [%=3!l] [%i] %v");
 }
 
 void Logger::log(std::string msg, spdlog::level::level_enum lvl) {
-	msg = std::to_string(get_time_since_epoch()) + " " + msg;
 	_logger->log(lvl, msg);
 	_logger->flush();
 }
@@ -23,7 +22,6 @@ void Logger::log(std::string msg, spdlog::level::level_enum lvl) {
 // Schreibt _buffer in die Datei
 void Logger::log_buffer(spdlog::level::level_enum lvl) {
 	if(!_buffer.empty()) {
-		_buffer = std::to_string(get_time_since_epoch()) + " " + _buffer;
 		_logger->log(lvl, _buffer);
 		_logger->flush();
 		_buffer.clear();

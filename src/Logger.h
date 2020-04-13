@@ -32,9 +32,8 @@ public:
 		example_log << "This is only for testing purposes!" << spdlog::level::info;
 	*/
 
-	template< typename T >
-	Logger& operator<<(const T& val) {
-		_buffer += val;
+	Logger& operator<<(const std::string& str) {
+		_buffer += str;
 		return *this;
 	}
 
@@ -68,9 +67,15 @@ public:
 		return *this;
 	}
 
+	Logger &operator<<(const std::vector<cv::Point>& vp) {
+		for(auto & p: vp){
+			_buffer += "("  + std::to_string(p.x) + "," + std::to_string(p.y) + ")";
+		}
+		return *this;
+	}
+
 	Logger& operator<<(const spdlog::level::level_enum& lvl) {
 		if(!_buffer.empty()) {
-			_buffer = std::to_string(get_time_since_epoch()) + " " + _buffer;
 			_logger->log(lvl, _buffer);
 			_logger->flush();
 			_buffer.clear();
