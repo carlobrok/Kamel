@@ -43,7 +43,7 @@ Stephan Swiatek
 
 ### Required Librarys
 
-* OpenCV 4 or newer Version (recommended), [Install guide for OpenCV 4.1.0](https://docs.opencv.org/4.1.0/d7/d9f/tutorial_linux_install.html)  
+* OpenCV 4 or newer version (recommended), [Install guide for OpenCV 4.1.0](https://docs.opencv.org/4.1.0/d7/d9f/tutorial_linux_install.html)  
   **Important:** 
   1. as cmake run `cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules/ -D WITH_QT=ON -DWITH_OPENGL=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D WITH_GTK=ON  ..` 
   2. make sure all packages are configured (OpenGL, Qt, ...)
@@ -55,7 +55,7 @@ Stephan Swiatek
   2. Extract folder and cd into it
   3. `./bootstrap.sh`
   4. `sudo ./b2 install`
-* spdlog - [Wiki](https://github.com/gabime/spdlog/wiki/)
+* spdlog 1.5.0 or newer version - [Wiki](https://github.com/gabime/spdlog/wiki/)
   </br>**Installation:**</br>
   1. `git clone https://github.com/gabime/spdlog.git`
   2. `cd spdlog/`
