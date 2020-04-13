@@ -17,7 +17,7 @@ OBJS += \
 ./src/KamelDevices.o \
 ./src/Logger.o \
 ./src/VideoServer.o \
-../src/drive.o \
+./src/drive.o \
 ./src/gruen.o \
 ./src/line.o \
 ./src/util.o
@@ -28,7 +28,7 @@ CPP_DEPS += \
 ./src/KamelDevices.d \
 ./src/Logger.d \
 ./src/VideoServer.d \
-../src/drive.d \
+./src/drive.d \
 ./src/gruen.d \
 ./src/line.d \
 ./src/util.d
