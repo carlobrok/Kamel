@@ -9,8 +9,11 @@
 #include "Logger.h"
 #include "KamelDevices.h"					// kommunikation mit Arduino und Servosteuerung
 
-namespace lvl = spdlog::level;
-using std::cout, std::endl, std::vector, cv::Point;
+using namespace spdlog::level;
+using std::cout;
+using std::endl;
+using std::vector;
+using cv::Point;
 
 // Logger for everything what happens in this file
 Logger drive_lg("drive");
@@ -38,13 +41,13 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 	float correction;
 	bool correct_angle = false;
 
-	std::cout << "Turn angle; current / target:" << imu_data[YAW] << "/" << target_angle << std::endl;
+	drive_lg << "Turn angle; current / target:" << imu_data[YAW] << "/" << target_angle << info;
 
 	while(!correct_angle) {
 		get_imu_data(imu_data);
 		correction = fmod((target_angle - imu_data[YAW] + 180 + 720), 360) - 180;
 
-		std::cout << "correction: " << correction << std::endl;
+		drive_lg << "correction: " << correction << trace;
 
 		if(correction > 30) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 220, MOTOR_BACKWARD, 220);
@@ -65,6 +68,7 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 			setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 90, MOTOR_FORWARD, 90);
 		}
 		else if(correction <= 1 && correction >= -1) {
+			drive_lg << "correction <= 1 and >= -1: " << correction << " try to quit" << debug;
 			setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 			thread_delay(100);
 			get_imu_data(imu_data);
@@ -72,6 +76,7 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 
 			// Hysterese für Messwertschwankungen
 			if(correction <= 1 && correction >= -1) {
+				drive_lg << "quit turn_angle" << debug;
 				correct_angle = true;
 			}
 		}
@@ -85,16 +90,14 @@ void turn_angle(int & motor_fd, float (&imu_data)[3], float angle) {
 
 void m_drive() {
 
+	drive_lg.set_level(debug);
 
-	Logger sensor_lg("sensors");					// logger class for log file 'sensors.log'
-
-	drive_lg << "init i2c devices" << lvl::debug;
+	drive_lg << "init i2c devices" << debug;
 
 	// init i2c devices
-
 	int motor_fd = kamelI2Copen(0x08); 					// I2C Schnittstelle vom Motor-Arduino mit der Adresse 0x08 öffnen
 	if(motor_fd == -1) {
-		drive_lg << "error opening motor_arduino" << lvl::off;
+		drive_lg << "error opening motor_arduino" << off;
 		cout << "error opening motor_arduino" << endl;
 		return;
 	}
@@ -103,27 +106,29 @@ void m_drive() {
 
 	int sensor_fd = kamelI2Copen(0x09);
 	if(sensor_fd == -1) {
-		drive_lg << "error opening sensor_arduino" << lvl::off;
+		drive_lg << "error opening sensor_arduino" << off;
 		cout << "error opening sensor_arduino" << endl;
 		return;
 	}
 
-	drive_lg << "successfully initialized i2c devices" << lvl::debug;
-	drive_lg << "init sensor / camera variables" << lvl::debug;
-
-
 	int servo_fd = pca9685_setup(0x40);
 	if(servo_fd == -1) {
-		drive_lg << "error opening servo controller" << lvl::off;
+		drive_lg << "error opening servo controller" << off;
 		cout << "error opening servo controller" << endl;
 		return;
 	}
+
+	drive_lg << "> COMPLETE - successfully initialized i2c devices" << debug;
+
+	drive_lg << "init servos" << debug;
 
   Servo cameraservo(servo_fd, 0);
   cameraservo.set_angle(kamera_winkel);
 
 	Servo kaefigservo(servo_fd, 1, 180, 0.7, 2.2);
 	kaefigservo.set_angle(180);
+
+	drive_lg << "> COMPLETE" << debug;
 
 	// init line variables
 	vector<Point> m_line_points;			// m_line_points enthält lokale line_points, gilt nur im drive thread
@@ -134,19 +139,6 @@ void m_drive() {
 	int m_grstate;				// temporäre kopie für den drive thread
 	//boost::circular_buffer<Point> last_grcenter(30);		// circular_buffer initialisieren
 
-	// init digital sensor variables
-
-
-
-//	for (auto& cb : last_digital_time) {
-//		cb.resize(100);
-//	}
-
-
-	// init analog sensor variables
-
-
-
 
 	// Init IMU variables
 
@@ -156,12 +148,12 @@ void m_drive() {
 
 	float imu_data[3] = {0,0,0};
 
-	drive_lg << "successfully initialized sensor / camera variables" << lvl::debug;
-
 	setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 	thread_delay(2000);
 
 	kaefigservo.off();
+
+	drive_lg << "init COMPLETE - start loop" << debug;
 
 	while(1) {
 
@@ -170,23 +162,22 @@ void m_drive() {
 
 		// update values
 
+		drive_lg << "update green data" << info;
 		get_gruen_data(m_grcenter, m_grstate);		// grün data updaten
-
+		drive_lg << "update line data" << info;
 		get_line_data(m_line_points, last_line_points);					 		// line data updaten
-
+		drive_lg << "line_points: " << m_line_points << info;
+		drive_lg << "update imu data" << info;
 		get_imu_data(imu_data);									// imu data updaten
 
+		drive_lg << "update sensor data" << info;
 		update_sensordata();
 		//thread_delay(2);
-		std::cout << "A0: " << get_analog_sensordata(IR_MITTE) << std::endl;
+		drive_lg << "A0: " << get_analog_sensordata(IR_MITTE);
 		for(int i = 0; i  < 8; i++) {
-			std::cout << "D" << i << ": " << get_digital_sensordata(i) << "  ";
+			drive_lg << "  D" << i << ": " << get_digital_sensordata(i);
 		}
-		std::cout << std::endl;
-
-
-
-		cout << "drive routine; line_points: " << m_line_points << endl;
+		drive_lg << info;
 
 		// main part: drive decisions	=================================
 
@@ -194,9 +185,12 @@ void m_drive() {
 // =========== RAMPE HOCH  ==================
 
 		if (rampe_hoch) {
+
+			drive_lg << "** RAMPE HOCH **" << info;
+
 			// Sichergehen, ob der Robo noch auf der Rampe ist.
 			if (imu_data[PITCH] < 5.0) {
-
+				drive_lg << "oben angekommen" << info;
 
 				int max_l = 320;
 				int max_r = 320;
@@ -267,7 +261,10 @@ void m_drive() {
 // ========== RAMPE RUNTER ======================
 
 		else if (rampe_runter) {
+			drive_lg << "** RAMPE RUNTER **" << info;
+
 			if (imu_data[PITCH] > -5.0) {
+				drive_lg << "unten angekommen" << info;
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD, 110);
 				thread_delay(1500);
@@ -349,11 +346,14 @@ void m_drive() {
 
 		// Roboter gerade
 		else {
+			drive_lg << "** Roboter gerade **" << info;
 			if (imu_data[PITCH] > 10.0) {
+				drive_lg << "Rampe hoch erkannt" << info;
 				rampe_hoch = true;
 				continue;				// Rest der while schleife skippen
 			}
 			if (imu_data[PITCH] < -10.0) {
+				drive_lg << "Rampe runter erkannt" << info;
 				rampe_runter = true;
 				continue;				// Rest der while schleife skippen
 			}
@@ -364,10 +364,10 @@ void m_drive() {
 // ======== Endzone erkennen ============
 
 			if (get_digital_sensordata(IR_VORNE_L) == 0 && digital_sensor_had_value(IR_VORNE_R, 750, 0, 3)) {
-				std::cout << std::endl << "KANTE ERKANNT" << std::endl;
+				drive_lg << "KANTE ERKANNT" << warn;
 			}
 			else if (get_digital_sensordata(IR_VORNE_R) == 0 && digital_sensor_had_value(IR_VORNE_L, 750, 0, 3)) {
-				std::cout << std::endl << "KANTE ERKANNT" << std::endl;
+				drive_lg << "KANTE ERKANNT" << warn;
 			}
 
 
@@ -381,7 +381,7 @@ void m_drive() {
 			// Flasche mittig vor dem Roboter
 			if(get_analog_sensordata(IR_MITTE) >= flasche_fahren && (get_digital_sensordata(IR_VORNE_L) == 0 || get_digital_sensordata(IR_VORNE_R) == 0)) {		// AUSKOMMENTIERT WEGEN HARDWAREFEHLER
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
-
+				drive_lg << "Objekt erkannt" << info;
 				auto tbegin = get_cur_time();
 				bool flasche = true;
 
@@ -398,7 +398,7 @@ void m_drive() {
 
 				if(flasche) {
 
-					std::cout << " > FLASCHE FAHREN" << std::endl;
+					drive_lg << " > FLASCHE FAHREN" << warn;
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_BACKWARD_NORMAL);
 
 					while(get_analog_sensordata(IR_MITTE) > 110) {
@@ -482,7 +482,7 @@ void m_drive() {
 
 			if (m_grstate == GRUEN_BEIDE) {
 
-				drive_lg << "green point BOTH" << lvl::info;
+				drive_lg << "green BOTH" << warn;
 
 				while (m_grstate != GRUEN_NICHT) {		// Solange grstate nicht GRUEN_NICHT ist
 					get_gruen_data(m_grcenter, m_grstate);											// gruen werte aktualisieren
@@ -508,7 +508,7 @@ void m_drive() {
 
 			} else if (m_grstate == GRUEN_LINKS && m_grcenter.y > 480 - 150) {			// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_LINKS
 
-				drive_lg << "green point LEFT" << lvl::info;					// in debug.log loggen
+				drive_lg << "green LEFT" << warn;					// in debug.log loggen
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);				// beide Motoren vorwärts, pwm: 150
 				thread_delay(300);						// delay 300ms
@@ -525,7 +525,7 @@ void m_drive() {
 
 			} else if (m_grstate == GRUEN_RECHTS && m_grcenter.y > 480 - 150) {				// m_grcenter im unteren Bildbereich + m_grstate = GRUEN_RECHTS
 
-				drive_lg << "green point RIGHT" << lvl::info;			// in debug.log loggen
+				drive_lg << "green RIGHT" << warn;			// in debug.log loggen
 
 				setMotorDirPwm(motor_fd, MOTOR_BOTH, MOTOR_FORWARD, 150);			// beide Motoren vorwärts, pwm: 150
 				thread_delay(300);					// delay 300ms
@@ -545,7 +545,7 @@ void m_drive() {
 
 			else if(m_line_points.size() == 1) {							// wenn nur 1 linepoint vorhanden ist
 
-				drive_lg << "single Line point: " << m_line_points[0] << lvl::info;
+				drive_lg << "single Line point: " << m_line_points[0] << info;
 				//			cout << "Different value -> check motor output for line" << endl;
 
 				// Der Roboter hat sich 5 Sekunden weniger als 5°/Sekunde bewegt, steht aber nicht mittig auf der Linie:
@@ -611,7 +611,7 @@ void m_drive() {
 				//drive_lg << "lost line, last line singe line point: " << last_line_points[1][0];
 
 				if (last_line_points[1][0].x > 560) {				// letzter linepoint rechts außen: nach rechts fahren, bis linie wieder gefunden
-					drive_lg << " -  correction right" << lvl::warn;
+					drive_lg << " -  correction right" << info;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 160, MOTOR_BACKWARD, 120);
 
@@ -625,7 +625,7 @@ void m_drive() {
 					setMotorState(motor_fd, MOTOR_BOTH, MOTOR_OFF);
 
 				} else if (last_line_points[1][0].x < 80) {				// letzter linepoint links außen: nach links fahren, bis linie wieder gefunden
-					cout << " -   correction left" << lvl::warn;
+					drive_lg << " -   correction left" << info;
 
 					setMotorDirPwmBoth(motor_fd, MOTOR_BACKWARD, 120, MOTOR_FORWARD, 160);
 
@@ -641,7 +641,7 @@ void m_drive() {
 				} else if (last_line_points[1][0].x >= 140 && last_line_points[1][0].x <= 500) {
 
 					float movement = get_movement();
-					cout << "Last movement: " << get_movement() << endl;
+					drive_lg << "Last movement: " << get_movement() << info;
 
 					if(movement > 10) {
 						setMotorDirPwmBoth(motor_fd, MOTOR_FORWARD, 140, MOTOR_FORWARD, 0);
@@ -664,7 +664,7 @@ void m_drive() {
 
 			} else {			// wenn linepoints.size() > 1 und kein grünpunkt, grade fahren
 				setMotorState(motor_fd, MOTOR_BOTH, MOTOR_FORWARD_NORMAL);				// vorwärts mit festgelegtem Standardtempo
-				//drive_lg << "driving forward, " << m_line_points.size() << " line points" << lvl::info;
+				//drive_lg << "driving forward, " << m_line_points.size() << " line points" << info;
 			}
 		}
 
