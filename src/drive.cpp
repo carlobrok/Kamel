@@ -365,9 +365,11 @@ void m_drive() {
 
 			if (get_digital_sensordata(IR_VORNE_L) == 0 && digital_sensor_had_value(IR_VORNE_R, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
+				thread_delay(1000);
 			}
 			else if (get_digital_sensordata(IR_VORNE_R) == 0 && digital_sensor_had_value(IR_VORNE_L, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
+				thread_delay(1000);
 			}
 
 
