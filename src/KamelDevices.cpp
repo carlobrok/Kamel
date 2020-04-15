@@ -330,15 +330,14 @@ int sen::analog_sensor_data(int sensor) {
 }
 
 bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int min_counter) {
-  std::cout << "IN => digital_sensor_had_value" << std::endl;
-  std::cout << "checking sensor: " << dig_names[sensor] << "size last_data: " << m_last_digital_data[sensor].size() << std::endl;
+  std::cout << "IN => digital_sensor_had_value" << "checking sensor: " << dig_names[sensor] << std::endl;
   auto t_begin = get_cur_time();
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	unsigned int counter = 0;
 
 	for(unsigned i : util::lang::indices(m_last_digital_data[sensor])) {
     //std::cout << "diff time: " << get_ms_diff(m_last_digital_time[i], t_begin);
- 		if(get_ms_diff(m_last_digital_time[i], t_begin) <= last_ms) {
+ 		if(get_ms_diff(m_last_digital_time[i], t_begin) <= last_ms && counter < min_counter) {
       //std::cout << " last_value: " << m_last_digital_data[sensor][i] << std::endl;
 			if(m_last_digital_data[sensor][i] == value)
 				counter++;
@@ -347,7 +346,7 @@ bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value,
 			break;
 		}
 	}
-  std::cout << "counter: " << counter << " enough " << (counter >= min_counter) << std::endl;
+  std::cout << "counter: " << counter << ", enough " << (counter >= min_counter) << std::endl;
 	return counter >= min_counter;
 }
 
