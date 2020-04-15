@@ -315,6 +315,7 @@ int get_analog_sensordata(int sensor) {
 bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
   std::cout << "IN => digital_sensor_had_value" << std::endl;
   std::cout << "size last_data: " << last_digital_data.size() << std::endl;
+  std::cout << "cap last_data: " << last_digital_data.capacity() << std::endl;
   auto t_begin = get_cur_time();
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	unsigned int counter = 0;
