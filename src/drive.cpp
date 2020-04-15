@@ -363,11 +363,11 @@ void m_drive() {
 
 // ======== Endzone erkennen ============
 
-			if (sen::digital_sensor_data(IR_VORNE_L) == 0 && sen::digital_sensor_had_value(IR_VORNE_R, 750, 0, 3)) {
+			if (sen::digital_sensor_data(IR_LINKS_V) == 0 && sen::digital_sensor_had_value(IR_RECHTS_V, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
 				thread_delay(1000);
 			}
-			else if (sen::digital_sensor_data(IR_VORNE_R) == 0 && sen::digital_sensor_had_value(IR_VORNE_L, 750, 0, 3)) {
+			else if (sen::digital_sensor_data(IR_RECHTS_V) == 0 && sen::digital_sensor_had_value(IR_LINKS_V, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
 				thread_delay(1000);
 			}

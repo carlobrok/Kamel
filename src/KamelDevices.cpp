@@ -329,7 +329,7 @@ int sen::analog_sensor_data(int sensor) {
 	return m_analog_sensor_data;
 }
 
-bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
+bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int min_counter) {
   std::cout << "IN => digital_sensor_had_value" << std::endl;
   std::cout << "size last_data: " << m_last_digital_data[sensor].size() << " sensor: " << sensor << std::endl;
   auto t_begin = get_cur_time();
@@ -341,14 +341,14 @@ bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value,
  		if(get_ms_diff(m_last_digital_time[i], t_begin) <= last_ms) {
       std::cout << " last_value: " << m_last_digital_data[sensor][i] << std::endl;
 			if(m_last_digital_data[sensor][i] == value)
-				count++;
+				counter++;
 		} else {
       std::cout << std::endl;
 			break;
 		}
 	}
-  std::cout << "counter: " << counter << " enough? " << (counter >= count) << std::endl;
-	return counter >= count;
+  std::cout << "counter: " << counter << " enough? " << (counter >= min_counter) << std::endl;
+	return counter >= min_counter;
 }
 
 

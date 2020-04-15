@@ -99,8 +99,8 @@ namespace sen {
 	const std::string dig_short_names[8] = {
 		"IR VL ", "IR VR",
 		"IR LV", "IR LH",
-		"IR_RV", "IR_RH",
-		"T_HL ", "T_HR"
+		"IR RV", "IR RH",
+		"T HL ", "T HR"
 	};
 
 
