@@ -276,7 +276,7 @@ int sen::update_sensordata() {
 	m_analog_sensor_data = in_data[1] | (in_data[2] << 8);
 
 
-  std::cout << "digital_sensor_data:" << std::endl;
+  /*std::cout << "digital_sensor_data:" << std::endl;
   for(int i = 0; i < 8; i++) {
     std::cout << m_digital_sensor_data[i] << "  ";
   }
@@ -289,7 +289,7 @@ int sen::update_sensordata() {
       std::cout << m_last_digital_data[sen][i] << "  ";
     }
     std::cout << std::endl;
-  }
+  }*/
 
 	return ret;
 }
