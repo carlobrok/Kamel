@@ -175,7 +175,7 @@ void m_drive() {
 		//thread_delay(2);
 		drive_lg << "A0: " << sen::analog_sensor_data(IR_MITTE);
 		for(int i = 0; i  < 8; i++) {
-			drive_lg << sen::dig_short_names[i] << ": " << sen::digital_sensor_data(i);
+			drive_lg << "  " << sen::dig_short_names[i] << ":" << sen::digital_sensor_data(i);
 		}
 		drive_lg << info;
 
