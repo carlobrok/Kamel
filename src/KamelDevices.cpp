@@ -224,7 +224,7 @@ int mot::state(int &fd, uint8_t side, uint8_t state) {
 
 // ================== Sensoren ==================
 
-bool std::get_bit(uint8_t byte, uint8_t bit_index) {
+bool sen::get_bit(uint8_t byte, uint8_t bit_index) {
 	return (byte & (1 << (bit_index - 1))) != 0;
 }
 
