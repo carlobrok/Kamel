@@ -329,7 +329,7 @@ bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsi
 			break;
 		}
 	}
-
+  std::cout << "counter: " << counter << " enough? " << counter >= count << std::endl;
 	return counter >= count;
 }
 
