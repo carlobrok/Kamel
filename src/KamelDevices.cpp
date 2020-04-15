@@ -232,19 +232,19 @@ std::mutex digital_sensor_mutex;
 std::mutex analog_sensor_mutex;
 int sensor_fd;
 
-bool digital_sensor_data[8] = {1,1,1,1,1,1,1,1};
-std::array<boost::circular_buffer<bool>, 9> last_digital_data;
-boost::circular_buffer<std::chrono::steady_clock::time_point> last_digital_time(100);
+bool m_digital_sensor_data[8] = {1,1,1,1,1,1,1,1};
+std::array<boost::circular_buffer<bool>, 9> m_last_digital_data;
+boost::circular_buffer<std::chrono::steady_clock::time_point> m_last_digital_time(100);
 
-uint16_t analog_sensor_data = 0;
-boost::circular_buffer<uint16_t> last_analog_data(100);
+uint16_t m_analog_sensor_data = 0;
+boost::circular_buffer<uint16_t> m_last_analog_data(100);
 //	boost::circular_buffer<double> last_analog_time(100);
 
 
 int sen::init_sensoren(int address) {
 	sensor_fd = kamelI2Copen(address);
 
-	for (auto& cb : last_digital_data) {
+	for (auto& cb : m_last_digital_data) {
 		cb.resize(100);
 	}
 
@@ -267,18 +267,18 @@ int update_sensordata() {
 	std::lock_guard<std::mutex> m_dlock(digital_sensor_mutex);
 	std::lock_guard<std::mutex> m_alock(analog_sensor_mutex);
 
-	last_digital_time.push_front(get_cur_time());
+	m_last_digital_time.push_front(get_cur_time());
 	for(int i = 0; i < 8; i++) {
-		last_digital_data[i].push_front(digital_sensor_data[i]);
-		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
+		m_last_digital_data[i].push_front(m_digital_sensor_data[i]);
+		m_digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
-	last_analog_data.push_front(analog_sensor_data);
-	analog_sensor_data = in_data[1] | (in_data[2] << 8);
+	m_last_analog_data.push_front(m_analog_sensor_data);
+	m_analog_sensor_data = in_data[1] | (in_data[2] << 8);
 
 
   std::cout << "digital_sensor_data:" << std::endl;
   for(int i = 0; i < 8; i++) {
-    std::cout << digital_sensor_data[i] << "  ";
+    std::cout << m_digital_sensor_data[i] << "  ";
   }
   std::cout << std::endl;
 
@@ -286,7 +286,7 @@ int update_sensordata() {
   for(int i = 0; i < 100; i++) {
     std::cout << i << " ";
     for(int sen = 0; sen < 8; sen++) {
-      std::cout << last_digital_data[sen][i] << "  ";
+      std::cout << m_last_digital_data[sen][i] << "  ";
     }
     std::cout << std::endl;
   }
@@ -300,10 +300,10 @@ int update_digital_sensordata() {
 
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 
-	last_digital_time.push_front(get_cur_time());
+	m_last_digital_time.push_front(get_cur_time());
 	for(int i = 0; i < 8; i++) {
-		last_digital_data[i].push_front(digital_sensor_data[i]);
-		digital_sensor_data[i] = get_bit(in_data[0], 8-i);
+		m_last_digital_data[i].push_front(m_digital_sensor_data[i]);
+		m_digital_sensor_data[i] = get_bit(in_data[0], 8-i);
 	}
 	return ret;
 }
@@ -313,34 +313,34 @@ int update_analog_sensordata() {
 	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, ANALOG_SENSOR_VALUES, 2, in_data);
 
 	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
-	last_analog_data.push_front(analog_sensor_data);
-	analog_sensor_data = in_data[0] | (in_data[1] << 8);
+	m_last_analog_data.push_front(m_analog_sensor_data);
+	m_analog_sensor_data = in_data[0] | (in_data[1] << 8);
 	return ret;
 }
 
 
 bool digital_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
-	return digital_sensor_data[sensor];
+	return m_digital_sensor_data[sensor];
 }
 
 int analog_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
-	return analog_sensor_data;
+	return m_analog_sensor_data;
 }
 
 bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
   std::cout << "IN => digital_sensor_had_value" << std::endl;
-  std::cout << "size last_data: " << last_digital_data[sensor].size() << " sensor: " << sensor << std::endl;
+  std::cout << "size last_data: " << m_last_digital_data[sensor].size() << " sensor: " << sensor << std::endl;
   auto t_begin = get_cur_time();
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	unsigned int counter = 0;
 
-	for(unsigned i : util::lang::indices(last_digital_data[sensor])) {
-    std::cout << "diff time: " << get_ms_diff(last_digital_time[i], t_begin);
- 		if(get_ms_diff(last_digital_time[i], t_begin) <= last_ms) {
-      std::cout << " last_value: " << last_digital_data[sensor][i] << std::endl;
-			if(last_digital_data[sensor][i] == value)
+	for(unsigned i : util::lang::indices(m_last_digital_data[sensor])) {
+    std::cout << "diff time: " << get_ms_diff(m_last_digital_time[i], t_begin);
+ 		if(get_ms_diff(m_last_digital_time[i], t_begin) <= last_ms) {
+      std::cout << " last_value: " << m_last_digital_data[sensor][i] << std::endl;
+			if(m_last_digital_data[sensor][i] == value)
 				count++;
 		} else {
       std::cout << std::endl;
