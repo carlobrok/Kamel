@@ -224,7 +224,7 @@ int mot::state(int &fd, uint8_t side, uint8_t state) {
 
 // ================== Sensoren ==================
 
-bool get_bit(uint8_t byte, uint8_t bit_index) {
+bool std::get_bit(uint8_t byte, uint8_t bit_index) {
 	return (byte & (1 << (bit_index - 1))) != 0;
 }
 
@@ -260,7 +260,7 @@ int sen::init_sensoren(int address) {
  * Sequence of digital sensors is:
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
  */
-int update_sensordata() {
+int sen::update_sensordata() {
 	uint8_t in_data[3];
 	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, ALL_SENSOR_VALUES, 3, in_data);
 
@@ -294,7 +294,7 @@ int update_sensordata() {
 	return ret;
 }
 
-int update_digital_sensordata() {
+int sen::update_digital_sensordata() {
 	uint8_t in_data[1];
 	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, DIGITAL_SENSOR_VALUES, 1, in_data);
 
@@ -308,7 +308,7 @@ int update_digital_sensordata() {
 	return ret;
 }
 
-int update_analog_sensordata() {
+int sen::update_analog_sensordata() {
 	uint8_t in_data[2];
 	int ret = i2c_smbus_read_i2c_block_data(sensor_fd, ANALOG_SENSOR_VALUES, 2, in_data);
 
@@ -319,17 +319,17 @@ int update_analog_sensordata() {
 }
 
 
-bool digital_sensor_data(int sensor) {
+bool sen::digital_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	return m_digital_sensor_data[sensor];
 }
 
-int analog_sensor_data(int sensor) {
+int sen::analog_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
 	return m_analog_sensor_data;
 }
 
-bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
+bool sen::digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
   std::cout << "IN => digital_sensor_had_value" << std::endl;
   std::cout << "size last_data: " << m_last_digital_data[sensor].size() << " sensor: " << sensor << std::endl;
   auto t_begin = get_cur_time();
@@ -362,26 +362,26 @@ std::array<boost::circular_buffer<float>, 3> last_imu_data;
 //float last_abs_movement = 0.0;
 std::chrono::time_point<std::chrono::system_clock> last_movement_change = std::chrono::system_clock::now();
 
-void reset_last_movement_change() {
+void sen::reset_last_movement_change() {
 	last_movement_change = std::chrono::system_clock::now();
 }
 
 // Gibt die Sekunden zurück, wie lange sich der Roboter weniger als 5°/Sekunde gedreht hat
-double get_last_movement_seconds() {
+double sen::get_last_movement_seconds() {
 	std::chrono::duration<double> diff = std::chrono::system_clock::now() - last_movement_change;
   return diff.count();
 }
 
 
 
-void get_imu_data(float (&imu_data)[3]) {
+void sen::get_imu_data(float (&imu_data)[3]) {
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		imu_data[i] = m_imu_data[i];
 	}
 }
 
-void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp available
+void sen::set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp available
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(int i = 0; i < 3; ++i) {
 		m_imu_data[i] = imu_data[i];
@@ -389,7 +389,7 @@ void set_imu_data(float (&imu_data)[3]) {							// only within KamelDevices.cpp 
 	}
 }
 
-float get_abs_movement() {
+float sen::get_abs_movement() {
 	float abs_der = 0.0;
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(uint16_t i = 100; i < last_imu_data[YAW].size() - 1; i++) {
@@ -398,7 +398,7 @@ float get_abs_movement() {
 	return abs_der;
 }
 
-float get_movement() {
+float sen::get_movement() {
 	float der = 0.0;
 	std::lock_guard<std::mutex> m_lock(imu_mutex);			// mutex locken, zugriff auf die nächsten Variablen sperren
 	for(uint16_t i = 0; i < last_imu_data[YAW].size() - 1; i++) {
@@ -407,7 +407,7 @@ float get_movement() {
 	return der;
 }
 
-void m_imu(void) {
+void sen::m_imu(void) {
 	int imu_fd = serialOpen("/dev/serial0", IMU_BAUD);			// Serielle Schnittstelle öffnen, imu_fd ist der file descriptor
 	float t_imu_data[AMOUNT_IMU_DATA] = {0,0,0};						// lokaler Buffer mit den aktuellen Werten als Float
 	std::string in_str ("");																// Buffer der zueletzt gelesenen Bytes

@@ -97,7 +97,7 @@ int dir_pwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
 int dir_pwm_both(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
 int state(int &fd, uint8_t side, uint8_t state);
 
-}
+}	// namespace mot
 
 // === Sensoren ===========
 
@@ -128,6 +128,6 @@ float get_movement();
 
 void m_imu(void);
 
-}
+}	// namespace sen
 
 #endif
