@@ -2,6 +2,7 @@
 #define KAMELI2C_H
 
 #include <stdint.h>       	// int8_t, uint8_t, uint16_t, ...
+#include <string>
 
 // WHAT TO DO   (DO NOT USE!)
 #define MOTOR_DIR_PWM 0
@@ -43,7 +44,24 @@
 #define IR_MITTE 0
 
 
+static const std::string digital_sensor_names[8] = {
+	"IR vorne L ", "IR vorne R",
+	"IR links V", "IR links H",
+	"IR rechts V", "IR rechts H",
+	"T hinten L ", "T hinten R"
+};
+
+static const std::string digital_sensor_short_names[8] = {
+	"IR VL ", "IR VR",
+	"IR LV", "IR LH",
+	"IR_RV", "IR_RH",
+	"T_HL ", "T_HR"
+};
+
+
 int kamelI2Copen(int devId);
+
+namespace mot {
 
 // === Servo ===========
 
@@ -75,22 +93,26 @@ private:
 
 // === Motoren ===========
 
-int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
-int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
-int setMotorState(int &fd, uint8_t side, uint8_t state);
+int dir_pwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm);
+int dir_pwm_both(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right);
+int state(int &fd, uint8_t side, uint8_t state);
+
+}
 
 // === Sensoren ===========
 
-int init_sensoren(int address);
+namespace sen {
+
 bool get_bit(uint8_t byte, uint8_t bit_number);
+
+int init_sensoren(int address);
 
 int update_sensordata();
 int update_digital_sensordata();
 int update_analog_sensordata();
 
-int get_digital_sensordata(int sensor);
-int get_analog_sensordata(int sensor);
-
+bool digital_sensor_data(int sensor);
+int analog_sensor_data(int sensor);
 
 bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count = 1);
 
@@ -105,5 +127,7 @@ float get_abs_movement();
 float get_movement();
 
 void m_imu(void);
+
+}
 
 #endif

@@ -109,19 +109,13 @@ void image_processing() {
 #endif
 
 
-		//		log_timing(tlast, "Reading, color covert, gauss: ");
 
 		separate_gruen(hsv, bin_gr);  // grün auf dem Bild erkennen und in bin_gr als weiß schreiben, muss vor line_calc stehen, wenn der grünpunkt nicht als Linie erkannt werden soll
 
-		//		log_timing(tlast, "Green separation: ");
-
 		line_calc(img_rgb, hsv, bin_sw, bin_gr);		// linienpunkte berechnen, in m_line_points schreiben
-		//		log_timing(tlast, "Line calculation: ");
 
 		gruen_calc(img_rgb, hsv, bin_sw, bin_gr);		// grstate und grcenter berechnen
 
-
-		//		log_timing(tlast, "Green calc: ");
 
 		// Alle Bilder an VideoServer übergeben
 
@@ -166,7 +160,7 @@ int main() {
 	debug_lg << "> COMPLETE" << lvl::debug;
 
 	debug_lg << "init sensoren arduino" << lvl::debug;
-	if(init_sensoren(0x09) == -1) {
+	if(sen::init_sensoren(0x09) == -1) {
 		debug_lg << "> FAILED - error opening sensor_arduino" << lvl::off;
 		return -1;
 	}
@@ -174,7 +168,7 @@ int main() {
 
 	debug_lg << "starting threads" << lvl::debug;
 	thread drive_t (m_drive);			// thread starten; ruft void m_drive auf
-	thread imu_t (m_imu);					// thread startet; void m_imu in neuem thread
+	thread imu_t (sen::m_imu);					// thread startet; void m_imu in neuem thread
 	image_processing();						// start void image_processing
 
 	debug_lg << "stopping all threads" << lvl::warn;

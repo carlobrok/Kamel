@@ -61,7 +61,7 @@ int kamelI2Copen(int devId) {
 #define PCA9685_MODE1 0x0
 #define PCA9685_PRESCALE 0xFE
 
-int pca9685_setup(int address) {
+int mot::pca9685_setup(int address) {
   int fd = kamelI2Copen(address);
   if (fd < 0) return fd;
 
@@ -101,7 +101,7 @@ int pca9685_setup(int address) {
 }
 
 
-Servo::Servo(int pca9685_fd, uint8_t pin) {
+mot::Servo::Servo(int pca9685_fd, uint8_t pin) {
   m_fd = pca9685_fd;
   m_pin = pin;
 	m_max_angle = 180;
@@ -109,7 +109,7 @@ Servo::Servo(int pca9685_fd, uint8_t pin) {
   m_max_ms = 2;
 }
 
-Servo::Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, float max_ms) {
+mot::Servo::Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, float max_ms) {
   m_fd = pca9685_fd;
   m_pin = pin;
   m_max_angle = max_angle;
@@ -117,12 +117,12 @@ Servo::Servo(int pca9685_fd, uint8_t pin, uint16_t max_angle, float min_ms, floa
   m_max_ms = max_ms;
 }
 
-Servo::~Servo() {
+mot::Servo::~Servo() {
   off();
 	thread_delay(1);
 }
 
-void Servo::set_angle(int angle) {
+void mot::Servo::set_angle(int angle) {
   int off = (int)(4096 * ((angle*1.0 / m_max_angle) * ((m_max_ms - m_min_ms) / 20.0) + (m_min_ms / 20.0)) + 0.5f);
 
   //pca9685PWMWrite(m_fd, m_pin, 0, off);
@@ -132,7 +132,7 @@ void Servo::set_angle(int angle) {
 	i2c_smbus_write_word_data(m_fd, get_register(m_pin) + 2, off & 0x0FFF);
 }
 
-void Servo::off() {
+void mot::Servo::off() {
   //pca9685FullOff(m_fd, m_pin, 1);
 
 	int reg = get_register(m_pin) + 3;		// LEDX_OFF_H
@@ -184,7 +184,7 @@ bool send_req(uint8_t (&data)[N], last_values<N> &l_data) {
 // sets the direction and pwm rate of the given motors by sending the values over I2C to the motor-arduino
 
 last_values<3> last_dirPwm;
-int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
+int mot::dir_pwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
 	uint8_t data[3] = {side, direction, pwm};
 	if(send_req(data, last_dirPwm))
 		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM, 3, data);
@@ -196,7 +196,7 @@ int setMotorDirPwm(int &fd, uint8_t side, uint8_t direction, uint8_t pwm) {
 // sets the direction and pwm rate of both motors by sending the values over I2C to the motor-arduino
 
 last_values<4> last_dirPwmBoth;
-int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right) {
+int mot::dir_pwm_both(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_t direction_right, uint8_t pwm_right) {
 	uint8_t data[4] = {direction_left, pwm_left, direction_right, pwm_right};
 	if(send_req(data, last_dirPwmBoth))
 		return i2c_smbus_write_block_data(fd, MOTOR_DIR_PWM_BOTH, 4, data);
@@ -208,7 +208,7 @@ int setMotorDirPwmBoth(int &fd, uint8_t direction_left, uint8_t pwm_left, uint8_
 // sets the given motors to the given state by sending the values over I2C to the motor-arduino
 
 last_values<2> last_state;
-int setMotorState(int &fd, uint8_t side, uint8_t state) {
+int mot::state(int &fd, uint8_t side, uint8_t state) {
 	uint8_t data[2] = {side, state};
 	if(send_req(data, last_state))
 		return i2c_smbus_write_block_data(fd, MOTOR_STATE, 2, data);
@@ -224,6 +224,10 @@ int setMotorState(int &fd, uint8_t side, uint8_t state) {
 
 // ================== Sensoren ==================
 
+bool get_bit(uint8_t byte, uint8_t bit_index) {
+	return (byte & (1 << (bit_index - 1))) != 0;
+}
+
 std::mutex digital_sensor_mutex;
 std::mutex analog_sensor_mutex;
 int sensor_fd;
@@ -237,7 +241,7 @@ boost::circular_buffer<uint16_t> last_analog_data(100);
 //	boost::circular_buffer<double> last_analog_time(100);
 
 
-int init_sensoren(int address) {
+int sen::init_sensoren(int address) {
 	sensor_fd = kamelI2Copen(address);
 
 	for (auto& cb : last_digital_data) {
@@ -249,13 +253,9 @@ int init_sensoren(int address) {
 
 
 
-bool get_bit(uint8_t byte, uint8_t bit_index) {
-	return (byte & (1 << (bit_index - 1))) != 0;
-}
-
 
 /* function reads 3 bytes of sensordata and fetches it to the output arrays.
- * first 8 bit is for 8 digital sensors, last to bits are lowbyte and highbyt if 1 analog  10bit sensor.
+ * first 8 bit is for 8 digital sensors, last two bytes are lowbyte and highbyte of 1 analog  10bit sensor.
  *
  * Sequence of digital sensors is:
  * IR_VORNE_L, IR_VORNE_R, IR_LINKS_V, IR_LINKS_H, IR_RECHTS_V, IR_RECHTS_H, T_HINTEN_L, T_HINTEN_R
@@ -319,12 +319,12 @@ int update_analog_sensordata() {
 }
 
 
-int get_digital_sensordata(int sensor) {
+bool digital_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	return digital_sensor_data[sensor];
 }
 
-int get_analog_sensordata(int sensor) {
+int analog_sensor_data(int sensor) {
 	std::lock_guard<std::mutex> m_lock(analog_sensor_mutex);
 	return analog_sensor_data;
 }
