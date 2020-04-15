@@ -321,15 +321,17 @@ bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsi
 	unsigned int counter = 0;
 
 	for(unsigned i : util::lang::indices(last_digital_data[sensor])) {
-    std::cout << "diff time: " << get_ms_diff(last_digital_time[i], t_begin) << std::endl;
+    std::cout << "diff time: " << get_ms_diff(last_digital_time[i], t_begin);
  		if(get_ms_diff(last_digital_time[i], t_begin) <= last_ms) {
+      std::cout << " last_value: " << last_digital_data[sensor][i];
 			if(last_digital_data[sensor][i] == value)
 				count++;
 		} else {
 			break;
 		}
+    std::cout << std::endl;
 	}
-  std::cout << "counter: " << counter << " enough? " << counter >= count << std::endl;
+  std::cout << "counter: " << counter << " enough? " << (counter >= count) << std::endl;
 	return counter >= count;
 }
 
