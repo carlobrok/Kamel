@@ -274,6 +274,22 @@ int update_sensordata() {
 	}
 	last_analog_data.push_front(analog_sensor_data);
 	analog_sensor_data = in_data[1] | (in_data[2] << 8);
+
+
+  std::cout << "digital_sensor_data:" << std::endl;
+  for(int i = 0; i < 8; i++) {
+    std::cout << digital_sensor_data[i] << "  ";
+  }
+  std::endl;
+
+  std::cout << "last_digital_data: " << std::endl;
+  for(int i = 0; i < 100; i++) {
+    std::cout << i << " ";
+    for(int sen = 0; sen < 8; sen++) {
+      std::cout << last_analog_data[sen][i] << std::endl;
+    }
+  }
+
 	return ret;
 }
 
@@ -314,8 +330,7 @@ int get_analog_sensordata(int sensor) {
 
 bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsigned int count) {
   std::cout << "IN => digital_sensor_had_value" << std::endl;
-  std::cout << "size last_data: " << last_digital_data[sensor].size() << std::endl;
-  std::cout << "cap last_data: " << last_digital_data[sensor].capacity() << std::endl;
+  std::cout << "size last_data: " << last_digital_data[sensor].size() << " sensor: " << sensor << std::endl;
   auto t_begin = get_cur_time();
 	std::lock_guard<std::mutex> m_lock(digital_sensor_mutex);
 	unsigned int counter = 0;
@@ -323,13 +338,13 @@ bool digital_sensor_had_value(int sensor, unsigned int last_ms, bool value, unsi
 	for(unsigned i : util::lang::indices(last_digital_data[sensor])) {
     std::cout << "diff time: " << get_ms_diff(last_digital_time[i], t_begin);
  		if(get_ms_diff(last_digital_time[i], t_begin) <= last_ms) {
-      std::cout << " last_value: " << last_digital_data[sensor][i];
+      std::cout << " last_value: " << last_digital_data[sensor][i] << std::endl;
 			if(last_digital_data[sensor][i] == value)
 				count++;
 		} else {
+      std::cout << std::endl;
 			break;
 		}
-    std::cout << std::endl;
 	}
   std::cout << "counter: " << counter << " enough? " << (counter >= count) << std::endl;
 	return counter >= count;
