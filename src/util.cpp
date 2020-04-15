@@ -23,7 +23,7 @@ int get_ms_since(std::chrono::steady_clock::time_point t_prev) {
 }
 
 int get_ms_diff(std::chrono::steady_clock::time_point t_start, std::chrono::steady_clock::time_point t_stop) {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(t_start - t_stop).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(t_stop - t_start).count();
 }
 
 long get_time_since_epoch() {
