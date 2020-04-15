@@ -365,11 +365,13 @@ void m_drive() {
 
 			if (sen::digital_sensor_data(IR_LINKS_V) == 0 && sen::digital_sensor_had_value(IR_RECHTS_V, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
-				thread_delay(1000);
+				mot::state(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+				thread_delay(3000);
 			}
 			else if (sen::digital_sensor_data(IR_RECHTS_V) == 0 && sen::digital_sensor_had_value(IR_LINKS_V, 750, 0, 3)) {
 				drive_lg << "KANTE ERKANNT" << warn;
-				thread_delay(1000);
+				mot::state(motor_fd, MOTOR_BOTH, MOTOR_OFF);
+				thread_delay(3000);
 			}
 
 
