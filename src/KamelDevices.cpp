@@ -280,13 +280,13 @@ int update_sensordata() {
   for(int i = 0; i < 8; i++) {
     std::cout << digital_sensor_data[i] << "  ";
   }
-  std::endl;
+  std::cout << std::endl;
 
   std::cout << "last_digital_data: " << std::endl;
   for(int i = 0; i < 100; i++) {
     std::cout << i << " ";
     for(int sen = 0; sen < 8; sen++) {
-      std::cout << last_analog_data[sen][i] << std::endl;
+      std::cout << last_digital_data[sen][i] << "  " << std::endl;
     }
   }
 
