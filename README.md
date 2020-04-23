@@ -45,7 +45,7 @@ Stephan Swiatek
 
 * OpenCV 4 or newer version (recommended), [Install guide for OpenCV 4.1.0](https://docs.opencv.org/4.1.0/d7/d9f/tutorial_linux_install.html)  
   **Important:** 
-  1. as cmake run `cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules/ -D WITH_QT=ON -DWITH_OPENGL=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D WITH_GTK=ON  ..` 
+  1. as cmake run `cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules/ -D WITH_QT=ON -DWITH_OPENGL=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D WITH_GTK=ON -DPYTHON_DEFAULT_EXECUTABLE=$(which python3) ..` 
   2. make sure all packages are configured (OpenGL, Qt, ...)
   3. after finishing the installation run `sudo ldconfig`
 * WiringPi, install with `sudo apt-get install wiringpi`
