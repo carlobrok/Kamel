@@ -1,25 +1,16 @@
 # Kamel Documentation
 
-### Team members 
-
-Björn Ellwert - 
-Carlo Brokering - 
-Jamal Salif -
-Stephan Swiatek
-
-</br>
-
-## Robot parts - Hardware
+## Hardware
 
 ### Microcontroller
 
-* [Arduino nano v3](https://store.arduino.cc/arduino-nano)
+* [2x Arduino nano v3](https://store.arduino.cc/arduino-nano)
 * [Raspberry Pi 3B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)
 
 ### Sensors
 
 * [Raspberry Camera v2.1](https://www.raspberrypi.org/products/camera-module-v2/)
-* [Sharp digital infrared distance sensor](https://www.pololu.com/product/1134)
+* [6x Sharp digital infrared distance sensor](https://www.pololu.com/product/1134)
 * [Sharp analog infrared distance sensor](http://www.sharp-world.com/products/device/lineup/data/pdf/datasheet/gp2y0a51sk_e.pdf)
 * [Sparkfun 9DoF Razor IMU](https://www.sparkfun.com/products/14001)
 * [Touch sensors](https://www.reichelt.de/schnappschalter-1xum-5a-250vac-flachhebel-mar-1050-5202-p32729.html?&trstct=pol_5)
@@ -31,20 +22,15 @@ Stephan Swiatek
 
 ### Motors
 
-* [V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
+* [4x V-TEC 12V DC-Gearmotor 76 RPM](https://eckstein-shop.de/V-TEC-12V-Mini-37D-DC-Motor-Gleichstrom-Getriebe-Motor-Stirnradgetriebe-76-RPM)
+* [5x Reely Micro Servo S-8246](https://www.conrad.com/p/reely-micro-servo-s-8246-analogue-servo-gear-box-material-plastic-connector-system-jr-1647020)
+* [KPower Servo DM1500](https://m.kpower.com/product/products_rc_servo_airplane_servos/DM1500.html)
 
 </br>
 
-## Software
+## Installation on Raspberry Pi
 
-First make sure that the required libraries are installed (see below). With ./install.sh the program is built and installed as a service.
-The start-stop-daemon starts the program automatically when booting.
-
-To start / stop the program manually use systemctl kamel start / stop / restart
-
-### Environment
-
-* Raspbian Lite
+Use a Linux disto operating system, [Raspbian Lite](https://www.raspberrypi.org/software/operating-systems/) is recommended.
 
 ### Required Librarys
 
@@ -65,3 +51,20 @@ To start / stop the program manually use systemctl kamel start / stop / restart
   1. `git clone https://github.com/gabime/spdlog.git`
   2. `cd spdlog/`
   3. `sudo cp -r include/spdlog/ /usr/local/include/`
+
+### Install program
+
+First make sure that the required libraries are installed ([see below](#required-librarys)). With `./install-pi.sh` the program is built and installed as a service.
+The start-stop-daemon starts the program automatically when booting.
+
+To start / stop the program manually use `systemctl kamel <start/stop/restart>`.
+
+## Program Arduinos
+
+
+#### Team members 
+
+Björn E. - 
+Carlo B.- 
+Jamal S. -
+Stephan S.
