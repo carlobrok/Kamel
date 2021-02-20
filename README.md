@@ -54,7 +54,8 @@ Use a Linux disto operating system, [Raspbian Lite](https://www.raspberrypi.org/
 
 ### Install program
 
-First make sure that the required libraries are installed ([see below](#required-librarys)). With `./install-pi.sh` the program is built and installed as a service.
+Make sure that the required libraries are installed ([see above](#required-librarys)). 
+With `./install-pi.sh` the program is built and installed as a service.
 The start-stop-daemon starts the program automatically when booting.
 
 To start / stop the program manually use `systemctl kamel <start/stop/restart>`.
