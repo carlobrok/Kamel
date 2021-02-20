@@ -37,6 +37,11 @@ Stephan Swiatek
 
 ## Software
 
+First make sure that the required libraries are installed (see below). With ./install.sh the program is built and installed as a service.
+The start-stop-daemon starts the program automatically when booting.
+
+To start / stop the program manually use systemctl kamel start / stop / restart
+
 ### Environment
 
 * Raspbian Lite
