@@ -1,7 +1,5 @@
 # Kamel Documentation
 
-## Hardware
-
 ### Microcontroller
 
 * [2x Arduino nano v3](https://store.arduino.cc/arduino-nano)
@@ -26,7 +24,6 @@
 * [5x Reely Micro Servo S-8246](https://www.conrad.com/p/reely-micro-servo-s-8246-analogue-servo-gear-box-material-plastic-connector-system-jr-1647020)
 * [KPower Servo DM1500](https://m.kpower.com/product/products_rc_servo_airplane_servos/DM1500.html)
 
-</br>
 
 ## Installation on Raspberry Pi
 
