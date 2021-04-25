@@ -1,5 +1,8 @@
 # Kamel Documentation
 
+This is a short documentation of which hardware is used for the robot and how to install the software on the Raspberry Pi and Arduinos. 
+A more detailed documentation in german is [here] available.
+
 ### Microcontroller
 
 * [2x Arduino nano v3](https://store.arduino.cc/arduino-nano)
@@ -25,9 +28,9 @@
 * [KPower Servo DM1500](https://m.kpower.com/product/products_rc_servo_airplane_servos/DM1500.html)
 
 
-## Installation on Raspberry Pi
+## Software Installation
 
-Use a Linux disto operating system, [Raspbian Lite](https://www.raspberrypi.org/software/operating-systems/) is recommended.
+For the Raspberry Pi a Linux disto operating system is needed, [Raspbian Lite](https://www.raspberrypi.org/software/operating-systems/) is recommended.
 
 ### Required Librarys
 
@@ -51,14 +54,15 @@ Use a Linux disto operating system, [Raspbian Lite](https://www.raspberrypi.org/
 
 ### Install program
 
-Make sure that the required libraries are installed ([see above](#required-librarys)). 
-With `./install-pi.sh` the program is built and installed as a service.
+Make sure that the [required libraries](#required-librarys) are installed. 
+Run `./install-pi.sh` to build and install the program as a service.
 The start-stop-daemon starts the program automatically when booting.
 
 To start / stop the program manually use `systemctl kamel <start/stop/restart>`.
 
 ## Program Arduinos
 
+Install the [Arduino IDE](https://www.arduino.cc/en/software) on your computer. Open the .ino source files and upload the firmware to the respective Arduino.
 
 #### Team members 
 
